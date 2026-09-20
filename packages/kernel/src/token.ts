@@ -38,3 +38,36 @@ export function defineService<T>(key: string): ServiceToken<T> {
 export function defineCollection<T>(key: string): CollectionToken<T> {
   return Object.freeze({ kind: 'collection', key }) as CollectionToken<T>
 }
+
+/**
+ * Two ways to get a typed token, because identity is by `key` (see the file
+ * comment above) rather than by object, so both can name the same capability:
+ *
+ * - **Imported token objects** — `defineService`/`defineCollection`, shared
+ *   via a contract package the provider and consumers both depend on. The
+ *   documented default: best go-to-definition/rename support, and since
+ *   identity is by key a plugin may even bundle its own copy of the contract
+ *   package instead of depending on the host's.
+ * - **Registry interface** — augment this interface (or `Collections`) and
+ *   call `service`/`collection`. For a third-party plugin that cannot take a
+ *   dependency on the host's contract package: the host publishes only
+ *   types, e.g. `declare module '@yatoyi/kernel' { interface Services {
+ *   todos: TodoStore } }`, and the plugin calls `service('todos')` with no
+ *   import beyond `@yatoyi/kernel` itself.
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface Services {}
+/** Same as {@link Services}, for collections. */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface Collections {}
+
+export type ServiceKey = keyof Services & string
+export type CollectionKey = keyof Collections & string
+
+export function service<K extends ServiceKey>(key: K): ServiceToken<Services[K]> {
+  return defineService(key)
+}
+
+export function collection<K extends CollectionKey>(key: K): CollectionToken<Collections[K]> {
+  return defineCollection(key)
+}

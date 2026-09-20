@@ -38,9 +38,9 @@ Wrap the tree once:
 
 ## Define a service
 
-A service token names a capability. Put it where both provider and
-consumers can import it — a `services.ts`, or the package that owns the
-concept:
+A service token names a capability. Default: an imported token object. Put
+it where both provider and consumers can import it — a `services.ts`, or
+the package that owns the concept:
 
 ```ts
 import { defineService } from '@yatoyi/kernel'
@@ -56,6 +56,24 @@ export const Todos = defineService<TodoStore>('todos')
 
 The string is runtime identity for debugging. You never type it at a call
 site.
+
+When a plugin can't depend on your contract package — the third-party
+case — the host publishes a types-only package (a `.d.ts` package, no
+runtime code) and the plugin augments `Services` and calls `service(key)`
+instead of importing a token; identity is by key, so it resolves the same
+capability:
+
+```ts
+import { service } from '@yatoyi/kernel'
+import type { TodoStore } from '@todo-app/types'
+
+declare module '@yatoyi/kernel' {
+  interface Services {
+    todos: TodoStore
+  }
+}
+const todos = service('todos') // ServiceToken<TodoStore>
+```
 
 ## Write a plugin that provides a service
 

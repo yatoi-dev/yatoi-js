@@ -195,6 +195,34 @@ describe('<Requires>', () => {
     expect(mounted.mock.calls.length).toBeGreaterThan(mountsBefore)
   })
 
+  it('resolves a token created separately from the one the provider used, by key', () => {
+    // Simulates a cross-bundle plugin: B is its own object, same key as A.
+    const kernel = createKernel()
+    const B = defineService<Clock>('clock')
+    const provider = definePlugin({
+      name: 'clock-b',
+      provides: [Clock],
+      setup(scope) {
+        scope.provide(Clock, { now: () => 7 })
+      },
+    })
+    mount(
+      kernel,
+      <Requires of={[B]} fallback={<span>waiting</span>}>
+        {(clock) => <span>now={clock.now()}</span>}
+      </Requires>,
+    )
+    expect(screen.getByText('waiting')).toBeTruthy()
+    act(() => {
+      kernel.load(provider)
+    })
+    expect(screen.getByText('now=7')).toBeTruthy()
+    act(() => {
+      kernel.unload(provider)
+    })
+    expect(screen.getByText('waiting')).toBeTruthy()
+  })
+
   it('does not re-render children for unrelated kernel changes', () => {
     const kernel = createKernel()
     kernel.load(clockPlugin)

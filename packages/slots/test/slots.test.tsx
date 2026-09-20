@@ -1,9 +1,9 @@
 import { StrictMode, useEffect, type ReactNode } from 'react'
 import { act, render, screen } from '@testing-library/react'
 import { describe, expect, expectTypeOf, it, vi } from 'vitest'
-import { createKernel, definePlugin, defineService, type Kernel, type Scope } from '@yatoyi/kernel'
+import { createKernel, defineCollection, definePlugin, defineService, type Kernel, type Scope } from '@yatoyi/kernel'
 import { KernelProvider, Requires } from '@yatoyi/react'
-import { Slot, contribute, type SlotRendererProps } from '../src/index.js'
+import { Slot, contribute, type SlotRenderer, type SlotRendererProps } from '../src/index.js'
 
 // ── host declares its contract ─────────────────────────────────────
 interface Task {
@@ -210,6 +210,22 @@ describe('<Slot mode="single">', () => {
     expect(screen.getByText('compact')).toBeTruthy()
     act(() => kernel.unload(compact))
     expect(screen.getByText('card:Write tests')).toBeTruthy()
+  })
+})
+
+describe('cross-bundle interop', () => {
+  it('a contribution made through a hand-built collection token (a second @yatoyi/slots copy) shows up in <Slot>', () => {
+    // `slot(name)` is just `defineCollection('slot:' + name)`; a plugin
+    // bundled with its own copy of @yatoyi/slots reaches the same
+    // collection by building that key itself, with no shared object.
+    const kernel = createKernel()
+    const foreignToken = defineCollection<SlotRenderer<'sidebar.item'>>('slot:sidebar.item')
+    const p = plugin('foreign', (scope) => {
+      scope.contribute(foreignToken, () => <li>foreign</li>)
+    })
+    kernel.load(p)
+    mount(kernel, <Slot name="sidebar.item" collapsed={false} fallback={<i>empty</i>} />)
+    expect(screen.getByText('foreign')).toBeTruthy()
   })
 })
 

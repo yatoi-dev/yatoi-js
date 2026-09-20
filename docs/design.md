@@ -262,6 +262,12 @@ Things the implementation pinned down:
   `defineCollection<T>(key)`, `scope.contribute(col, value, { priority, mode })`,
   `kernel.list(col)` (priority-desc, stable, same array ref until changed).
   The kernel stores the mode string; it never interprets it.
+- **The registry-interface token form:** `service(key)` / `collection(key)`
+  resolve through the augmented `Services` / `Collections` interfaces —
+  typed wrappers over `defineService`/`defineCollection`, no new runtime
+  behaviour. For third-party plugins that can't depend on the host's
+  contract package; the imported-token-object form stays the documented
+  default. Both are the same capability because identity is by key.
 - **Errors** from `setup` and disposers go to `kernel.on('error', fn)`, or
   `console.error` if nobody listens. They never propagate to the caller of
   `load`/`unload`. Two providers of one token: first wins, second `fail`s.
@@ -378,8 +384,12 @@ in practice.
    `replace`/`wrap` over the host default, highest priority outermost).
    The kernel stores the mode string and never interprets it.
 3. **Token versioning** for third-party plugins across breaking changes.
-4. **Do tokens live in a shared package or a global augmented interface?**
-   Probably both; decide which is the documented default.
+4. **Do tokens live in a shared package or a global augmented interface? —
+   resolved:** both, implemented as `defineService`/`defineCollection`
+   (imported token objects) and `service`/`collection` (the `Services` /
+   `Collections` registry interfaces). The imported-token-object form,
+   shared via a contract package, is the documented default; the registry
+   form is for third-party plugins that can't take that dependency.
 
 ---
 

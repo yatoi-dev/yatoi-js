@@ -46,6 +46,10 @@ what stops `provide(Clock, wrongShape)` from inferring a union and
 compiling. Internal helpers that only need `.key` take `AnyServiceToken`
 (`ServiceToken<any>`) for that reason.
 
+`service(key)` / `collection(key)` are typed wrappers over
+`defineService`/`defineCollection` that look the key up in the augmented
+`Services`/`Collections` interfaces — no runtime behaviour of their own.
+
 ### Registry
 
 The registry is the value store plus the single change channel. Every
@@ -210,7 +214,9 @@ lies is worse than none. The rule is documented instead.
 `@yatoyi/slots` is thin on purpose:
 
 - `token.ts`: `slot(name)` memoises one `CollectionToken<SlotRenderer>`
-  per name. The kernel sees an ordinary collection.
+  per name. The kernel sees an ordinary collection. The `slot:${name}` key
+  format is stable for cross-bundle interop — a plugin carrying its own
+  copy of `@yatoyi/slots` reaches the same collection by key alone.
 - `contribute.ts`: a typed wrapper over `scope.contribute(slot(name), …)`.
   All the type-checking of props against `Slots[name]` happens here.
 - `Slot.tsx`: the public `Slot` is a typed *signature* over an untyped

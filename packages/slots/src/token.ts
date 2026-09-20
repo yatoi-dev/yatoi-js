@@ -8,6 +8,11 @@ const tokens = new Map<string, CollectionToken<SlotRenderer<SlotName>>>()
  * so `contribute` and `<Slot>` agree without sharing anything but the
  * string. The kernel stores renderers as opaque values — it never learns
  * they are React components.
+ *
+ * The `slot:${name}` key format is a stable contract, not an implementation
+ * detail: a plugin bundling its own copy of `@yatoyi/slots` reaches the same
+ * collection by building that key itself, so cross-bundle interop depends
+ * on this format never changing.
  */
 export function slot<N extends SlotName>(name: N): CollectionToken<SlotRenderer<N>> {
   let token = tokens.get(name)

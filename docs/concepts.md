@@ -49,6 +49,10 @@ There are two kinds:
 The kernel stores values opaquely. It never knows a value is a React
 component; `@yatoyi/slots` is what gives a stored value React meaning.
 
+Tokens like `Clock` above are the documented default. There is a second
+form, `service(key)`/`collection(key)`, for a plugin that can't depend on
+the host's contract package — see [guide.md](guide.md) "Define a service".
+
 ## Plugins
 
 A **plugin** is a named unit of behaviour with a declared dependency

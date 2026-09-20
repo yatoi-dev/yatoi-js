@@ -1,5 +1,27 @@
 import { describe, expect, expectTypeOf, it } from 'vitest'
-import { defineCollection, definePlugin, defineService, type Scope } from '../src/index.js'
+import {
+  collection,
+  createKernel,
+  defineCollection,
+  definePlugin,
+  defineService,
+  service,
+  type CollectionToken,
+  type Scope,
+  type ServiceToken,
+} from '../src/index.js'
+
+// Simulates a host augmenting the registry interface to declare services by
+// key, the way a third-party plugin that can't depend on a contract package
+// would look them up.
+declare module '../src/index.js' {
+  interface Services {
+    clock: { now(): number }
+  }
+  interface Collections {
+    items: string
+  }
+}
 
 describe('tokens', () => {
   it('are frozen objects carrying only a key', () => {
@@ -57,5 +79,42 @@ describe('definePlugin typing', () => {
 
   it('requires a name', () => {
     expect(() => definePlugin({ name: '', setup() {} })).toThrow(/name/)
+  })
+})
+
+describe('service() / collection() — the registry-interface token form', () => {
+  it('resolves keys through the augmented Services/Collections interfaces, and rejects unknown ones', () => {
+    expectTypeOf(service('clock')).toEqualTypeOf<ServiceToken<{ now(): number }>>()
+    // @ts-expect-error unknown key
+    service('nope')
+
+    expectTypeOf(collection('items')).toEqualTypeOf<CollectionToken<string>>()
+    // @ts-expect-error unknown key
+    collection('nope')
+  })
+
+  it('is the same capability as the matching defineService/defineCollection call, by key', () => {
+    const kernel = createKernel()
+    let seenInSetup: { now(): number } | undefined
+    const provider = definePlugin({
+      name: 'provider',
+      provides: [defineService<{ now(): number }>('clock')],
+      setup(scope) {
+        scope.provide(defineService<{ now(): number }>('clock'), { now: () => 5 })
+      },
+    })
+    const consumer = definePlugin({
+      name: 'consumer',
+      inject: [service('clock')],
+      setup(scope) {
+        const clock = scope.get(service('clock'))
+        expectTypeOf(clock).toEqualTypeOf<{ now(): number }>()
+        seenInSetup = clock
+      },
+    })
+
+    kernel.load(provider, consumer)
+    expect(kernel.pluginState(consumer)).toBe('active')
+    expect(seenInSetup?.now()).toBe(5)
   })
 })

@@ -580,6 +580,72 @@ describe('10. collections', () => {
   })
 })
 
+// Identity is by `.key`, not by token object, because registry lookups
+// (`services.has(token.key)`, cascade matching, `@yatoyi/slots`'
+// `slot:${name}`) all compare strings. This is what lets a plugin bundle
+// delivered from a CDN — carrying its own copy of `@yatoyi/kernel` and its
+// own token objects — interoperate with the host's kernel: two independently
+// created tokens with the same key name the same capability.
+describe('11. identity is by key, not by token object', () => {
+  it('a consumer created with a separate token object still resolves the provider', () => {
+    const kernel = createKernel()
+    const A = defineService<Clock>('clock')
+    const B = defineService<Clock>('clock')
+    expect(A).not.toBe(B)
+
+    const disposed = vi.fn()
+    const provider = definePlugin({
+      name: 'provider',
+      provides: [A],
+      setup(scope) {
+        scope.provide(A, { now: () => 99 })
+        scope.defer(disposed)
+      },
+    })
+    let seenInSetup: number | undefined
+    const consumer = definePlugin({
+      name: 'consumer',
+      inject: [B],
+      setup(scope) {
+        seenInSetup = scope.get(B).now()
+      },
+    })
+
+    kernel.load(provider, consumer)
+    expect(kernel.pluginState(consumer)).toBe('active')
+    expect(seenInSetup).toBe(99)
+    expect(kernel.get(B)).toBe(kernel.get(A))
+    expect(kernel.state(B)).toEqual(kernel.state(A))
+
+    kernel.unload(provider)
+    expect(disposed).toHaveBeenCalledOnce()
+    expect(kernel.pluginState(consumer)).toBe('inactive')
+    expect(kernel.state(B)).toEqual({ status: 'absent' })
+
+    kernel.load(provider)
+    expect(kernel.pluginState(consumer)).toBe('active')
+  })
+
+  it('a consumer created with a separate collection token sees contributions made through another', () => {
+    const kernel = createKernel()
+    const Items = defineCollection<string>('items')
+    const OtherItems = defineCollection<string>('items')
+    expect(Items).not.toBe(OtherItems)
+
+    const p = definePlugin({
+      name: 'p',
+      setup(scope) {
+        scope.contribute(Items, 'from-a')
+      },
+    })
+    kernel.load(p)
+    expect(kernel.list(OtherItems).map((c) => c.value)).toEqual(['from-a'])
+
+    kernel.unload(p)
+    expect(kernel.list(OtherItems)).toEqual([])
+  })
+})
+
 describe('kernel.dispose', () => {
   it('unloads everything and waits for async disposers', async () => {
     const kernel = createKernel()
