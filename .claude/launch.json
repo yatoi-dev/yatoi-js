@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "todo-example",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "weft-example-todo", "dev", "--", "--port", "5173"],
+      "port": 5173
+    }
+  ]
+}
