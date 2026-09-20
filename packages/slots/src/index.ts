@@ -1,3 +1,6 @@
-// @weft/slots — Phase 3. See CLAUDE.md "Package layering" and the plan.
-// Intentionally empty until /kernel and /react exist.
-export {}
+export type { Slots, SlotName, SlotProps, SlotRenderer, SlotRendererProps } from './types.js'
+export { slot } from './token.js'
+export { contribute } from './contribute.js'
+export type { ContributeOptions } from './contribute.js'
+export { Slot } from './Slot.js'
+export type { SlotComponentProps } from './Slot.js'

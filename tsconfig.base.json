@@ -16,11 +16,6 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "jsx": "react-jsx",
-    "paths": {
-      "@weft/kernel": ["./packages/kernel/src/index.ts"],
-      "@weft/react": ["./packages/react/src/index.ts"],
-      "@weft/slots": ["./packages/slots/src/index.ts"]
-    }
+    "jsx": "react-jsx"
   }
 }

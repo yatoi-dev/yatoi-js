@@ -6,11 +6,14 @@
       "DOM",
       "DOM.Iterable"
     ],
-    "rootDir": "src",
+    "types": [
+      "node"
+    ],
     "noEmit": true
   },
   "include": [
-    "src"
+    "src",
+    "test"
   ],
   "references": [
     {
