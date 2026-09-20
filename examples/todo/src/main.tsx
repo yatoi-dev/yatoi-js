@@ -1,6 +1,8 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import './slots.js' // registers the app's Slots augmentation before anything renders
+// The contract's Slots augmentation is pulled in transitively by any
+// import from it below (App.tsx, TodoList.tsx) — see
+// examples/todo/src/contract/index.ts.
 import { bootstrap } from './bootstrap.js'
 import { App } from './App.js'
 import './styles.css'

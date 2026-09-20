@@ -107,6 +107,33 @@ on a different cache key.
 If you need a console handle for debugging, expose the kernel yourself
 (`window.__kernel = kernel` in dev) — or better, use the UI you built.
 
+## Share React, not @yatoyi
+
+A plugin loaded from a URL (`docs/guide.md` "Load plugins from a
+manifest") runs in a bundle built independently of the host. It **must**
+externalize `react` and `react/jsx-runtime` — a second copy of React in the
+page means the plugin's hooks run against a dispatcher the host's render
+loop never sees, and you get "Invalid hook call" (or a silent duplicate-
+React warning) instead of a working plugin. The host has to share its own
+instance back, typically via a native import map pointing the plugin's bare
+`import 'react'` at a re-export of the host's own React — see
+`examples/todo/vite/react-import-map.ts` (the `reactImportMap` plugin) and
+`examples/todo/vite.plugin.config.ts` (`rollupOptions.external`)
+for a worked version, including the build-time gotchas (Rollup can't
+statically expand a re-export of a CommonJS module for a consumer outside
+its own build — the shim has to name its exports explicitly, not
+`export * from 'react'`).
+
+The plugin does **not** need to externalize `@yatoyi/kernel`, `@yatoyi/slots`,
+or its contract package — it may bundle its own copies of all three. A
+service, collection, or slot's identity is its string `key`
+(`packages/kernel/src/token.ts`), and `/slots`' slot names are just
+collection keys of the form `slot:${name}` (`packages/slots/src/token.ts`).
+Two independently bundled tokens with the same key name the same
+capability to the host's kernel, no shared object or shared module
+instance required. That's what makes "externalize React, bundle
+everything else" the right split, not an arbitrary one.
+
 ## Slot props are the *host's* contract
 
 `declare module '@yatoyi/slots' { interface Slots { … } }` must be in the

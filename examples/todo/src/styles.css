@@ -144,15 +144,6 @@ button {
   flex: 1;
 }
 
-.due-date-field {
-  font-size: 0.85rem;
-  padding: 0.15rem 0.35rem;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--bg);
-  color: var(--fg);
-}
-
 .todo-delete {
   border: none;
   background: transparent;
@@ -226,6 +217,11 @@ button {
   flex: 1;
 }
 
+.plugin-card-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
 .plugin-card button {
   align-self: flex-start;
   padding: 0.4rem 0.85rem;
@@ -241,86 +237,8 @@ button {
   opacity: 0.6;
 }
 
-/* ── calendar ──────────────────────────────────────────────────────── */
-
-.calendar-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
-}
-
-.calendar-header h2 {
+.plugin-error {
   margin: 0;
-  font-size: 1.05rem;
-  min-width: 10rem;
-  text-align: center;
-}
-
-.calendar-header button {
-  border: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--fg);
-  border-radius: 6px;
-  width: 2rem;
-  height: 2rem;
-  cursor: pointer;
-}
-
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 1px;
-  background: var(--border);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-}
-
-.calendar-weekday {
-  background: var(--bg-subtle);
-  color: var(--fg-muted);
-  font-size: 0.75rem;
-  text-align: center;
-  padding: 0.3rem 0;
-}
-
-.calendar-cell {
-  background: var(--bg);
-  min-height: 4.5rem;
-  padding: 0.3rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  font-size: 0.75rem;
-}
-
-.calendar-cell-outside {
-  background: var(--bg-subtle);
-  color: var(--fg-muted);
-}
-
-.calendar-cell-today {
-  background: var(--today);
-}
-
-.calendar-date {
-  font-weight: 600;
+  color: var(--danger);
   font-size: 0.8rem;
-}
-
-.calendar-todo {
-  background: var(--accent);
-  color: var(--accent-fg);
-  border-radius: 4px;
-  padding: 0.05rem 0.3rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.calendar-todo.done {
-  opacity: 0.55;
-  text-decoration: line-through;
 }

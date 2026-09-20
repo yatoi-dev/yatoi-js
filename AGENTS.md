@@ -13,11 +13,13 @@ v0.1 is implemented and tested. Not yet published.
 ## Layout
 
 ```
-packages/kernel/   @yatoyi/kernel   plugins, services, scope tree, cascade unload   no React, no DOM
-packages/react/    @yatoyi/react    KernelProvider, useService, <Requires>, usePlugin
-packages/slots/    @yatoyi/slots    contribute(), <Slot>, Slots augmentation
-examples/todo/     yatoyi-example-todo   Vite app: todo + installable calendar plugin
-docs/              concepts, guide, pitfalls, architecture, design
+packages/kernel/          @yatoyi/kernel   plugins, services, scope tree, cascade unload   no React, no DOM
+packages/react/           @yatoyi/react    KernelProvider, useService, <Requires>, usePlugin
+packages/slots/           @yatoyi/slots    contribute(), <Slot>, Slots augmentation
+examples/todo/            yatoyi-example-todo   Vite app: todo + installable calendar plugin,
+                           chapter 1 in one `pnpm dev`; chapter 2 delivers the same plugin as a
+                           separately built file, opt-in (see examples/todo/README.md)
+docs/                     concepts, guide, pitfalls, architecture, design
 ```
 
 Each package: `src/` (source), `test/` (vitest), `tsconfig.json`
@@ -29,17 +31,25 @@ Run from the repo root. pnpm 9, Node ≥ 20.
 
 ```bash
 pnpm install
-pnpm test                                  # all packages (59 tests)
+pnpm test                                  # all packages
 pnpm test -- --project kernel              # one package: kernel | react | slots
 pnpm typecheck                             # every package, in parallel
 pnpm build                                 # tsc -b, topological
-pnpm --filter yatoyi-example-todo dev      # example on :5173 (also .claude/launch.json → todo-example)
-pnpm --filter yatoyi-example-todo build    # tsc --noEmit && vite build
+pnpm --filter yatoyi-example-todo dev          # example on :5173 (also .claude/launch.json → todo-example)
+pnpm --filter yatoyi-example-todo dev:remote   # same app, calendar plugin loaded from :5174 instead of bundled
+pnpm --filter yatoyi-example-todo build        # tsc --noEmit && vite build
+pnpm --filter yatoyi-example-todo serve:plugin # builds + serves the calendar plugin on :5174 (also .claude/launch.json → todo-plugin-cdn)
 ```
 
 Tests and the example alias `@yatoyi/*` to `packages/*/src`, so no build
 is needed in the inner loop. Typechecking `react`/`slots` goes through
 `tsc -b` with project references, so each builds `kernel` first itself.
+
+Chapter 2 of the example needs both servers running, to demonstrate the
+loaded-by-URL plugin: `todo-plugin-cdn` (:5174, serves `calendar.js`) and
+`todo-example-remote` (:5173, the host in remote mode). Chapter 1 needs
+just one — `todo-example` — the calendar plugin ships bundled with the
+app. See `examples/todo/README.md`.
 
 ## Hard rules
 
@@ -60,7 +70,10 @@ These are load-bearing. Don't relax them without changing
 5. **All React tests run under `<StrictMode>` on a concurrent root.** If a
    change doesn't survive double-invoke, the change is wrong.
 6. **Don't add `/loader` or `/devtools`** until someone files an issue.
-   The example's `plugins/registry.ts` is all the loader v0.1 needs.
+   The example's manifest + `examples/todo/src/plugins/registry.ts` (id →
+   `import()`), plus the `VITE_PLUGIN_BASE` seam in
+   `examples/todo/src/marketplace/useMarketplace.ts` for loading the same
+   ids from another origin, is all the loader v0.1 needs.
 7. **TypeScript stays on 5.9.** 6.x changed defaults, 7.x is the native
    compiler; upgrading is a deliberate task, not a side effect.
 

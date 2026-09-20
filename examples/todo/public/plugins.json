@@ -9,6 +9,6 @@
     "id": "tags",
     "name": "Tags",
     "version": "0.1.0",
-    "description": "Label todos and filter by tag. Coming soon."
+    "description": "Label todos and filter by label."
   }
 ]

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { KernelProvider, Requires, useContributions } from '@yatoyi/react'
 import { kernel } from './kernel.js'
 import { Todos, type TodoStore } from './core/todos.js'
-import { Views } from './core/views.js'
+import { Views } from './contract/index.js'
 import { TodoList } from './TodoList.js'
 import { Marketplace } from './Marketplace.js'
 

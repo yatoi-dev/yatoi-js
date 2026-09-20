@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Slot } from '@yatoyi/slots'
 import type { TodoStore } from './core/todos.js'
-import { useTodos } from './core/useTodos.js'
+import { useTodos } from './contract/index.js'
 
 export function TodoList({ todos }: { todos: TodoStore }) {
   const items = useTodos(todos)

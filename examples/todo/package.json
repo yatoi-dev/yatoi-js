@@ -5,7 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:remote": "VITE_PLUGIN_BASE=http://localhost:5174 vite",
     "build": "tsc -p tsconfig.json --noEmit && vite build",
+    "build:plugin": "vite build --config vite.plugin.config.ts",
+    "serve:plugin": "vite build --config vite.plugin.config.ts && vite preview --config vite.plugin.config.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "preview": "vite preview"
   },

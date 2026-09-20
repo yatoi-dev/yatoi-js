@@ -329,19 +329,63 @@ Keep the *description* of a plugin (data) separate from its *code*:
 
 ```json
 // public/plugins.json
-[{ "id": "calendar", "name": "Calendar", "version": "0.1.0", "description": "…" }]
+[{
+  "id": "calendar",
+  "name": "Calendar",
+  "version": "0.1.0",
+  "description": "…"
+}]
 ```
 
 ```ts
-// plugins/registry.ts — the activation map
-export const pluginModules: Record<string, () => Promise<{ default: AnyPlugin }>> = {
-  calendar: () => import('./calendar/index.js'),
+// the "loader": id → code. The default shape — bundled with the app, so
+// Vite code-splits this like any other dynamic import.
+const registry: Record<string, () => Promise<unknown>> = {
+  calendar: () => import('./plugins/calendar/index.js'),
 }
+
+const mod = await registry[entry.id]?.()
+if (typeof mod?.default?.name !== 'string' || typeof mod?.default?.setup !== 'function') {
+  throw new Error(`plugin "${entry.id}" has no valid default export`)
+}
+kernel.load(mod.default)
 ```
 
-The marketplace UI renders cards from the JSON alone. A manifest entry
-with no registry entry shows as unavailable — the shell can describe a
-plugin it can't run. That's the whole "loader" a v0.1 app needs.
+The marketplace UI renders cards from the JSON alone. An id the manifest
+describes but the registry doesn't list shows as unavailable — the shell
+can describe a plugin it can't run.
+
+**The same thing, with the code on another origin.** The registry doesn't
+have to hold code — it can resolve an id to a URL instead, and
+dynamic-`import()` that, the way a plugin from a CDN would be loaded:
+
+```ts
+const url = `${pluginBase}/${entry.id}.js`
+const mod = await import(/* @vite-ignore */ url)
+// same validation, same kernel.load(mod.default)
+```
+
+Now every id is attemptable, and a missing file is a load failure the UI
+can show without the app crashing, rather than "unavailable" — see
+`examples/todo`'s "Failed to load" card. Switching between the two is a
+deployment decision, not an app-logic one; `examples/todo`'s
+`src/marketplace/useMarketplace.ts` picks between them with one `if` keyed
+on an env var (`VITE_PLUGIN_BASE`), and the plugin's own source doesn't
+change either way. That's the whole "loader" a v0.1 app needs.
+
+**Bundling.** A plugin built to ship as a separate file can bundle its own
+copy of `@yatoyi/kernel`, `@yatoyi/slots`, and whatever contract it depends
+on — the kernel identifies services, collections and slots by a token's
+string `key`, not by object identity (`packages/kernel/src/token.ts`), so a
+second copy of the protocol still resolves the host's services and still
+contributes to the host's slots. The one thing that must **not** be
+bundled is React: externalize `react` and `react/jsx-runtime`, and share a
+single instance with the host via an import map. `examples/todo`'s chapter
+2 is built exactly this way — see `examples/todo/vite.plugin.config.ts`
+(`rollupOptions.external`) and `examples/todo/vite/react-import-map.ts`
+for the full mechanics, and
+[Pitfalls](pitfalls.md#share-react-not-yatoyi) for why. See the example's
+README for the runnable version of both forms.
 
 ## Observe the kernel directly
 

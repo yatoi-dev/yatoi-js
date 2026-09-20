@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import { definePlugin } from '@yatoyi/kernel'
 import { contribute, type SlotRendererProps } from '@yatoyi/slots'
-import { Todos, type Todo, type TodoStore } from '../../core/todos.js'
-import { useTodos } from '../../core/useTodos.js'
-import { Views } from '../../core/views.js'
+import { Todos, Views, useTodos, type Todo, type TodoStore } from '../../contract/index.js'
+import css from './calendar.css?inline'
 
 /**
  * The core `Todo` type never mentions `dueDate` — this plugin owns the
@@ -133,6 +132,17 @@ export default definePlugin({
   name: 'calendar',
   inject: [Todos],
   setup(scope) {
+    // Styles ship with the plugin, as a reversible effect: this plugin
+    // isn't just contributing UI into surfaces the host owns, it also owns
+    // its own CSS. Appending the <style> element and deferring its removal
+    // means uninstalling takes the styles with it the same way it takes
+    // the due-date field and the Calendar tab with it — no separate
+    // cleanup path to forget.
+    const style = document.createElement('style')
+    style.textContent = css
+    document.head.append(style)
+    scope.defer(() => style.remove())
+
     const todos = scope.get(Todos)
     // A genuine slot: UI injected into a row this plugin doesn't own.
     contribute(scope, 'todo.item.extra', makeDueDateField(todos))

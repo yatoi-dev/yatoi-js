@@ -6,6 +6,18 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "yatoyi-example-todo", "dev", "--", "--port", "5173"],
       "port": 5173
+    },
+    {
+      "name": "todo-example-remote",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "yatoyi-example-todo", "dev:remote", "--", "--port", "5173"],
+      "port": 5173
+    },
+    {
+      "name": "todo-plugin-cdn",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "yatoyi-example-todo", "serve:plugin"],
+      "port": 5174
     }
   ]
 }

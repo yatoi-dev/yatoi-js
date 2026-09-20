@@ -182,8 +182,11 @@ uses both and explains when each is the right shape.
 Contributions are JSON-serialisable data, separate from executable code.
 A shell can render a marketplace card for a plugin whose code has not
 loaded — or does not exist. In the example, `plugins.json` describes
-plugins and a tiny `id → import()` map activates them. That map is all
-the "loader" a v0.1 app needs; a `/loader` package is deliberately absent
+plugins by id; a separate registry (id → `import()`) supplies the code,
+`import()`-ed on install. That registry can resolve an id to a bundled
+module or, for a plugin shipped as a separately built ESM file, to a URL —
+loaded the way a plugin from a CDN would be. Either way that's all the
+"loader" a v0.1 app needs; a `/loader` package is deliberately absent
 until someone asks for it.
 
 ## The honest cost

@@ -1,5 +1,6 @@
 node_modules/
 dist/
+dist-plugin/
 *.tsbuildinfo
 coverage/
 .DS_Store

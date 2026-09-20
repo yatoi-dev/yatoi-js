@@ -1,28 +1,12 @@
-import { defineService, definePlugin } from '@yatoyi/kernel'
+import { definePlugin } from '@yatoyi/kernel'
+import { Todos, type Todo, type TodoStore } from '../contract/index.js'
 
-/**
- * The index signature is deliberate: plugins attach their own fields (the
- * calendar plugin adds `dueDate?: string`, 'YYYY-MM-DD') and this store
- * must round-trip them without knowing what they mean. See docs/design.md
- * "Manifest / activation split" — the core never imports the calendar.
- */
-export type Todo = {
-  id: string
-  title: string
-  done: boolean
-  createdAt: string
-} & Record<string, unknown>
-
-export interface TodoStore {
-  getAll(): readonly Todo[]
-  add(title: string): void
-  toggle(id: string): void
-  remove(id: string): void
-  patch(id: string, partial: Partial<Todo>): void
-  subscribe(listener: () => void): () => void
-}
-
-export const Todos = defineService<TodoStore>('todos')
+// The `Todos` token and the `Todo`/`TodoStore` types live in `../contract`
+// now — both the host (this file, the implementation) and any plugin
+// depend on that folder to agree on the shape without the plugin
+// importing this file. Re-exported here so the rest of the host can keep
+// importing them from `./core/todos.js`.
+export { Todos, type Todo, type TodoStore }
 
 const STORAGE_KEY = 'yatoyi-todo:todos'
 
