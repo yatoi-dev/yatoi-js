@@ -2,7 +2,7 @@
 
 A plugin kernel for React: reversible effects, key-based service discovery,
 and reactive dependency unload — implemented against React's scheduler
-rather than fighting it. See [CLAUDE.md](CLAUDE.md) for the full design
+rather than fighting it. See [AGENTS.md](AGENTS.md) for the full design
 brief and rationale.
 
 ## Packages
@@ -82,4 +82,4 @@ See its own README for what each part of the example demonstrates.
   `useSyncExternalStore`.
 
 Full rationale for both, plus the rest of the settled design decisions, is
-in [CLAUDE.md](CLAUDE.md).
+in [AGENTS.md](AGENTS.md).

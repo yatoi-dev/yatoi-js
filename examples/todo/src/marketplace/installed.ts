@@ -1,6 +1,6 @@
 /**
  * Which marketplace plugin ids the user has installed, persisted so a
- * reload re-installs them (CLAUDE.md doesn't ask the kernel to remember
+ * reload re-installs them (AGENTS.md doesn't ask the kernel to remember
  * this — installed-ness is app state, not kernel state).
  */
 const STORAGE_KEY = 'yatoyi-todo:installed'

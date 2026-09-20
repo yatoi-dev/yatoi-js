@@ -3,3 +3,8 @@ dist/
 *.tsbuildinfo
 coverage/
 .DS_Store
+
+# Per-machine agent tooling config. Conventions live in AGENTS.md instead.
+.claude/settings.json
+.claude/settings.local.json
+.claude/worktrees/

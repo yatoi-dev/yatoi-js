@@ -1,7 +1,7 @@
 import { createKernel } from '@yatoyi/kernel'
 
 // One kernel for the whole app, created at module scope — it outlives any
-// render tree. React only ever observes it (see CLAUDE.md "Kernel-scoped").
+// render tree. React only ever observes it (see AGENTS.md "Kernel-scoped").
 export const kernel = createKernel()
 
 kernel.on('error', (error, plugin) => {

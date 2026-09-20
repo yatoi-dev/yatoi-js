@@ -2,7 +2,7 @@
  * Tokens are real TypeScript values, so go-to-definition, rename, and
  * find-all-references work. The `key` string is runtime identity for
  * debugging and serialization only — it is never what you type at a call
- * site. See CLAUDE.md "Tokens are not bare strings".
+ * site. See AGENTS.md "Tokens are not bare strings".
  */
 
 declare const TYPE: unique symbol
