@@ -1,4 +1,4 @@
-import { defineCollection, type CollectionToken } from '@weft/kernel'
+import { defineCollection, type CollectionToken } from '@yatoyi/kernel'
 import type { SlotName, SlotRenderer } from './types.js'
 
 const tokens = new Map<string, CollectionToken<SlotRenderer<SlotName>>>()

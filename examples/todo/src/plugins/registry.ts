@@ -1,4 +1,4 @@
-import type { AnyPlugin } from '@weft/kernel'
+import type { AnyPlugin } from '@yatoyi/kernel'
 
 /**
  * The activation map: code, kept separate from the marketplace's manifest

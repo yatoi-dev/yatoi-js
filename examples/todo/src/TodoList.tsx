@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Slot } from '@weft/slots'
+import { Slot } from '@yatoyi/slots'
 import type { TodoStore } from './core/todos.js'
 import { useTodos } from './core/useTodos.js'
 

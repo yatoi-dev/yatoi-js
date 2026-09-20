@@ -5,7 +5,7 @@ import type { ComponentType, ReactNode } from 'react'
  * Keys are slot names; values are the props a contribution receives.
  *
  * ```ts
- * declare module '@weft/slots' {
+ * declare module '@yatoyi/slots' {
  *   interface Slots {
  *     'sidebar.item': { collapsed: boolean }
  *     'task.card': { task: Task }

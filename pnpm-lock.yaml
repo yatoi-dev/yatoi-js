@@ -38,13 +38,13 @@ importers:
 
   examples/todo:
     dependencies:
-      '@weft/kernel':
+      '@yatoyi/kernel':
         specifier: workspace:*
         version: link:../../packages/kernel
-      '@weft/react':
+      '@yatoyi/react':
         specifier: workspace:*
         version: link:../../packages/react
-      '@weft/slots':
+      '@yatoyi/slots':
         specifier: workspace:*
         version: link:../../packages/slots
       react:
@@ -74,7 +74,7 @@ importers:
 
   packages/react:
     dependencies:
-      '@weft/kernel':
+      '@yatoyi/kernel':
         specifier: workspace:*
         version: link:../kernel
       react:
@@ -83,10 +83,10 @@ importers:
 
   packages/slots:
     dependencies:
-      '@weft/kernel':
+      '@yatoyi/kernel':
         specifier: workspace:*
         version: link:../kernel
-      '@weft/react':
+      '@yatoyi/react':
         specifier: workspace:*
         version: link:../react
       react:

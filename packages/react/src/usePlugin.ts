@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import type { AnyPlugin } from '@weft/kernel'
+import type { AnyPlugin } from '@yatoyi/kernel'
 import { useKernel } from './context.js'
 
 /**

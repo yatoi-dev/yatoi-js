@@ -1,5 +1,5 @@
 {
-  "name": "weft-example-todo",
+  "name": "yatoyi-example-todo",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -10,9 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@weft/kernel": "workspace:*",
-    "@weft/react": "workspace:*",
-    "@weft/slots": "workspace:*",
+    "@yatoyi/kernel": "workspace:*",
+    "@yatoyi/react": "workspace:*",
+    "@yatoyi/slots": "workspace:*",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },

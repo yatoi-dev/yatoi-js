@@ -12,9 +12,9 @@ export default defineConfig({
       // Point at source for a smooth dev loop — no rebuild-the-library step.
       // `exports` in each package's package.json still points at `dist/`
       // for anyone consuming this repo as installed packages.
-      '@weft/kernel': src('kernel'),
-      '@weft/react': src('react'),
-      '@weft/slots': src('slots'),
+      '@yatoyi/kernel': src('kernel'),
+      '@yatoyi/react': src('react'),
+      '@yatoyi/slots': src('slots'),
     },
   },
 })

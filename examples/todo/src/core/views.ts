@@ -1,4 +1,4 @@
-import { defineCollection } from '@weft/kernel'
+import { defineCollection } from '@yatoyi/kernel'
 import type { ComponentType } from 'react'
 
 /**

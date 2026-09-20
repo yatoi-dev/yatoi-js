@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { KernelProvider, Requires, useContributions } from '@weft/react'
+import { KernelProvider, Requires, useContributions } from '@yatoyi/react'
 import { kernel } from './kernel.js'
 import { Todos, type TodoStore } from './core/todos.js'
 import { Views } from './core/views.js'
@@ -39,7 +39,7 @@ function Shell({ todos }: { todos: TodoStore }) {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>weft todo</h1>
+        <h1>yatoyi todo</h1>
         <nav className="app-nav">
           <button
             type="button"

@@ -6,9 +6,9 @@ const src = (pkg: string) =>
 
 // Source aliases so cross-package tests never depend on a prior build.
 const alias = {
-  '@weft/kernel': src('kernel'),
-  '@weft/react': src('react'),
-  '@weft/slots': src('slots'),
+  '@yatoyi/kernel': src('kernel'),
+  '@yatoyi/react': src('react'),
+  '@yatoyi/slots': src('slots'),
 }
 
 export default defineConfig({

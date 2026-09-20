@@ -49,18 +49,18 @@ export class ScopeImpl implements Scope<readonly AnyServiceToken[]> {
 
   provide<T>(token: ServiceToken<T>, value: T): void {
     if (!this.active) {
-      console.warn(`[weft] ${this.name}: provide(${token.key}) after scope disposed — ignored`)
+      console.warn(`[yatoyi] ${this.name}: provide(${token.key}) after scope disposed — ignored`)
       return
     }
     if (!this.provides.has(token.key)) {
       throw new Error(
-        `[weft] ${this.name}: provide(${token.key}) but "${token.key}" is not in this plugin's \`provides\``,
+        `[yatoyi] ${this.name}: provide(${token.key}) but "${token.key}" is not in this plugin's \`provides\``,
       )
     }
     const registry = this.host.registry
     const holder = registry.serviceOwner(token)
     if (holder !== undefined) {
-      throw new Error(`[weft] ${this.name}: "${token.key}" is already provided by "${holder}"`)
+      throw new Error(`[yatoyi] ${this.name}: "${token.key}" is already provided by "${holder}"`)
     }
     this.provided.add(token)
     registry.setService(token, value, this.name)
@@ -76,7 +76,7 @@ export class ScopeImpl implements Scope<readonly AnyServiceToken[]> {
 
   contribute<T>(collection: CollectionToken<T>, value: T, meta?: ContributionMeta): void {
     if (!this.active) {
-      console.warn(`[weft] ${this.name}: contribute(${collection.key}) after scope disposed — ignored`)
+      console.warn(`[yatoyi] ${this.name}: contribute(${collection.key}) after scope disposed — ignored`)
       return
     }
     this.disposers.push(this.host.registry.addContribution(collection, value, meta, this.name))
@@ -84,7 +84,7 @@ export class ScopeImpl implements Scope<readonly AnyServiceToken[]> {
 
   load(plugin: AnyPlugin): PluginHandle {
     if (!this.active) {
-      throw new Error(`[weft] ${this.name}: load(${plugin.name}) after scope disposed`)
+      throw new Error(`[yatoyi] ${this.name}: load(${plugin.name}) after scope disposed`)
     }
     return this.host.loadChild(this, plugin)
   }

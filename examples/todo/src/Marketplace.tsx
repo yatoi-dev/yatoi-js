@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import { useKernel } from '@weft/react'
+import { useKernel } from '@yatoyi/react'
 import {
   getLoadedPlugin,
   installPlugin,

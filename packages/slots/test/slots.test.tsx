@@ -1,8 +1,8 @@
 import { StrictMode, useEffect, type ReactNode } from 'react'
 import { act, render, screen } from '@testing-library/react'
 import { describe, expect, expectTypeOf, it, vi } from 'vitest'
-import { createKernel, definePlugin, defineService, type Kernel, type Scope } from '@weft/kernel'
-import { KernelProvider, Requires } from '@weft/react'
+import { createKernel, definePlugin, defineService, type Kernel, type Scope } from '@yatoyi/kernel'
+import { KernelProvider, Requires } from '@yatoyi/react'
 import { Slot, contribute, type SlotRendererProps } from '../src/index.js'
 
 // ── host declares its contract ─────────────────────────────────────

@@ -1,4 +1,4 @@
-import { defineService, definePlugin } from '@weft/kernel'
+import { defineService, definePlugin } from '@yatoyi/kernel'
 
 /**
  * The index signature is deliberate: plugins attach their own fields (the
@@ -24,7 +24,7 @@ export interface TodoStore {
 
 export const Todos = defineService<TodoStore>('todos')
 
-const STORAGE_KEY = 'weft-todo:todos'
+const STORAGE_KEY = 'yatoyi-todo:todos'
 
 function load(): Todo[] {
   try {

@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { definePlugin } from '@weft/kernel'
-import { contribute, type SlotRendererProps } from '@weft/slots'
+import { definePlugin } from '@yatoyi/kernel'
+import { contribute, type SlotRendererProps } from '@yatoyi/slots'
 import { Todos, type Todo, type TodoStore } from '../../core/todos.js'
 import { useTodos } from '../../core/useTodos.js'
 import { Views } from '../../core/views.js'

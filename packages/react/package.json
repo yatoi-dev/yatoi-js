@@ -1,7 +1,7 @@
 {
-  "name": "@weft/react",
+  "name": "@yatoyi/react",
   "version": "0.0.0",
-  "description": "React bridge for @weft/kernel: KernelProvider, useService, Requires, usePlugin.",
+  "description": "React bridge for @yatoyi/kernel: KernelProvider, useService, Requires, usePlugin.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
@@ -25,7 +25,7 @@
     "react": "^18.0.0 || ^19.0.0"
   },
   "dependencies": {
-    "@weft/kernel": "workspace:*"
+    "@yatoyi/kernel": "workspace:*"
   },
   "keywords": [
     "react",

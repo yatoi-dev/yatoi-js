@@ -1,7 +1,7 @@
-# weft todo example
+# yatoyi todo example
 
 A small todo app with an installable calendar plugin, built to exercise
-`@weft/kernel`, `@weft/react`, and `@weft/slots` end to end.
+`@yatoyi/kernel`, `@yatoyi/react`, and `@yatoyi/slots` end to end.
 
 ## Run it
 
@@ -9,12 +9,12 @@ From the repo root:
 
 ```bash
 pnpm install
-pnpm --filter weft-example-todo dev
+pnpm --filter yatoyi-example-todo dev
 ```
 
 Or from this directory: `pnpm dev` / `pnpm build` / `pnpm typecheck` / `pnpm preview`.
 
-In dev, `vite.config.ts` aliases the three `@weft/*` packages straight to
+In dev, `vite.config.ts` aliases the three `@yatoyi/*` packages straight to
 `packages/*/src/index.ts`, so there's no build-the-library step in the loop.
 `pnpm build` (root) builds the real `dist/` output the `exports` fields
 point at, for anyone consuming this repo as installed packages.

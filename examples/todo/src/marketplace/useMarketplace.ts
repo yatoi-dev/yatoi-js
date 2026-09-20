@@ -1,5 +1,5 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
-import type { AnyPlugin } from '@weft/kernel'
+import type { AnyPlugin } from '@yatoyi/kernel'
 import { kernel } from '../kernel.js'
 import { pluginModules } from '../plugins/registry.js'
 import { loadInstalled, saveInstalled } from './installed.js'

@@ -8,9 +8,9 @@
     "noEmit": true,
     "types": ["vite/client"],
     "paths": {
-      "@weft/kernel": ["../../packages/kernel/src/index.ts"],
-      "@weft/react": ["../../packages/react/src/index.ts"],
-      "@weft/slots": ["../../packages/slots/src/index.ts"]
+      "@yatoyi/kernel": ["../../packages/kernel/src/index.ts"],
+      "@yatoyi/react": ["../../packages/react/src/index.ts"],
+      "@yatoyi/slots": ["../../packages/slots/src/index.ts"]
     }
   },
   "include": ["src", "vite.config.ts"]

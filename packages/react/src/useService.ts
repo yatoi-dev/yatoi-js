@@ -1,5 +1,5 @@
 import { useCallback, useRef, useSyncExternalStore } from 'react'
-import type { ServiceState, ServiceToken } from '@weft/kernel'
+import type { ServiceState, ServiceToken } from '@yatoyi/kernel'
 import { useKernel } from './context.js'
 
 /**

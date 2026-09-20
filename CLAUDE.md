@@ -43,12 +43,18 @@ React already has reversible effects (`useEffect` cleanup), hierarchical DI
 
 ## Naming
 
-**Working name: `weft`** — the thread woven crosswise through the warp.
-React is the warp: fixed structural threads running the length of the
-fabric. Plugins are the weft, woven across, and you can pull one out without
-the warp collapsing. The metaphor keeps paying off when explaining slots.
+**Name: `yatoyi`** (renamed from `weft` on 2026-09-20). Scopes:
+`@yatoyi/kernel`, `@yatoyi/react`, `@yatoyi/slots`, `@yatoyi/loader`.
 
-Scopes cleanly: `@weft/kernel`, `@weft/react`, `@weft/slots`, `@weft/loader`.
+Availability at rename time: `yatoyi` and `@yatoyi/{kernel,react,slots}`
+all returned 404 on npm. GitHub org, domain, and trademark not yet checked
+— do that before the first publish.
+
+The weaving metaphor survives as explanatory vocabulary even though it is
+no longer the name: React is the *warp*, fixed structural threads running
+the length of the fabric; plugins are the *weft*, woven across, and you can
+pull one out without the warp collapsing. It keeps paying off when
+explaining slots.
 
 ### Naming rules
 
@@ -77,17 +83,17 @@ A name free on GitHub but taken on npm is a name we'll regret. Check all
 four surfaces in one pass:
 
 ```bash
-npm view weft           # bare package
-npm view @weft/kernel   # scope — the binding constraint, check this first
+npm view yatoyi           # bare package
+npm view @yatoyi/kernel   # scope — the binding constraint, check this first
 ```
 
 `npm view` exiting with `404` means available. Then confirm:
 
-- **npm org/scope** — `@weft` must be claimable. Given the layered design,
+- **npm org/scope** — `@yatoyi` must be claimable. Given the layered design,
   this matters more than the bare package name.
-- **GitHub org** — `github.com/weft` (an org, not a user repo, so packages
+- **GitHub org** — `github.com/yatoyi` (an org, not a user repo, so packages
   and docs can live together).
-- **Domain** — `weft.dev` or equivalent.
+- **Domain** — `yatoyi.dev` or equivalent.
 - **Trademark** — plain search in software/tech classes. Skipping this is
   how projects get renamed at 10k stars.
 
@@ -195,7 +201,7 @@ gives stored values React meaning.
 follows is the real surface; the rest of this sketch is still a target.
 
 ```ts
-import { createKernel, defineService, defineCollection, definePlugin } from '@weft/kernel'
+import { createKernel, defineService, defineCollection, definePlugin } from '@yatoyi/kernel'
 
 // A token is a real imported symbol, so go-to-definition works.
 const Clock = defineService<{ now(): number }>('clock')
@@ -300,7 +306,7 @@ Host declares the contract; augmentation is what lets third parties
 participate:
 
 ```ts
-declare module '@weft/slots' {
+declare module '@yatoyi/slots' {
   interface Slots {
     'sidebar.item': { collapsed: boolean }
     'task.card': { task: Task }
@@ -314,7 +320,7 @@ name onto a kernel collection — the kernel itself only ever sees
 `scope.contribute(collectionToken, opaqueValue, meta)`:
 
 ```tsx
-import { contribute } from '@weft/slots'
+import { contribute } from '@yatoyi/slots'
 
 contribute(scope, 'sidebar.item', ({ collapsed }) =>
   <ClockWidget compact={collapsed} />, { priority: 10 })

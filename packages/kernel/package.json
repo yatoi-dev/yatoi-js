@@ -1,5 +1,5 @@
 {
-  "name": "@weft/kernel",
+  "name": "@yatoyi/kernel",
   "version": "0.0.0",
   "description": "Plugin kernel: scoped reversible effects, typed service discovery, and cascade unload. No React, no DOM.",
   "license": "MIT",

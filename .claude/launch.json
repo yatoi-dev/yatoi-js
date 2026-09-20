@@ -4,7 +4,7 @@
     {
       "name": "todo-example",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "weft-example-todo", "dev", "--", "--port", "5173"],
+      "runtimeArgs": ["--filter", "yatoyi-example-todo", "dev", "--", "--port", "5173"],
       "port": 5173
     }
   ]
