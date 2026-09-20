@@ -1,0 +1,25 @@
+{
+  "name": "@weft/slots",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Typed contribution points for @weft/kernel: contribute() and <Slot>. (not yet implemented)",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --project slots --root ../.."
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "dependencies": {
+    "@weft/kernel": "workspace:*",
+    "@weft/react": "workspace:*"
+  }
+}
