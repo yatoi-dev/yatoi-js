@@ -6,17 +6,17 @@ read it before proposing architecture, not before fixing a typo.
 
 ## What this is
 
-**yatoyi** — a plugin kernel for React: reversible effects, typed service
+**yatoi** — a plugin kernel for React: reversible effects, typed service
 discovery, cascade unload. Three packages, layered; a React example app.
 v0.1 is implemented and tested. Not yet published.
 
 ## Layout
 
 ```
-packages/kernel/          @yatoyi/kernel   plugins, services, scope tree, cascade unload   no React, no DOM
-packages/react/           @yatoyi/react    KernelProvider, useService, <Requires>, usePlugin
-packages/slots/           @yatoyi/slots    contribute(), <Slot>, Slots augmentation
-examples/todo/            yatoyi-example-todo   Vite app: todo + installable calendar plugin,
+packages/kernel/          @yatoi/kernel   plugins, services, scope tree, cascade unload   no React, no DOM
+packages/react/           @yatoi/react    KernelProvider, useService, <Requires>, usePlugin
+packages/slots/           @yatoi/slots    contribute(), <Slot>, Slots augmentation
+examples/todo/            yatoi-example-todo   Vite app: todo + installable calendar plugin,
                            chapter 1 in one `pnpm dev`; chapter 2 delivers the same plugin as a
                            separately built file, opt-in (see examples/todo/README.md)
 docs/                     concepts, guide, pitfalls, architecture, design
@@ -35,13 +35,13 @@ pnpm test                                  # all packages
 pnpm test -- --project kernel              # one package: kernel | react | slots
 pnpm typecheck                             # every package, in parallel
 pnpm build                                 # tsc -b, topological
-pnpm --filter yatoyi-example-todo dev          # example on :5173 (also .claude/launch.json → todo-example)
-pnpm --filter yatoyi-example-todo dev:remote   # same app, calendar plugin loaded from :5174 instead of bundled
-pnpm --filter yatoyi-example-todo build        # tsc --noEmit && vite build
-pnpm --filter yatoyi-example-todo serve:plugin # builds + serves the calendar plugin on :5174 (also .claude/launch.json → todo-plugin-cdn)
+pnpm --filter yatoi-example-todo dev          # example on :5173 (also .claude/launch.json → todo-example)
+pnpm --filter yatoi-example-todo dev:remote   # same app, calendar plugin loaded from :5174 instead of bundled
+pnpm --filter yatoi-example-todo build        # tsc --noEmit && vite build
+pnpm --filter yatoi-example-todo serve:plugin # builds + serves the calendar plugin on :5174 (also .claude/launch.json → todo-plugin-cdn)
 ```
 
-Tests and the example alias `@yatoyi/*` to `packages/*/src`, so no build
+Tests and the example alias `@yatoi/*` to `packages/*/src`, so no build
 is needed in the inner loop. Typechecking `react`/`slots` goes through
 `tsc -b` with project references, so each builds `kernel` first itself.
 
@@ -56,7 +56,7 @@ app. See `examples/todo/README.md`.
 These are load-bearing. Don't relax them without changing
 [docs/design.md](docs/design.md) first.
 
-1. **`@yatoyi/kernel` has no DOM and no Node types.** Its `tsconfig.json`
+1. **`@yatoi/kernel` has no DOM and no Node types.** Its `tsconfig.json`
    sets `lib: ["ES2022"]`, `types: []`. `document`, `window`, `setTimeout`
    are compile errors there. `console` is declared minimally in
    `globals.d.ts`. Keep it that way.

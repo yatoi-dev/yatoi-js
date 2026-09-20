@@ -22,7 +22,7 @@ const root = (rel: string) => fileURLToPath(new URL(`../${rel}`, import.meta.url
  * "Invalid hook call".
  *
  * This plugin is the one piece of this whole example that is genuinely
- * about cross-bundle module sharing, not about yatoyi itself — which is
+ * about cross-bundle module sharing, not about yatoi itself — which is
  * why it only matters when plugins are loaded from another origin
  * (README chapter 2). It's harmless the rest of the time.
  */

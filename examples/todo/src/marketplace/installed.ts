@@ -3,7 +3,7 @@
  * reload re-installs them (docs/design.md doesn't ask the kernel to remember
  * this — installed-ness is app state, not kernel state).
  */
-const STORAGE_KEY = 'yatoyi-todo:installed'
+const STORAGE_KEY = 'yatoi-todo:installed'
 
 export function loadInstalled(): Set<string> {
   try {

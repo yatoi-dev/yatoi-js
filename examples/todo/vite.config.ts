@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { yatoyiAlias } from './vite/yatoyi-alias.js'
+import { yatoiAlias } from './vite/yatoi-alias.js'
 import { reactImportMap } from './vite/react-import-map.js'
 
 // `reactImportMap` only matters when plugins are loaded from another
@@ -9,6 +9,6 @@ import { reactImportMap } from './vite/react-import-map.js'
 export default defineConfig({
   plugins: [react(), reactImportMap()],
   resolve: {
-    alias: yatoyiAlias(),
+    alias: yatoiAlias(),
   },
 })

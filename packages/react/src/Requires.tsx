@@ -1,5 +1,5 @@
 import { useCallback, useRef, useSyncExternalStore, type ReactNode } from 'react'
-import type { AnyServiceToken, ServiceType } from '@yatoyi/kernel'
+import type { AnyServiceToken, ServiceType } from '@yatoi/kernel'
 import { useKernel } from './context.js'
 
 type Values<Tokens extends readonly AnyServiceToken[]> = {

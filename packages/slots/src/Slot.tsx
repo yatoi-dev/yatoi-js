@@ -1,6 +1,6 @@
 import { createElement, useMemo, type ComponentType, type ReactNode } from 'react'
-import type { Contribution } from '@yatoyi/kernel'
-import { useContributions } from '@yatoyi/react'
+import type { Contribution } from '@yatoi/kernel'
+import { useContributions } from '@yatoi/react'
 import { slot } from './token.js'
 import type { SlotName, SlotProps } from './types.js'
 

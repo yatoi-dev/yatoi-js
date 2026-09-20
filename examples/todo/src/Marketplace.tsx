@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import { useKernel } from '@yatoyi/react'
+import { useKernel } from '@yatoi/react'
 import { installPlugin, isAvailable, uninstallPlugin, useMarketplace } from './marketplace/useMarketplace.js'
 
 export function Marketplace() {

@@ -1,4 +1,4 @@
-import { definePlugin } from '@yatoyi/kernel'
+import { definePlugin } from '@yatoi/kernel'
 import { Todos, type Todo, type TodoStore } from '../contract/index.js'
 
 // The `Todos` token and the `Todo`/`TodoStore` types live in `../contract`
@@ -8,7 +8,7 @@ import { Todos, type Todo, type TodoStore } from '../contract/index.js'
 // importing them from `./core/todos.js`.
 export { Todos, type Todo, type TodoStore }
 
-const STORAGE_KEY = 'yatoyi-todo:todos'
+const STORAGE_KEY = 'yatoi-todo:todos'
 
 function load(): Todo[] {
   try {

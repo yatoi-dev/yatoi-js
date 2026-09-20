@@ -1,12 +1,12 @@
-# yatoyi todo example
+# yatoi todo example
 
 A small todo app with an installable calendar plugin, exercising
-`@yatoyi/kernel`, `@yatoyi/react`, and `@yatoyi/slots` end to end.
+`@yatoi/kernel`, `@yatoi/react`, and `@yatoi/slots` end to end.
 
 ## Run it
 
 ```bash
-pnpm --filter yatoyi-example-todo dev
+pnpm --filter yatoi-example-todo dev
 ```
 
 That's chapter 1 — the whole app, one server, on `:5173`. Chapter 2 below
@@ -88,10 +88,10 @@ Two terminals:
 
 ```bash
 # terminal 1 — builds the calendar plugin and serves dist-plugin/ on :5174 with CORS
-pnpm --filter yatoyi-example-todo serve:plugin
+pnpm --filter yatoi-example-todo serve:plugin
 
 # terminal 2 — the host, on :5173, resolving plugin ids against :5174 instead of the registry
-pnpm --filter yatoyi-example-todo dev:remote
+pnpm --filter yatoi-example-todo dev:remote
 ```
 
 ### What to look at
@@ -99,15 +99,15 @@ pnpm --filter yatoyi-example-todo dev:remote
 - **Network tab**: installing Calendar fetches `calendar.js` from
   `http://localhost:5174`, with a clean URL (no query string on a first,
   successful attempt).
-- That file carries its own tree-shaken copy of `@yatoyi/kernel`,
-  `@yatoyi/slots`, and the contract, and still interoperates with the
+- That file carries its own tree-shaken copy of `@yatoi/kernel`,
+  `@yatoi/slots`, and the contract, and still interoperates with the
   host's kernel by token key, not by shared module instance — see
   `packages/kernel/test/kernel.test.ts` block 11 and
   `packages/slots/test/slots.test.tsx` "cross-bundle interop" for the same
   guarantee, tested directly.
 - **React is the one thing that *is* shared**, via a native import map —
   see `vite/react-import-map.ts` and
-  [Pitfalls](../../docs/pitfalls.md#share-react-not-yatoyi) for why a
+  [Pitfalls](../../docs/pitfalls.md#share-react-not-yatoi) for why a
   second React instance breaks hooks.
 - **Tags** shows "Failed to load" here (chapter 1 shows "Unavailable" for
   it) — there's no `tags.js` on `:5174`, and in remote mode every manifest

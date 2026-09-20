@@ -1,4 +1,4 @@
-import { defineCollection } from '@yatoyi/kernel'
+import { defineCollection } from '@yatoi/kernel'
 import type { ComponentType } from 'react'
 
 /**

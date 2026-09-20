@@ -581,9 +581,9 @@ describe('10. collections', () => {
 })
 
 // Identity is by `.key`, not by token object, because registry lookups
-// (`services.has(token.key)`, cascade matching, `@yatoyi/slots`'
+// (`services.has(token.key)`, cascade matching, `@yatoi/slots`'
 // `slot:${name}`) all compare strings. This is what lets a plugin bundle
-// delivered from a CDN — carrying its own copy of `@yatoyi/kernel` and its
+// delivered from a CDN — carrying its own copy of `@yatoi/kernel` and its
 // own token objects — interoperate with the host's kernel: two independently
 // created tokens with the same key name the same capability.
 describe('11. identity is by key, not by token object', () => {

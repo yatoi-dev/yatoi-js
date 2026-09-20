@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { yatoyiAlias } from './vite/yatoyi-alias.js'
+import { yatoiAlias } from './vite/yatoi-alias.js'
 
 /**
  * Chapter 2 of the README: builds the calendar plugin to a single,
@@ -13,7 +13,7 @@ import { yatoyiAlias } from './vite/yatoyi-alias.js'
 export default defineConfig({
   plugins: [react()],
   resolve: {
-    alias: yatoyiAlias(),
+    alias: yatoiAlias(),
   },
   // The host's public/ (plugins.json etc.) is not part of the plugin bundle.
   publicDir: false,
@@ -28,7 +28,7 @@ export default defineConfig({
     rollupOptions: {
       // React is the ONLY thing this bundle externalizes. The host shares
       // one React instance with every plugin it loads by URL via an import
-      // map (see vite/react-import-map.ts). @yatoyi/kernel, @yatoyi/slots,
+      // map (see vite/react-import-map.ts). @yatoi/kernel, @yatoi/slots,
       // and the contract (src/contract) are bundled in on purpose, not
       // left external. A token's identity is its string `key`
       // (packages/kernel/src/token.ts), not the object `defineService` /

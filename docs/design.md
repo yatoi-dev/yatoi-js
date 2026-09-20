@@ -1,6 +1,6 @@
 # Design Brief
 
-What yatoyi is, what it is not, and why each decision went the way it
+What yatoi is, what it is not, and why each decision went the way it
 did. This is the decision record; the mechanics are in
 [architecture.md](architecture.md), and day-to-day repo instructions are in
 [AGENTS.md](../AGENTS.md). If the implementation argues for a different
@@ -48,18 +48,19 @@ React already has reversible effects (`useEffect` cleanup), hierarchical DI
 
 ## Naming
 
-**Name: `yatoyi`** (renamed from `weft` on 2026-09-20). Scopes:
-`@yatoyi/kernel`, `@yatoyi/react`, `@yatoyi/slots`, `@yatoyi/loader`.
+**Name: `yatoi`** — the loose tenon in Japanese joinery: a separate piece
+belonging to neither board, cut to fit slots in both, carrying load
+without being glued in place, so the joint comes apart without damaging
+either side. (Literally, a hired hand.) The README carries the full
+metaphor; it's the one we explain slots and cascade unload with.
 
-Availability at rename time: `yatoyi` and `@yatoyi/{kernel,react,slots}`
-all returned 404 on npm. GitHub org, domain, and trademark not yet checked
-— do that before the first publish.
+History: `weft` → `yatoyi` (2026-09-20, a misspelling) → `yatoi` (same
+day). Scopes: `@yatoi/kernel`, `@yatoi/react`, `@yatoi/slots`,
+`@yatoi/loader`.
 
-The weaving metaphor survives as explanatory vocabulary even though it is
-no longer the name: React is the *warp*, fixed structural threads running
-the length of the fabric; plugins are the *weft*, woven across, and you can
-pull one out without the warp collapsing. It keeps paying off when
-explaining slots.
+Availability at rename time: `yatoi` and `@yatoi/{kernel,react,slots}`
+all 404 on the npm registry. GitHub org, domain, and trademark not yet
+checked — do that before the first publish.
 
 ### Naming rules
 
@@ -88,17 +89,17 @@ A name free on GitHub but taken on npm is a name we'll regret. Check all
 four surfaces in one pass:
 
 ```bash
-npm view yatoyi           # bare package
-npm view @yatoyi/kernel   # scope — the binding constraint, check this first
+npm view yatoi           # bare package
+npm view @yatoi/kernel   # scope — the binding constraint, check this first
 ```
 
 `npm view` exiting with `404` means available. Then confirm:
 
-- **npm org/scope** — `@yatoyi` must be claimable. Given the layered design,
+- **npm org/scope** — `@yatoi` must be claimable. Given the layered design,
   this matters more than the bare package name.
-- **GitHub org** — `github.com/yatoyi` (an org, not a user repo, so packages
+- **GitHub org** — `github.com/yatoi` (an org, not a user repo, so packages
   and docs can live together).
-- **Domain** — `yatoyi.dev` or equivalent.
+- **Domain** — `yatoi.dev` or equivalent.
 - **Trademark** — plain search in software/tech classes. Skipping this is
   how projects get renamed at 10k stars.
 
@@ -206,7 +207,7 @@ gives stored values React meaning.
 follows is the real surface; the rest of this sketch is still a target.
 
 ```ts
-import { createKernel, defineService, defineCollection, definePlugin } from '@yatoyi/kernel'
+import { createKernel, defineService, defineCollection, definePlugin } from '@yatoi/kernel'
 
 // A token is a real imported symbol, so go-to-definition works.
 const Clock = defineService<{ now(): number }>('clock')
@@ -317,7 +318,7 @@ Host declares the contract; augmentation is what lets third parties
 participate:
 
 ```ts
-declare module '@yatoyi/slots' {
+declare module '@yatoi/slots' {
   interface Slots {
     'sidebar.item': { collapsed: boolean }
     'task.card': { task: Task }
@@ -331,7 +332,7 @@ name onto a kernel collection — the kernel itself only ever sees
 `scope.contribute(collectionToken, opaqueValue, meta)`:
 
 ```tsx
-import { contribute } from '@yatoyi/slots'
+import { contribute } from '@yatoi/slots'
 
 contribute(scope, 'sidebar.item', ({ collapsed }) =>
   <ClockWidget compact={collapsed} />, { priority: 10 })

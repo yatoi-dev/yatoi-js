@@ -1,4 +1,4 @@
-import type { ContributionMode, Scope } from '@yatoyi/kernel'
+import type { ContributionMode, Scope } from '@yatoi/kernel'
 import { slot } from './token.js'
 import type { SlotName, SlotRenderer } from './types.js'
 

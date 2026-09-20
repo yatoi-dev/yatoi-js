@@ -12,7 +12,7 @@
  * a single `contribute()`.
  *
  * A plugin may bundle its own copy of this contract (and of
- * `@yatoyi/kernel` and `@yatoyi/slots`) instead of taking a runtime
+ * `@yatoi/kernel` and `@yatoi/slots`) instead of taking a runtime
  * dependency on the host's copies — see packages/kernel/src/token.ts: a
  * token's identity is its string `key`, not the object
  * `defineService`/`defineCollection` returned, so two independently

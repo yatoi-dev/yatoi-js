@@ -1,5 +1,5 @@
 import { createContext, useContext, type ReactNode } from 'react'
-import type { Kernel } from '@yatoyi/kernel'
+import type { Kernel } from '@yatoi/kernel'
 
 const KernelContext = createContext<Kernel | null>(null)
 
@@ -20,7 +20,7 @@ export function KernelProvider({ kernel, children }: KernelProviderProps) {
 export function useKernel(): Kernel {
   const kernel = useContext(KernelContext)
   if (!kernel) {
-    throw new Error('[yatoyi] useKernel: no <KernelProvider> above this component')
+    throw new Error('[yatoi] useKernel: no <KernelProvider> above this component')
   }
   return kernel
 }

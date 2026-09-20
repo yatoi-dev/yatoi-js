@@ -1,5 +1,5 @@
 {
-  "name": "yatoyi-example-todo",
+  "name": "yatoi-example-todo",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -13,9 +13,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@yatoyi/kernel": "workspace:*",
-    "@yatoyi/react": "workspace:*",
-    "@yatoyi/slots": "workspace:*",
+    "@yatoi/kernel": "workspace:*",
+    "@yatoi/react": "workspace:*",
+    "@yatoi/slots": "workspace:*",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },

@@ -1,4 +1,4 @@
-import type { AnyPlugin } from '@yatoyi/kernel'
+import type { AnyPlugin } from '@yatoi/kernel'
 
 /**
  * The code side of the manifest (`public/plugins.json` is the data side —

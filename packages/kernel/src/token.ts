@@ -51,9 +51,9 @@ export function defineCollection<T>(key: string): CollectionToken<T> {
  * - **Registry interface** — augment this interface (or `Collections`) and
  *   call `service`/`collection`. For a third-party plugin that cannot take a
  *   dependency on the host's contract package: the host publishes only
- *   types, e.g. `declare module '@yatoyi/kernel' { interface Services {
+ *   types, e.g. `declare module '@yatoi/kernel' { interface Services {
  *   todos: TodoStore } }`, and the plugin calls `service('todos')` with no
- *   import beyond `@yatoyi/kernel` itself.
+ *   import beyond `@yatoi/kernel` itself.
  */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface Services {}

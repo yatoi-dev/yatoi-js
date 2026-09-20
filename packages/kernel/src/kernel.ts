@@ -146,7 +146,7 @@ class KernelImpl implements Kernel, ScopeHost {
 
   reportError(error: unknown, plugin: AnyPlugin): void {
     if (this.errorListeners.size === 0) {
-      console.error(`[yatoyi] error in plugin "${plugin.name}":`, error)
+      console.error(`[yatoi] error in plugin "${plugin.name}":`, error)
       return
     }
     for (const listener of [...this.errorListeners]) listener(error, plugin)
@@ -173,7 +173,7 @@ class KernelImpl implements Kernel, ScopeHost {
         let passes = 0
         while (this.needsPass) {
           if (++passes > MAX_PASSES) {
-            throw new Error('[yatoyi] plugin graph did not converge — a setup is likely mutating the kernel in a loop')
+            throw new Error('[yatoi] plugin graph did not converge — a setup is likely mutating the kernel in a loop')
           }
           this.needsPass = false
           this.pass()
@@ -237,7 +237,7 @@ class KernelImpl implements Kernel, ScopeHost {
 
   private register(plugin: AnyPlugin, parent: ScopeImpl | null): PluginHandle {
     if (this.records.some((r) => r.registered && r.parent === parent && r.plugin === plugin)) {
-      throw new Error(`[yatoyi] plugin "${plugin.name}" is already loaded${parent ? ` in "${parent.name}"` : ''}`)
+      throw new Error(`[yatoi] plugin "${plugin.name}" is already loaded${parent ? ` in "${parent.name}"` : ''}`)
     }
     const rec: PluginRecord = {
       plugin,

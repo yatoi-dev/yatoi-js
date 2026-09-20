@@ -1,8 +1,8 @@
 import { StrictMode, useEffect, type ReactNode } from 'react'
 import { act, render, screen } from '@testing-library/react'
 import { describe, expect, expectTypeOf, it, vi } from 'vitest'
-import { createKernel, defineCollection, definePlugin, defineService, type Kernel, type Scope } from '@yatoyi/kernel'
-import { KernelProvider, Requires } from '@yatoyi/react'
+import { createKernel, defineCollection, definePlugin, defineService, type Kernel, type Scope } from '@yatoi/kernel'
+import { KernelProvider, Requires } from '@yatoi/react'
 import { Slot, contribute, type SlotRenderer, type SlotRendererProps } from '../src/index.js'
 
 // ── host declares its contract ─────────────────────────────────────
@@ -214,9 +214,9 @@ describe('<Slot mode="single">', () => {
 })
 
 describe('cross-bundle interop', () => {
-  it('a contribution made through a hand-built collection token (a second @yatoyi/slots copy) shows up in <Slot>', () => {
+  it('a contribution made through a hand-built collection token (a second @yatoi/slots copy) shows up in <Slot>', () => {
     // `slot(name)` is just `defineCollection('slot:' + name)`; a plugin
-    // bundled with its own copy of @yatoyi/slots reaches the same
+    // bundled with its own copy of @yatoi/slots reaches the same
     // collection by building that key itself, with no shared object.
     const kernel = createKernel()
     const foreignToken = defineCollection<SlotRenderer<'sidebar.item'>>('slot:sidebar.item')

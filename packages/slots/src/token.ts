@@ -1,4 +1,4 @@
-import { defineCollection, type CollectionToken } from '@yatoyi/kernel'
+import { defineCollection, type CollectionToken } from '@yatoi/kernel'
 import type { SlotName, SlotRenderer } from './types.js'
 
 const tokens = new Map<string, CollectionToken<SlotRenderer<SlotName>>>()
@@ -10,7 +10,7 @@ const tokens = new Map<string, CollectionToken<SlotRenderer<SlotName>>>()
  * they are React components.
  *
  * The `slot:${name}` key format is a stable contract, not an implementation
- * detail: a plugin bundling its own copy of `@yatoyi/slots` reaches the same
+ * detail: a plugin bundling its own copy of `@yatoi/slots` reaches the same
  * collection by building that key itself, so cross-bundle interop depends
  * on this format never changing.
  */

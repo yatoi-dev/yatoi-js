@@ -107,7 +107,7 @@ on a different cache key.
 If you need a console handle for debugging, expose the kernel yourself
 (`window.__kernel = kernel` in dev) — or better, use the UI you built.
 
-## Share React, not @yatoyi
+## Share React, not @yatoi
 
 A plugin loaded from a URL (`docs/guide.md` "Load plugins from a
 manifest") runs in a bundle built independently of the host. It **must**
@@ -124,7 +124,7 @@ statically expand a re-export of a CommonJS module for a consumer outside
 its own build — the shim has to name its exports explicitly, not
 `export * from 'react'`).
 
-The plugin does **not** need to externalize `@yatoyi/kernel`, `@yatoyi/slots`,
+The plugin does **not** need to externalize `@yatoi/kernel`, `@yatoi/slots`,
 or its contract package — it may bundle its own copies of all three. A
 service, collection, or slot's identity is its string `key`
 (`packages/kernel/src/token.ts`), and `/slots`' slot names are just
@@ -136,7 +136,7 @@ everything else" the right split, not an arbitrary one.
 
 ## Slot props are the *host's* contract
 
-`declare module '@yatoyi/slots' { interface Slots { … } }` must be in the
+`declare module '@yatoi/slots' { interface Slots { … } }` must be in the
 program for both the host and every plugin that contributes — import the
 file from your entry point. If a plugin sees an empty `Slots`, every slot
 name is a type error, which is the correct failure but a confusing one.

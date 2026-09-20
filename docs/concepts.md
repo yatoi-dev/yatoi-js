@@ -1,13 +1,13 @@
 # Concepts
 
-The mental model behind yatoyi, in one sitting. Read this before the
+The mental model behind yatoi, in one sitting. Read this before the
 [guide](guide.md); read [architecture](architecture.md) if you want to
 change the library rather than use it.
 
 ## The one-paragraph version
 
 React gives you reversible effects (`useEffect` cleanup), hierarchical DI
-(context), and dynamic code delivery (`lazy`). yatoyi adds the three things
+(context), and dynamic code delivery (`lazy`). yatoi adds the three things
 it lacks for a plugin-based app: **a composition unit that isn't a
 render-tree node** (a plugin), **capability-level lifecycle** (a subtree
 that cannot exist without a service unmounts when the service goes away),
@@ -18,9 +18,9 @@ a thin React binding that only ever *observes* the kernel.
 ## Three layers
 
 ```
-@yatoyi/slots    typed contribution points, <Slot>        React
-@yatoyi/react    KernelProvider, useService, <Requires>   React
-@yatoyi/kernel   plugins, services, cascade unload        no React, no DOM
+@yatoi/slots    typed contribution points, <Slot>        React
+@yatoi/react    KernelProvider, useService, <Requires>   React
+@yatoi/kernel   plugins, services, cascade unload        no React, no DOM
 ```
 
 You stop at the layer you need. A shell developer drives the kernel from
@@ -47,7 +47,7 @@ There are two kinds:
   Contributed to by any number of plugins. Slots are built on collections.
 
 The kernel stores values opaquely. It never knows a value is a React
-component; `@yatoyi/slots` is what gives a stored value React meaning.
+component; `@yatoi/slots` is what gives a stored value React meaning.
 
 Tokens like `Clock` above are the documented default. There is a second
 form, `service(key)`/`collection(key)`, for a plugin that can't depend on
@@ -153,7 +153,7 @@ with a props contract; plugins **contribute** renderers; the host renders
 
 ```tsx
 // host
-declare module '@yatoyi/slots' {
+declare module '@yatoi/slots' {
   interface Slots { 'todo.item.extra': { todo: Todo } }
 }
 <Slot name="todo.item.extra" todo={todo} />

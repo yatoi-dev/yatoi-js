@@ -1,5 +1,5 @@
 import { useCallback, useSyncExternalStore } from 'react'
-import type { CollectionToken, Contribution } from '@yatoyi/kernel'
+import type { CollectionToken, Contribution } from '@yatoi/kernel'
 import { useKernel } from './context.js'
 
 /**

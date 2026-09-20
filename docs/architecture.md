@@ -189,7 +189,7 @@ use this instead of timers.
 
 ## React binding
 
-Everything in `@yatoyi/react` is `useSyncExternalStore(kernel.subscribe,
+Everything in `@yatoi/react` is `useSyncExternalStore(kernel.subscribe,
 read, read)` with a carefully chosen `read`:
 
 - `useService`: `read = () => kernel.get(token)`. Snapshot identity is the
@@ -211,12 +211,12 @@ lies is worse than none. The rule is documented instead.
 
 ## Slots
 
-`@yatoyi/slots` is thin on purpose:
+`@yatoi/slots` is thin on purpose:
 
 - `token.ts`: `slot(name)` memoises one `CollectionToken<SlotRenderer>`
   per name. The kernel sees an ordinary collection. The `slot:${name}` key
   format is stable for cross-bundle interop — a plugin carrying its own
-  copy of `@yatoyi/slots` reaches the same collection by key alone.
+  copy of `@yatoi/slots` reaches the same collection by key alone.
 - `contribute.ts`: a typed wrapper over `scope.contribute(slot(name), …)`.
   All the type-checking of props against `Slots[name]` happens here.
 - `Slot.tsx`: the public `Slot` is a typed *signature* over an untyped

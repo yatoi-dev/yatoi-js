@@ -7,10 +7,10 @@ in doubt, those are the compiled truth.
 ## Install
 
 ```bash
-pnpm add @yatoyi/kernel @yatoyi/react @yatoyi/slots
+pnpm add @yatoi/kernel @yatoi/react @yatoi/slots
 ```
 
-`@yatoyi/kernel` has no dependencies. The other two peer-depend on
+`@yatoi/kernel` has no dependencies. The other two peer-depend on
 `react ^18 || ^19`.
 
 ## Create a kernel
@@ -19,7 +19,7 @@ One per app, at module scope, outside any component:
 
 ```ts
 // kernel.ts
-import { createKernel } from '@yatoyi/kernel'
+import { createKernel } from '@yatoi/kernel'
 
 export const kernel = createKernel()
 
@@ -43,7 +43,7 @@ it where both provider and consumers can import it — a `services.ts`, or
 the package that owns the concept:
 
 ```ts
-import { defineService } from '@yatoyi/kernel'
+import { defineService } from '@yatoi/kernel'
 
 export interface TodoStore {
   getAll(): readonly Todo[]
@@ -64,10 +64,10 @@ instead of importing a token; identity is by key, so it resolves the same
 capability:
 
 ```ts
-import { service } from '@yatoyi/kernel'
+import { service } from '@yatoi/kernel'
 import type { TodoStore } from '@todo-app/types'
 
-declare module '@yatoyi/kernel' {
+declare module '@yatoi/kernel' {
   interface Services {
     todos: TodoStore
   }
@@ -78,7 +78,7 @@ const todos = service('todos') // ServiceToken<TodoStore>
 ## Write a plugin that provides a service
 
 ```ts
-import { definePlugin } from '@yatoyi/kernel'
+import { definePlugin } from '@yatoi/kernel'
 
 export const todosPlugin = definePlugin({
   name: 'todos',
@@ -228,7 +228,7 @@ this stays cheap.
 // slots.ts — import this from your entry point so the augmentation is in the program
 import type { Todo } from './core/todos'
 
-declare module '@yatoyi/slots' {
+declare module '@yatoi/slots' {
   interface Slots {
     'todo.item.extra': { todo: Todo }
     'task.card': { task: Task }
@@ -253,7 +253,7 @@ contribution:
 ## Contribute to a slot (plugin side)
 
 ```tsx
-import { contribute } from '@yatoyi/slots'
+import { contribute } from '@yatoi/slots'
 
 setup(scope) {
   const todos = scope.get(Todos)
@@ -374,7 +374,7 @@ on an env var (`VITE_PLUGIN_BASE`), and the plugin's own source doesn't
 change either way. That's the whole "loader" a v0.1 app needs.
 
 **Bundling.** A plugin built to ship as a separate file can bundle its own
-copy of `@yatoyi/kernel`, `@yatoyi/slots`, and whatever contract it depends
+copy of `@yatoi/kernel`, `@yatoi/slots`, and whatever contract it depends
 on — the kernel identifies services, collections and slots by a token's
 string `key`, not by object identity (`packages/kernel/src/token.ts`), so a
 second copy of the protocol still resolves the host's services and still
@@ -384,7 +384,7 @@ single instance with the host via an import map. `examples/todo`'s chapter
 2 is built exactly this way — see `examples/todo/vite.plugin.config.ts`
 (`rollupOptions.external`) and `examples/todo/vite/react-import-map.ts`
 for the full mechanics, and
-[Pitfalls](pitfalls.md#share-react-not-yatoyi) for why. See the example's
+[Pitfalls](pitfalls.md#share-react-not-yatoi) for why. See the example's
 README for the runnable version of both forms.
 
 ## Observe the kernel directly

@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import type { AnyPlugin } from '@yatoyi/kernel'
+import type { AnyPlugin } from '@yatoi/kernel'
 import { kernel } from '../kernel.js'
 import { registry } from '../plugins/registry.js'
 import { loadInstalled, saveInstalled } from './installed.js'

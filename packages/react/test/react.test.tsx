@@ -5,7 +5,7 @@
 import { StrictMode, useEffect, startTransition, type ReactNode } from 'react'
 import { act, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
-import { createKernel, definePlugin, defineService, type Kernel } from '@yatoyi/kernel'
+import { createKernel, definePlugin, defineService, type Kernel } from '@yatoi/kernel'
 import {
   KernelProvider,
   Requires,

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { KernelProvider, Requires, useContributions } from '@yatoyi/react'
+import { KernelProvider, Requires, useContributions } from '@yatoi/react'
 import { kernel } from './kernel.js'
 import { Todos, type TodoStore } from './core/todos.js'
 import { Views } from './contract/index.js'
@@ -39,7 +39,7 @@ function Shell({ todos }: { todos: TodoStore }) {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>yatoyi todo</h1>
+        <h1>yatoi todo</h1>
         <nav className="app-nav">
           <button
             type="button"

@@ -1,4 +1,4 @@
-import { defineService } from '@yatoyi/kernel'
+import { defineService } from '@yatoi/kernel'
 
 /**
  * The index signature is deliberate: plugins attach their own fields (the
