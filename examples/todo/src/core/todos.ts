@@ -3,7 +3,7 @@ import { defineService, definePlugin } from '@yatoyi/kernel'
 /**
  * The index signature is deliberate: plugins attach their own fields (the
  * calendar plugin adds `dueDate?: string`, 'YYYY-MM-DD') and this store
- * must round-trip them without knowing what they mean. See AGENTS.md
+ * must round-trip them without knowing what they mean. See docs/design.md
  * "Manifest / activation split" — the core never imports the calendar.
  */
 export type Todo = {
@@ -95,7 +95,7 @@ function createTodoStore(): TodoStore {
 /**
  * Kernel-scoped: the store outlives every render tree and is never itself
  * a component. This is the composition unit React has no home for (see
- * AGENTS.md "A composition unit that isn't a render-tree node").
+ * docs/design.md "A composition unit that isn't a render-tree node").
  */
 export const todosPlugin = definePlugin({
   name: 'todos',

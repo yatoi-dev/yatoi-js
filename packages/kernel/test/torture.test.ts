@@ -1,5 +1,5 @@
 /**
- * The deliberately nasty case from AGENTS.md: a service unloads while
+ * The deliberately nasty case from docs/design.md: a service unloads while
  * three dependents are mid-async setup. Nothing may leak, nothing may
  * double-run, and observers must never see an intermediate "present".
  */

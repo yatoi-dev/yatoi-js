@@ -2,7 +2,7 @@ import type { Todo } from './core/todos.js'
 
 /**
  * The host's contribution contract. Declaration-merged into `@yatoyi/slots`'
- * empty `Slots` interface (AGENTS.md "Declaration-merged registry
+ * empty `Slots` interface (docs/design.md "Declaration-merged registry
  * interface") — third parties augment this without the app shipping them a
  * token. Must be imported somewhere reachable from `main.tsx` so the merge
  * is part of the program before any `<Slot>` or `contribute()` type-checks.
