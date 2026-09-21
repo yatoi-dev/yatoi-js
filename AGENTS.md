@@ -19,7 +19,7 @@ packages/slots/           @yatoi/slots    contribute(), <Slot>, Slots augmentati
 examples/todo/            yatoi-example-todo   Vite app: todo + installable calendar plugin,
                            chapter 1 in one `pnpm dev`; chapter 2 delivers the same plugin as a
                            separately built file, opt-in (see examples/todo/README.md)
-docs/                     concepts, guide, pitfalls, architecture, design
+docs/                     concepts, guide, pitfalls, architecture, design, spec
 ```
 
 Each package: `src/` (source), `test/` (vitest), `tsconfig.json`
@@ -82,6 +82,8 @@ These are load-bearing. Don't relax them without changing
 Same commit, every time:
 
 - Update `docs/guide.md` (usage) and the API sketch in `docs/design.md`.
+- If the change alters *behaviour* (not just surface), update
+  `docs/spec.md` first — it is normative; the tests follow it.
 - Add or update a test. Kernel tests in Node; React tests under StrictMode.
 - If the change affects how plugins are written, check
   `examples/todo` still typechecks and builds.
@@ -116,7 +118,7 @@ passing; it encodes the sync-facade guarantee.
 | How do I use X | [docs/guide.md](docs/guide.md) |
 | Known footguns | [docs/pitfalls.md](docs/pitfalls.md) |
 | Real usage, end to end | [examples/todo](examples/todo/README.md) |
-| What the kernel guarantees | `packages/kernel/test/kernel.test.ts` (ten numbered semantics) and `torture.test.ts` |
+| What the kernel guarantees | [docs/spec.md](docs/spec.md) (normative), pinned by `packages/kernel/test/kernel.test.ts` (numbered semantics) and `torture.test.ts` |
 | Slot resolution semantics | `packages/slots/test/slots.test.tsx` |
 
 ## Known gaps (don't be surprised)

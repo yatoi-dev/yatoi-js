@@ -1,8 +1,9 @@
 # Architecture
 
 For people changing the library. The *decisions* and their rationale live
-in [design.md](design.md); this document is the map of how the code
-implements them. File references are to `packages/*/src`.
+in [design.md](design.md); the language-neutral *contract* is
+[spec.md](spec.md); this document is the map of how the TypeScript code
+implements both. File references are to `packages/*/src`.
 
 ## Layering and the no-DOM constraint
 

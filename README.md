@@ -211,6 +211,9 @@ collections.
 design; read before changing the library.
 - [Design brief](docs/design.md) — what we're building, what we're not,
 and why each decision went the way it did.
+- [Protocol spec](docs/spec.md) — the language-neutral contract a kernel
+and binding must satisfy; what a port to another language is built
+against.
 - [Example app](examples/todo/README.md) — todo + an installable calendar
 plugin, exercising all three packages end to end; chapter 2 loads the
 plugin from another origin.

@@ -131,6 +131,13 @@ commitment. **Do not merge these.**
 load-bearing — it keeps the protocol honest and makes a server-side or
 worker-side kernel possible later.
 
+"Framework-agnostic" here means agnostic within JavaScript: a Solid or
+Vue binding reuses `@yatoi/kernel` unchanged. A different language
+(Dart for Flutter, say) is a second *implementation* of the protocol,
+not a binding — which is why the protocol is written down separately
+in [spec.md](spec.md), and why the kernel's test suite is organised as
+numbered semantics that the spec cites.
+
 ---
 
 ## Settled design decisions
