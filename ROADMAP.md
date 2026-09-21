@@ -180,3 +180,6 @@ Kept briefly so the history is visible without reading git log.
   contract (`Slots`, `SlotName`, `SlotProps`, `slot()`), with
   `@yatoi/react-slots` and `@yatoi/vue-slots` as thin bindings over it. A
   host declares `Slots` once and both bindings type-check against it.
+- External review (2026-09-21): error-listener isolation, failed-plugin
+  restart gating, Vue prop reactivity for `Requires`/`Slot` — fixed with
+  regression tests.

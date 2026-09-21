@@ -1,4 +1,4 @@
-import { defineComponent, onScopeDispose, shallowRef, type PropType, type VNode } from 'vue'
+import { defineComponent, onScopeDispose, shallowRef, watch, type PropType, type VNode } from 'vue'
 import type { AnyServiceToken, ServiceType } from '@yatoi/kernel'
 import { useKernel } from './context.js'
 
@@ -51,6 +51,33 @@ const RequiresImpl = defineComponent({
       if (next !== values.value) values.value = next
     })
     onScopeDispose(unsubscribe)
+
+    // §13.4 last sentence: follow `props.of` if it changes after mount,
+    // not just kernel notifications. `flush: 'sync'` so the new tokens'
+    // values are current by the time this component's own render runs —
+    // the same render pass that observed the new `props.of`. Resetting
+    // `cache` on the change is required too: the tuple-identity cache
+    // (§9.7) is keyed on positional values only, so without a reset a
+    // same-shaped-by-accident old cache could compare equal to a read
+    // against the *new* tokens.
+    //
+    // The watch source is the token *keys* (§2.2 — identity is by key),
+    // not `props.of` itself: watching the array reference misses an
+    // in-place mutation of a reactive array (`of.value[0] = B`,
+    // `of.splice(...)`) since the reference never changes. Reading each
+    // element inside the getter also makes the watcher track the array's
+    // contents (Vue's reactivity), and comparing by the joined key string
+    // means an unrelated re-render that hands in a fresh-but-equal-keyed
+    // array doesn't churn the cache either.
+    watch(
+      () => props.of.map((t) => t.key).join('\0'),
+      () => {
+        cache = null
+        const next = read()
+        if (next !== values.value) values.value = next
+      },
+      { flush: 'sync' },
+    )
 
     return (): VNode[] | VNode | null | undefined => {
       const v = values.value

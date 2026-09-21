@@ -1,6 +1,16 @@
-import { computed, defineComponent, h, type FunctionalComponent, type PropType, type VNode } from 'vue'
+import {
+  computed,
+  defineComponent,
+  h,
+  onScopeDispose,
+  shallowRef,
+  watch,
+  type FunctionalComponent,
+  type PropType,
+  type VNode,
+} from 'vue'
 import type { CollectionToken, Contribution } from '@yatoi/kernel'
-import { useContributions } from '@yatoi/vue'
+import { useKernel } from '@yatoi/vue'
 import { slot } from '@yatoi/slots'
 import type { SlotName, SlotProps, SlotRenderer } from './types.js'
 
@@ -59,10 +69,36 @@ const SlotImpl = defineComponent({
   inheritAttrs: false,
   setup(props, { attrs, slots: rawSlots }) {
     const slots = rawSlots as LooseSlots
+    const kernel = useKernel()
+
     // Same boundary cast as `contribute.ts`: the neutral package hands back
     // CollectionToken<unknown>, and this is where Vue meaning is assigned.
-    const token = slot(props.name as SlotName) as CollectionToken<SlotRenderer<SlotName>>
-    const contributions = useContributions(token)
+    // Reactive on `props.name` (§13.6 "reactive name") — unlike
+    // `useContributions`, which fixes its collection for the component's
+    // lifetime, this token must follow the prop if it changes after mount.
+    const token = computed(
+      () => slot(props.name as SlotName) as CollectionToken<SlotRenderer<SlotName>>,
+    )
+
+    const readContributions = () => kernel.list(token.value)
+    const contributions = shallowRef<readonly Contribution<SlotRenderer<SlotName>>[]>(readContributions())
+    const unsubscribe = kernel.subscribe(() => {
+      const next = readContributions()
+      if (next !== contributions.value) contributions.value = next
+    })
+    onScopeDispose(unsubscribe)
+    // Kernel notifications alone won't fire when only `props.name` changes
+    // (the collection contents didn't change; the token we're reading did)
+    // — so also re-read whenever the token itself changes, synchronously,
+    // so this component's own render sees the new slot's contributions.
+    watch(
+      token,
+      () => {
+        const next = readContributions()
+        if (next !== contributions.value) contributions.value = next
+      },
+      { flush: 'sync' },
+    )
 
     // The default slot, wrapped so it can be passed around as `Default` —
     // a plain functional component that, when invoked, calls the scoped

@@ -239,6 +239,93 @@ describe('4. sync facade over async', () => {
     await kernel.settle()
   })
 
+  // E1 (spec §9.4, amended): `disposing` only counts as `loading` if the
+  // record will restart. A failed scope's cleanup that will settle to
+  // sticky `failed` is not progress, so it reads `absent`.
+  it('reads absent, not loading, while a failed scope\'s cleanup is in flight', () => {
+    const { kernel } = quietKernel()
+    const gate = deferred()
+    const clock = definePlugin({
+      name: 'clock',
+      provides: [Clock],
+      setup(scope) {
+        scope.provide(Clock, { now: () => 1 })
+        scope.defer(() => gate.promise)
+        throw new Error('boom')
+      },
+    })
+    kernel.load(clock)
+    expect(kernel.pluginState(clock)).toBe('disposing')
+    expect(kernel.state(Clock)).toEqual({ status: 'absent' })
+    gate.resolve()
+  })
+
+  it('stays absent after a sticky failure\'s cleanup settles, with no dependency cycle', async () => {
+    const { kernel } = quietKernel()
+    const gate = deferred()
+    const clock = definePlugin({
+      name: 'clock',
+      provides: [Clock],
+      setup(scope) {
+        scope.provide(Clock, { now: () => 1 })
+        scope.defer(() => gate.promise)
+        throw new Error('boom')
+      },
+    })
+    kernel.load(clock)
+    expect(kernel.pluginState(clock)).toBe('disposing')
+
+    gate.resolve()
+    await kernel.settle()
+
+    // No dependency ever cycled, so it settles to sticky `failed`, and
+    // `state` stays `absent` throughout — never `loading`.
+    expect(kernel.pluginState(clock)).toBe('failed')
+    expect(kernel.state(Clock)).toEqual({ status: 'absent' })
+  })
+
+  it('flips from absent to loading when a dependency cycle clears the failure mid-disposal', async () => {
+    const { kernel } = quietKernel()
+    const Dep = defineService<{}>('e1-dep')
+    const gate = deferred()
+    let calls = 0
+    const depPlugin = definePlugin({
+      name: 'e1-dep-plugin',
+      provides: [Dep],
+      setup(scope) {
+        scope.provide(Dep, {})
+      },
+    })
+    const flaky = definePlugin({
+      name: 'flaky',
+      inject: [Dep],
+      provides: [Clock],
+      setup(scope) {
+        calls++
+        scope.provide(Clock, { now: () => calls })
+        scope.defer(() => gate.promise)
+        if (calls === 1) throw new Error('boom')
+      },
+    })
+    kernel.load(depPlugin, flaky)
+    expect(kernel.pluginState(flaky)).toBe('disposing')
+    expect(kernel.state(Clock)).toEqual({ status: 'absent' })
+
+    // The dependency cycling clears the failure — from this moment the
+    // same `disposing` record correctly reads `loading` (§7.3).
+    kernel.unload(depPlugin)
+    expect(kernel.pluginState(flaky)).toBe('disposing')
+    expect(kernel.state(Clock)).toEqual({ status: 'loading' })
+
+    gate.resolve()
+    await kernel.settle()
+    kernel.load(depPlugin)
+    await kernel.settle()
+
+    expect(kernel.pluginState(flaky)).toBe('active')
+    expect(kernel.state(Clock).status).toBe('present')
+  })
+
   it('a provider blocked on its own deps reads absent, not loading', () => {
     const kernel = createKernel()
     const Derived = defineService<number>('derived')
@@ -389,6 +476,159 @@ describe('6. error containment', () => {
     )
     expect(err).toHaveBeenCalledOnce()
     err.mockRestore()
+  })
+
+  // K1 (spec §10.1, §10.6): a throwing on('error') listener must not escape
+  // fail(), and must not stop the partial scope from being disposed.
+  it('a throwing error listener does not escape kernel.load and the partial scope still unwinds', () => {
+    const kernel = createKernel()
+    const err = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const disposer = vi.fn()
+    const badListener = vi.fn(() => {
+      throw new Error('listener boom')
+    })
+    const goodListener = vi.fn()
+    kernel.on('error', badListener)
+    kernel.on('error', goodListener)
+
+    const bad = definePlugin({
+      name: 'bad',
+      provides: [Store],
+      setup(scope) {
+        scope.provide(Store, { items: [] })
+        scope.defer(disposer)
+        throw new Error('boom')
+      },
+    })
+
+    expect(() => kernel.load(bad)).not.toThrow()
+    expect(kernel.get(Store)).toBeUndefined()
+    expect(disposer).toHaveBeenCalledOnce()
+    expect(goodListener).toHaveBeenCalledOnce()
+    expect(err).toHaveBeenCalledWith(expect.stringMatching(/listener/i), expect.any(Error))
+    err.mockRestore()
+  })
+
+  it('a throwing error listener during unload does not stop the remaining disposers from running', () => {
+    const kernel = createKernel()
+    const err = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const after = vi.fn()
+    const badListener = vi.fn(() => {
+      throw new Error('listener boom')
+    })
+    kernel.on('error', badListener)
+
+    const p = definePlugin({
+      name: 'p',
+      setup(scope) {
+        scope.defer(after)
+        scope.defer(() => {
+          throw new Error('cleanup boom')
+        })
+      },
+    })
+    kernel.load(p)
+    expect(() => kernel.unload(p)).not.toThrow()
+    expect(after).toHaveBeenCalledOnce()
+    err.mockRestore()
+  })
+
+  // K2 (spec §7.3): a failed plugin's async cleanup must finish before it
+  // is allowed to restart, even though `fail()` marks it failed/inactive
+  // synchronously today. Otherwise a second scope's resources overlap the
+  // first's still-running disposers. §7.3 also says §7.2's reset rule
+  // applies *during* the disposing window: a dependency going absent while
+  // cleanup is in flight clears the failure, so the plugin settles to
+  // `inactive` (not `failed`) once cleanup finishes, and restarts as soon
+  // as deps are present again.
+  it('a dependency that cycles while a failed plugin\'s cleanup is in flight retries once cleanup settles', async () => {
+    const { kernel } = quietKernel()
+    const gate = deferred()
+    const disposer = vi.fn(() => gate.promise)
+    let setupCalls = 0
+    const flaky = definePlugin({
+      name: 'flaky',
+      inject: [Clock],
+      setup(scope) {
+        setupCalls++
+        scope.defer(disposer)
+        if (setupCalls === 1) throw new Error('first time fails')
+      },
+    })
+    const clock = clockPlugin()
+    const [, flakyHandle] = kernel.load(clock, flaky)
+
+    expect(kernel.pluginState(flaky)).toBe('disposing')
+    expect(flakyHandle!.error).toBeInstanceOf(Error)
+    expect(setupCalls).toBe(1)
+
+    // The dependency going absent while `disposing` clears the failure —
+    // but the record stays `disposing`: cleanup is still pending, so
+    // nothing may restart yet (the reviewer's P1: no second scope may
+    // overlap the first's still-running disposer).
+    kernel.unload(clock)
+    expect(kernel.pluginState(flaky)).toBe('disposing')
+    expect(flakyHandle!.error).toBeUndefined()
+    expect(setupCalls).toBe(1)
+
+    // And coming back doesn't jump the gate either — cleanup is still
+    // pending.
+    kernel.load(clock)
+    expect(kernel.pluginState(flaky)).toBe('disposing')
+    expect(setupCalls).toBe(1)
+
+    gate.resolve()
+    await kernel.settle()
+
+    // Cleanup finished; the failure was already cleared, so the plugin
+    // restarted on its own once deps were present.
+    expect(setupCalls).toBe(2)
+    expect(kernel.pluginState(flaky)).toBe('active')
+    expect(disposer).toHaveBeenCalledOnce()
+  })
+
+  // Contrasting case: §7.2's stickiness still holds when the dependency
+  // never went absent during the disposing window.
+  it('a failure whose dependencies never went absent stays failed after cleanup settles', async () => {
+    const { kernel } = quietKernel()
+    const gate = deferred()
+    const disposer = vi.fn(() => gate.promise)
+    let setupCalls = 0
+    const flaky = definePlugin({
+      name: 'flaky',
+      inject: [Clock],
+      setup(scope) {
+        setupCalls++
+        scope.defer(disposer)
+        if (setupCalls === 1) throw new Error('first time fails')
+      },
+    })
+    const clock = clockPlugin()
+    const [, flakyHandle] = kernel.load(clock, flaky)
+
+    expect(kernel.pluginState(flaky)).toBe('disposing')
+    expect(flakyHandle!.error).toBeInstanceOf(Error)
+
+    gate.resolve()
+    await kernel.settle()
+
+    // §7.2: `failed` is sticky and MUST NOT retry on its own — the
+    // dependency was present throughout, so the plugin does not get an
+    // unsolicited second attempt.
+    expect(setupCalls).toBe(1)
+    expect(kernel.pluginState(flaky)).toBe('failed')
+    expect(flakyHandle!.error).toBeInstanceOf(Error)
+    expect(disposer).toHaveBeenCalledOnce()
+
+    // §7.2's actual reset trigger: the dependency becoming absent, then
+    // present again, clears the sticky failure and gives a fresh attempt.
+    kernel.unload(clock)
+    expect(kernel.pluginState(flaky)).toBe('inactive')
+    kernel.load(clock)
+
+    expect(setupCalls).toBe(2)
+    expect(kernel.pluginState(flaky)).toBe('active')
+    expect(disposer).toHaveBeenCalledOnce()
   })
 })
 

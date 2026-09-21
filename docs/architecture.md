@@ -98,16 +98,28 @@ than the whole `KernelImpl`, to keep `scope.ts` legible on its own.
 ## The plugin state machine
 
 ```
-             ┌──────────── deps present ────────────┐
-             ▼                                       │
-inactive ─▶ starting ──setup returns/resolves──▶ active
-   ▲            │                                    │
-   │            └──── setup throws/rejects ──▶ failed │
-   │                                             │    │
-   └────── disposal promises settle ◀── disposing ◀──┘
-                                                 ▲
-                              deps absent or unload
+             ┌──────────── deps present ─────────────┐
+             ▼                                        │
+inactive ─▶ starting ──setup returns/resolves──────▶ active
+   ▲            │                                     │
+   │            └──── setup throws/rejects ──▶ failed  │
+   │                                             │      │
+   └────── disposal promises settle ◀── disposing ◀── deps absent or unload
 ```
+
+`failed`'s own arrow down into `disposing` is the edge `fail()` added for
+§7.3: a failing `setup` whose partial scope registered disposers that
+return awaitables does not sit in `failed` while they run — it sits in
+`disposing` (with `handle.error` already set) so §7.1's restart gate
+applies, and only becomes `failed` once every disposer awaitable has
+settled. If `scope.dispose()` returns nothing pending, that hop is
+instantaneous and the plugin lands in `failed` directly, as before.
+§7.2's reset rule applies during that `disposing` window too: if an
+`inject` token goes absent while a failed scope is still disposing,
+`handle.error` clears right then, so the record settles to `inactive`
+(not `failed`) once cleanup finishes and restarts immediately if deps are
+present again — otherwise (deps never went absent) it settles to `failed`
+and stays sticky.
 
 One `PluginRecord` per registration: `{ plugin, parent, registered,
 state, scope, error, handle }`. The same plugin object can have several
@@ -180,14 +192,25 @@ use this instead of timers.
 
 ## Error containment
 
-- `setup` throws (sync or rejects async): `fail()` marks the record
-  `failed`, records `error`, reports it, and disposes the partial scope so
-  whatever the setup registered before throwing is unwound.
+- `setup` throws (sync or rejects async): `fail()` records `error`,
+  disposes the partial scope so whatever the setup registered before
+  throwing is unwound, **then** reports (§10.1 — dispose before report, so
+  nothing a reporter does can observe or leave the partial scope live).
+  If disposal left no promises pending, the record becomes `failed`
+  immediately; if it did, the record becomes `disposing` instead (see the
+  state-machine diagram above) and only becomes `failed` once
+  `Promise.all` of those disposals settles.
 - A disposer throws: `ScopeImpl.run` catches, reports, and carries on with
   the remaining disposers. Rejected disposer promises are caught the same
   way.
 - Reporting goes to `kernel.on('error')` listeners, or `console.error` if
   none. Errors never propagate to the caller of `load`/`unload`.
+- A listener passed to `kernel.on('error')` runs in its own try/catch
+  inside `reportError`: if it throws, the exception is written to
+  `console.error` (named as a listener failure) and every other
+  registered listener still runs. A throwing listener can therefore never
+  escape `load`/`unload`, and can never stop a sibling listener — or a
+  disposer loop reporting through the same path — from completing.
 
 ## React binding
 
@@ -268,6 +291,24 @@ trace back to Vue's reactivity model not being React's.
   generic function *signature* that only exists for the type checker.
   `h()` validates real call sites against it; nothing checks it against
   the runtime object it's a lie about, same as `Slot.tsx`'s `as never`.
+- `Requires` follows `props.of` reactively (§13.4 last sentence): besides
+  the `kernel.subscribe` callback, a `watch(() => props.of, ..., { flush:
+  'sync' })` re-reads and resets the tuple-identity cache whenever the
+  token list itself changes, so a new `of` is picked up in the same tick
+  rather than only on the next unrelated kernel mutation. The watch
+  source is keyed on `props.of.map(t => t.key).join('\0')`, not the array
+  reference (§2.2 — identity is by key): that both tracks a *reactive*
+  `of` array's contents so an in-place mutation (`splice`, index
+  assignment) is caught, not just a swapped-out array, and keeps an
+  unrelated re-render that hands in a fresh-but-equal-keyed array from
+  churning the cache.
+- `@yatoi/vue-slots`'s `Slot` follows `props.name` reactively (§13.6
+  "reactive name"): the collection token is a `computed(() =>
+  slot(props.name))` instead of one fixed at `setup()`, and a `watch` on
+  that computed token (also `flush: 'sync'`) re-reads `kernel.list` so
+  the contributions ref — and the subscription driving it — both track
+  the slot the component is *currently* named after, not the one it
+  mounted with.
 
 ## Slots
 

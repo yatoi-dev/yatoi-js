@@ -14,6 +14,8 @@ declare module '@yatoi/slots' {
   interface Slots {
     'sidebar.item': { collapsed: boolean }
     'task.card': { task: Task }
+    a: { label: string }
+    b: { label: string }
   }
 }
 
@@ -140,6 +142,50 @@ describe('<Slot mode="list">', () => {
     await nextTick()
     expect(w.text()).toBe('true')
     expect(mounted.mock.calls.length).toBe(after)
+  })
+})
+
+// V2 (spec §13.6 "reactive name"): "if the framework lets the slot name
+// change after mount, the rendering construct MUST follow it: contributions
+// of the new slot, not the one it mounted with."
+describe('<Slot> reactive name', () => {
+  it('follows a change to `name` after mount', async () => {
+    const kernel = createKernel()
+    kernel.load(
+      plugin('a-contributor', (scope) => {
+        contribute(scope, 'a', () => h('span', 'from-a'))
+      }),
+    )
+    kernel.load(
+      plugin('b-contributor', (scope) => {
+        contribute(scope, 'b', () => h('span', 'from-b'))
+      }),
+    )
+
+    const Wrapper = defineComponent({
+      props: { name: { type: String, required: true } },
+      setup(props) {
+        provideKernel(kernel)
+        return () => h(Slot, { name: props.name as 'a' | 'b', label: 'x' })
+      },
+    })
+    const w = mount(Wrapper, { props: { name: 'a' }, attachTo: document.body })
+    await nextTick()
+    expect(w.text()).toBe('from-a')
+
+    await w.setProps({ name: 'b' })
+    await nextTick()
+    expect(w.text()).toBe('from-b')
+
+    // Proves the subscription itself followed `name`, not just the read:
+    // a fresh contribution to the *new* slot must show up too.
+    kernel.load(
+      plugin('b-contributor-2', (scope) => {
+        contribute(scope, 'b', () => h('span', 'from-b-2'), { priority: 10 })
+      }),
+    )
+    await nextTick()
+    expect(w.text()).toBe('from-b-2from-b')
   })
 })
 

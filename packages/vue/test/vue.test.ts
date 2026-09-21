@@ -1,4 +1,4 @@
-import { createApp, defineComponent, h, nextTick, onUnmounted, type Component } from 'vue'
+import { createApp, defineComponent, h, nextTick, onUnmounted, reactive, type Component } from 'vue'
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 import { createKernel, definePlugin, defineCollection, defineService, type Kernel } from '@yatoi/kernel'
@@ -390,6 +390,104 @@ describe('Requires', () => {
     kernel.load(storePlugin)
     await nextTick()
     expect(renders).toBe(after)
+  })
+
+  // V1 (spec §13.4 last sentence): "If the framework lets the token list
+  // change after mount, the construct MUST follow the change: values for
+  // the new tokens, subscription semantics unchanged."
+  it('follows a change to `of` after mount', async () => {
+    const kernel = createKernel()
+    const A = defineService<{ v: string }>('req-a')
+    const B = defineService<{ v: string }>('req-b')
+    const aPlugin = definePlugin({
+      name: 'req-a-plugin',
+      provides: [A],
+      setup(scope) {
+        scope.provide(A, { v: 'A' })
+      },
+    })
+    const bPlugin = definePlugin({
+      name: 'req-b-plugin',
+      provides: [B],
+      setup(scope) {
+        scope.provide(B, { v: 'B' })
+      },
+    })
+    kernel.load(aPlugin, bPlugin)
+
+    const Wrapper = defineComponent({
+      props: { of: { type: Array, required: true } },
+      setup(props) {
+        provideKernel(kernel)
+        return () =>
+          h(
+            Requires,
+            { of: props.of as [typeof A] },
+            {
+              fallback: () => h('span', 'gone'),
+              default: (values: readonly unknown[]) => h('span', (values[0] as { v: string }).v),
+            },
+          )
+      },
+    })
+    const wrapper = mount(Wrapper, { props: { of: [A] }, attachTo: document.body })
+    expect(wrapper.text()).toBe('A')
+
+    await wrapper.setProps({ of: [B] })
+    expect(wrapper.text()).toBe('B')
+
+    // Proves the subscription itself followed `of`, not just the read.
+    kernel.unload(bPlugin)
+    await nextTick()
+    expect(wrapper.text()).toBe('gone')
+  })
+
+  // E2: the watch source must be value-based on the token keys, not the
+  // array's identity — otherwise mutating a *reactive* `of` array in place
+  // (no new array reference) never fires the watcher and the old service
+  // keeps rendering.
+  it('follows an in-place mutation of a reactive `of` array', async () => {
+    const kernel = createKernel()
+    const A = defineService<{ v: string }>('req-a-2')
+    const B = defineService<{ v: string }>('req-b-2')
+    const aPlugin = definePlugin({
+      name: 'req-a-2-plugin',
+      provides: [A],
+      setup(scope) {
+        scope.provide(A, { v: 'A' })
+      },
+    })
+    const bPlugin = definePlugin({
+      name: 'req-b-2-plugin',
+      provides: [B],
+      setup(scope) {
+        scope.provide(B, { v: 'B' })
+      },
+    })
+    kernel.load(aPlugin, bPlugin)
+
+    const of = reactive<[typeof A]>([A])
+    const Root = defineComponent({
+      setup() {
+        provideKernel(kernel)
+        return () =>
+          h(
+            Requires,
+            { of },
+            {
+              fallback: () => h('span', 'gone'),
+              default: (values: readonly unknown[]) => h('span', (values[0] as { v: string }).v),
+            },
+          )
+      },
+    })
+    const wrapper = mount(Root, { attachTo: document.body })
+    expect(wrapper.text()).toBe('A')
+
+    // In-place mutation — same array reference, different contents.
+    of.splice(0, 1, B)
+    await nextTick()
+    expect(wrapper.text()).toBe('B')
   })
 })
 

@@ -73,12 +73,17 @@ class KernelImpl implements Kernel, ScopeHost {
     if (this.registry.hasService(token)) {
       return { status: 'present', value: this.registry.getService(token) as T }
     }
-    // A registered provider that is mid-setup or mid-teardown (and will come
-    // back) reads as loading. Providers blocked on their own deps are absent
-    // — "loading" must mean progress is actually being made.
+    // A registered provider that is mid-setup, or mid-teardown *and will
+    // restart*, reads as loading. Providers blocked on their own deps are
+    // absent — "loading" must mean progress is actually being made. A
+    // `disposing` record carrying a failure (§7.3) will settle to sticky
+    // `failed`, not restart, so it reads absent too — unless a dependency
+    // cycle already cleared that failure (`rec.error === undefined`),
+    // in which case it will settle to `inactive` and retry.
     for (const rec of this.records) {
       if (!rec.registered) continue
-      if (rec.state !== 'starting' && rec.state !== 'disposing') continue
+      const willRestart = rec.state === 'starting' || (rec.state === 'disposing' && rec.error === undefined)
+      if (!willRestart) continue
       if (rec.plugin.provides?.some((t) => t.key === token.key)) return LOADING
     }
     return ABSENT
@@ -149,7 +154,15 @@ class KernelImpl implements Kernel, ScopeHost {
       console.error(`[yatoi] error in plugin "${plugin.name}":`, error)
       return
     }
-    for (const listener of [...this.errorListeners]) listener(error, plugin)
+    for (const listener of [...this.errorListeners]) {
+      try {
+        listener(error, plugin)
+      } catch (listenerError) {
+        // A listener MUST NOT be able to take down the kernel or hide the
+        // original error from the other listeners (spec §10.6).
+        console.error(`[yatoi] error listener for plugin "${plugin.name}" threw:`, listenerError)
+      }
+    }
   }
 
   // ── reconciliation ──────────────────────────────────────────────────
@@ -214,6 +227,16 @@ class KernelImpl implements Kernel, ScopeHost {
           break
         case 'disposing':
           // Restarts (if still wanted) when the disposal promise settles.
+          // §7.3: if this scope is disposing because its `setup` failed
+          // (rec.error set) and a dependency goes absent while cleanup is
+          // still in flight, the failure clears right here — same rule as
+          // the `failed` branch below — so the record settles to
+          // `inactive` (not `failed`) once disposal finishes, and restarts
+          // as soon as deps are present again.
+          if (rec.error !== undefined && !ready) {
+            rec.error = undefined
+            this.registry.touch()
+          }
           break
       }
     }
@@ -353,12 +376,34 @@ class KernelImpl implements Kernel, ScopeHost {
   }
 
   private fail(rec: PluginRecord, scope: ScopeImpl, error: unknown): void {
-    rec.state = 'failed'
     rec.error = error
     rec.scope = null
+    // Whatever the partial setup registered still unwinds — it must not
+    // leak — and it happens *before* reporting (§10.1), so nothing a
+    // reporter does can observe or leave the partial scope live.
+    const pending = scope.dispose()
+    for (const p of pending) this.track(p)
+    if (pending.length === 0) {
+      rec.state = 'failed'
+    } else {
+      // §7.3: cleanup is still in flight. Stay `disposing` (with `error`
+      // already set) so §7.1's restart gate blocks a new scope from
+      // overlapping this one's still-running disposers. Only settle into
+      // `failed` once every disposer awaitable has resolved.
+      rec.state = 'disposing'
+      Promise.all(pending).then(() => {
+        this.mutate(() => {
+          // §7.3: a dependency going absent while `disposing` (handled in
+          // `pass()`) already cleared `rec.error` if it happened. Settle
+          // to `inactive` in that case — the pass this `mutate()` runs
+          // will start it immediately if deps are present again — or to
+          // `failed` if the failure was never cleared (sticky, §7.2).
+          rec.state = rec.error === undefined ? 'inactive' : 'failed'
+          this.registry.touch()
+        })
+      })
+    }
     this.reportError(error, rec.plugin)
-    // Whatever the partial setup registered still unwinds — it must not leak.
-    for (const p of scope.dispose()) this.track(p)
     this.registry.touch()
     this.needsPass = true
   }

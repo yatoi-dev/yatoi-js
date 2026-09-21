@@ -217,6 +217,18 @@ disposal settles (§8.5).
 plugin is unloaded, or when any of its `inject` tokens becomes absent — so
 a fixed dependency gets a fresh attempt when it returns.
 
+7.3. A failing `setup` whose partial scope registered disposers that
+return awaitables passes through `disposing` and reaches `failed` only
+when they settle, so §7.1's restart gate applies: the registration MUST
+NOT start a new scope while the failed scope's cleanup is in flight.
+`handle.error` is set from the moment of failure. §7.2's reset rule
+applies during that window too: if any `inject` token becomes absent
+while cleanup is in flight, the failure is cleared (`handle.error`
+unset) and the registration settles to `inactive` rather than `failed`
+— so it restarts as soon as cleanup is done and dependencies are
+present. A failure whose dependencies never went absent settles to
+`failed` and stays sticky.
+
 ---
 
 ## 8. Disposal
@@ -275,8 +287,11 @@ present from the moment `provide` is called. Presence is not gated on
 9.4. **`state(token)`** MUST return:
 - `present(value)` if a value is registered under the key;
 - otherwise `loading` if some **registered** plugin lists the token in
-  `provides` and is `starting`, or is `disposing` while still registered
-  (i.e. will restart);
+  `provides` and is `starting`, or is `disposing` **and will restart** —
+  i.e. it is not carrying a failure (§7.3: a failed scope's cleanup that
+  will settle to sticky `failed` is not progress, so it reads `absent`;
+  the same cleanup after its dependency cycled, which will settle to
+  `inactive` and retry, reads `loading`);
 - otherwise `absent`.
 
 A provider that is itself `inactive` because *its* dependencies are
@@ -306,9 +321,11 @@ collection changes, and a single shared empty list when empty.
 
 10.1. **Containment.** A `setup` that throws (or an awaitable that
 rejects) MUST fail only that plugin: its scope is disposed (so partial
-effects unwind), its state becomes `failed`, its handle's `error` is set,
-and no other plugin is affected. `load` MUST NOT throw because a plugin's
-`setup` failed.
+effects unwind), its state becomes `failed` (via `disposing` if cleanup
+is asynchronous, §7.3), its handle's `error` is set, and no other plugin
+is affected. Disposal MUST happen before the error is reported, so that
+nothing a reporter does can leave the partial scope live. `load` MUST NOT
+throw because a plugin's `setup` failed.
 
 10.2. **Stickiness.** `failed` persists per §7.2. A failed plugin's
 registration remains; it is not silently dropped.
@@ -330,7 +347,10 @@ the remaining disposers from running, nor propagate to the caller of
 10.6. **Reporting.** Errors from 10.1 and 10.5 go to `on('error')`
 listeners with the error and the plugin. If no listener is registered,
 implementations SHOULD write to the platform's error log. Errors MUST
-NOT be swallowed silently.
+NOT be swallowed silently. A listener that itself throws MUST NOT affect
+the kernel or its caller: the exception is caught and written to the
+error log, the remaining listeners still run, and `load`/`unload` never
+throw because a listener did.
 
 ---
 
@@ -405,7 +425,9 @@ are present, otherwise a fallback — and whose children are **unmounted**
 (their own cleanups run) when any becomes absent, and mounted fresh when
 all return. Inside, the values are typed as present. *(This is the
 binding-level form of cascade unload, and the recommended default over
-13.3.)*
+13.3.)* If the framework lets the token list change after mount, the
+construct MUST follow the change: values for the new tokens, subscription
+semantics unchanged.
 
 13.5. **Component-scoped loading.** A binding MUST offer a way to load a
 plugin for the lifetime of a component: load on mount, unload on unmount.
@@ -441,6 +463,9 @@ part) so that a host using more than one framework binding declares its
 - **identity stability** — contributed renderers MUST keep identity
   across host re-renders while the collection and default are unchanged,
   so contributed components are not remounted spuriously.
+- **reactive name** — if the framework lets the slot name change after
+  mount, the rendering construct MUST follow it: contributions of the new
+  slot, not the one it mounted with.
 
 13.7. The kernel MUST NOT know that a contributed value is a renderer.
 Slots are entirely a layer above §11.
@@ -539,22 +564,23 @@ injected token MUST still return the value.
 | §6.6, §6.7 | `kernel.test.ts` 9 |
 | §7, §7.1 | `kernel.test.ts` 3 "waits for async disposal…" |
 | §7.2 | `kernel.test.ts` 6 "failure does not retry…" |
+| §7.3 | `kernel.test.ts` 6 "a dependency that cycles while a failed plugin's cleanup is in flight retries once cleanup settles"; "a failure whose dependencies never went absent stays failed after cleanup settles" |
 | §8.2, §8.3 (T5) | `kernel.test.ts` 2 |
 | §8.4, §9.1 | `kernel.test.ts` 4 "state() flips synchronously…"; `torture.test.ts` T4 |
 | §8.5 (T3, T4) | `torture.test.ts` "StrictMode-shaped double invoke" |
 | §8.6 | `kernel.test.ts` 8 "a stale disposer never evicts…" |
-| §9.4 | `kernel.test.ts` 4 "reports loading…", "…reads absent, not loading" |
+| §9.4 | `kernel.test.ts` 4 "reports loading…", "…reads absent, not loading"; §7.3 amendment: `kernel.test.ts` 6 "reads absent, not loading, while a failed scope's cleanup is in flight", "stays absent after a sticky failure's cleanup settles, with no dependency cycle", "flips from absent to loading when a dependency cycle clears the failure mid-disposal" |
 | §9.5, §9.6 | `kernel.test.ts` 4 "subscribe fires once…", "version bumps…" |
 | §9.7 | `kernel.test.ts` 10; `react.test.tsx` "does not re-render for unrelated…"; `vue.test.ts` `useService` "does not trigger for unrelated…" |
-| §10.1, §10.5, §10.6 | `kernel.test.ts` 6 |
+| §10.1, §10.5, §10.6 | `kernel.test.ts` 6; `kernel.test.ts` 6 "a throwing error listener does not escape kernel.load…", "…does not stop the remaining disposers from running" |
 | §10.3 | `kernel.test.ts` 7 |
 | §10.4 | `kernel.test.ts` 8 |
 | §11 | `kernel.test.ts` 10 |
 | §13.2 | `react.test.tsx` "concurrent rendering"; `vue.test.ts` "reactivity sanity" (Vue's reactivity can't tear; the test asserts the guarantee anyway) |
 | §13.3 | `react.test.tsx` `useService`, `useServiceState`; `vue.test.ts` `useService`, `useServiceState` |
-| §13.4 | `react.test.tsx` `<Requires>`; `vue.test.ts` `Requires` |
+| §13.4 | `react.test.tsx` `<Requires>`; `vue.test.ts` `Requires`, including "follows a change to `of` after mount", "follows an in-place mutation of a reactive `of` array" |
 | §13.5 | `react.test.tsx` `usePlugin`; `torture.test.ts` T3; `vue.test.ts` `usePlugin` (including the explicit mount → unmount → mount remount case, Vue's stand-in for StrictMode double-invoke) |
-| §13.6 | `slots.test.ts` (neutral contract); `react-slots.test.tsx` (all); `vue-slots.test.ts` (all) |
+| §13.6 | `slots.test.ts` (neutral contract); `react-slots.test.tsx` (all); `vue-slots.test.ts` (all), including `<Slot>` reactive name "follows a change to `name` after mount" |
 | §14 | `examples/todo` (not a test; the reference host) |
 | T1, T2 | `torture.test.ts` "provider unloads while dependents are mid-async setup" |
 | `dispose()` / `settle()` | `kernel.test.ts` "kernel.dispose" |
