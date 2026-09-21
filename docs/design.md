@@ -391,13 +391,18 @@ in practice.
    (all `append`s, priority order) or `<Slot mode="single">` (fold
    `replace`/`wrap` over the host default, highest priority outermost).
    The kernel stores the mode string and never interprets it.
-3. **Token versioning** for third-party plugins across breaking changes.
+3. **Token versioning** for third-party plugins across breaking changes —
+   [proposal 0002](proposals/0002-token-versioning.md), draft.
 4. **Do tokens live in a shared package or a global augmented interface? —
    resolved:** both, implemented as `defineService`/`defineCollection`
    (imported token objects) and `service`/`collection` (the `Services` /
    `Collections` registry interfaces). The imported-token-object form,
    shared via a contract package, is the documented default; the registry
    form is for third-party plugins that can't take that dependency.
+5. **Namespace isolation** — per-scope resolution of a token, so two
+   instances of one plugin set can coexist. The `isolate` vocabulary is
+   reserved; the design is [proposal 0001](proposals/0001-namespace-isolation.md),
+   draft. Not a v0.1 blocker.
 
 ---
 

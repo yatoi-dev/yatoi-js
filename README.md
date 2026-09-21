@@ -186,19 +186,10 @@ React layer's under `<StrictMode>` on a concurrent root, plus a torture
 test for a service that unloads while dependents are mid-async. Not yet
 on npm; clone it and run the example.
 
-Open problems, if you want to help:
-
-- **Token versioning** across breaking changes in third-party plugins
-([design.md](docs/design.md#open-decisions--resolve-before-v01-tags), decision 3).
-- **Devtools** — a graph inspector and "why did this unload" traces. The
-honest cost above is why this isn't optional in practice.
-- **Suspense** integration. The kernel already exposes `loading`; the
-React layer doesn't use it yet.
-- **A second framework binding.** The kernel has no React in it; a Solid
-or Vue binding would prove the layering is real.
-
-Read [AGENTS.md](AGENTS.md) before opening a PR — it has the layout,
-commands, and the hard rules that are load-bearing.
+What's next — devtools, Suspense integration, token versioning, a Dart
+implementation for Flutter — and what's deliberately not planned is in
+[ROADMAP.md](ROADMAP.md). [CONTRIBUTING.md](CONTRIBUTING.md) is the short
+version of how to help; [AGENTS.md](AGENTS.md) is the long one.
 
 ## Documentation
 

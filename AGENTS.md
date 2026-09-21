@@ -19,7 +19,8 @@ packages/slots/           @yatoi/slots    contribute(), <Slot>, Slots augmentati
 examples/todo/            yatoi-example-todo   Vite app: todo + installable calendar plugin,
                            chapter 1 in one `pnpm dev`; chapter 2 delivers the same plugin as a
                            separately built file, opt-in (see examples/todo/README.md)
-docs/                     concepts, guide, pitfalls, architecture, design, spec
+docs/                     concepts, guide, pitfalls, architecture, design, spec, proposals/
+ROADMAP.md, CONTRIBUTING.md
 ```
 
 Each package: `src/` (source), `test/` (vitest), `tsconfig.json`
@@ -117,6 +118,7 @@ passing; it encodes the sync-facade guarantee.
 | How does X work / why is it shaped this way | [docs/architecture.md](docs/architecture.md), then [docs/design.md](docs/design.md) |
 | How do I use X | [docs/guide.md](docs/guide.md) |
 | Known footguns | [docs/pitfalls.md](docs/pitfalls.md) |
+| Protocol-level problems under design | [docs/proposals/](docs/proposals/README.md) — one file per problem, with per-implementation status |
 | Real usage, end to end | [examples/todo](examples/todo/README.md) |
 | What the kernel guarantees | [docs/spec.md](docs/spec.md) (normative), pinned by `packages/kernel/test/kernel.test.ts` (numbered semantics) and `torture.test.ts` |
 | Slot resolution semantics | `packages/slots/test/slots.test.tsx` |
@@ -127,4 +129,7 @@ passing; it encodes the sync-facade guarantee.
 - No Suspense integration; `useServiceState` exposes `loading` if needed.
 - No token versioning story for third-party plugins across breaking
   changes (design.md open decision 3).
-- GitHub org / domain / trademark for the name are unchecked.
+- Domain and trademark for the name are unchecked; the GitHub org is
+  `yatoi-dev` because `yatoi` is a taken username.
+
+What's planned about these, and what isn't, is in [ROADMAP.md](ROADMAP.md).
