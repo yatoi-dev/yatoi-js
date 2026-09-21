@@ -184,7 +184,7 @@ package is the rest.
 
 ## Status
 
-v0.1 is implemented and tested — 116 tests, the kernel's in plain Node, the
+v0.1 is implemented and tested — 124 tests, the kernel's in plain Node, the
 React layer's under `<StrictMode>` on a concurrent root, the Vue layer
 asserting unmount/remount explicitly since Vue has no StrictMode, plus a
 torture test for a service that unloads while dependents are mid-async.
@@ -222,6 +222,10 @@ author actually writes.
 - [Agent-host example](examples/agent-host/README.md) — a Node program,
 no React and no DOM, where skills are plugins and revoking a credential
 cascades its tools out before the model's next turn.
+- [Server example](examples/server/README.md) — a plain `node:http` host
+where routes and jobs follow an async database capability and config reload.
+- [Beyond UI](docs/beyond-ui.md) — how the same capability graph applies
+to agent runtimes, long-running servers, and other non-UI hosts.
 
 
 

@@ -135,6 +135,10 @@ Both are the same plugin type; only who calls `load` differs.
 case in full, with no React and no DOM in sight: a Node agent host where
 skills are plugins, revoking a credential cascades a skill's tools out
 before the next turn, and the whole thing runs under a plain test runner.
+The [server example](../examples/server/README.md) applies the same model
+to routes, jobs, middleware, database revocation, and config reload. See
+[Beyond UI](beyond-ui.md) for the shared capability-graph framing and its
+boundaries.
 
 ## Observing from React
 

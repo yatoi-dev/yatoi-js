@@ -174,6 +174,8 @@ Kept briefly so the history is visible without reading git log.
 - Token location → both forms; imported tokens are the default,
   `service(key)` for third parties (decision 4).
 - Cross-bundle identity → by key, tested (spec §2.2).
+- Non-UI examples → MCP and child-scoped delegation in the agent host,
+  a capability-driven `node:http` server, and [Beyond UI](docs/beyond-ui.md).
 - Name → `yatoi`, org `yatoi-dev`, repo `yatoi-js`.
 - Shared slot-names package for React + Vue hosts (raised while writing
   the Vue example) → `@yatoi/slots` split out as the framework-neutral
