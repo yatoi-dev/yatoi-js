@@ -51,6 +51,12 @@ skill's tools out before the model's next turn.
   towards a key convention plus adapter plugins now, kernel-level version
   matching only if a real marketplace needs it. Matters once plugins ship
   separately, so it sequences with publishing.
+- **Typed `<Requires>` slot under `vue-tsc`** — *pick-up-able.* The Vue
+  example showed that `Requires`' generic export (typed for `h()` call
+  sites) does not reach `v-slot` destructuring in templates: `todos` is
+  `any` there. Declare the default slot's shape on the component (Vue's
+  `SlotsType`) so a typo inside the slot is a `vue-tsc` error. Same check
+  for `<Slot>`'s `Default`. See `examples/todo-vue/README.md` "Friction".
 - **Conformance scenarios as data.** Spec §15's scenarios expressed as
   JSON (load/unload sequences with expected observable states) so every
   implementation runs the same suite. Worth doing when the second

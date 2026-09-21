@@ -215,6 +215,9 @@ against.
 - [Example app](examples/todo/README.md) — todo + an installable calendar
 plugin, exercising all three packages end to end; chapter 2 loads the
 plugin from another origin.
+- [Vue example app](examples/todo-vue/README.md) — the same app, chapter 1
+only, ported to `@yatoi/vue` + `@yatoi/vue-slots` — what a Vue plugin
+author actually writes.
 - [Agent-host example](examples/agent-host/README.md) — a Node program,
 no React and no DOM, where skills are plugins and revoking a credential
 cascades its tools out before the model's next turn.

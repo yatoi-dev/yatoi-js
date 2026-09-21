@@ -382,6 +382,12 @@ same way `v-slot="{ x }"` does for objects:
 </Requires>
 ```
 
+Write it with an explicit `<template #default="[...]">` like this, not the
+`<Requires :of="[...]" v-slot="[...]">` shorthand — combined with a
+sibling `<template #fallback>`, the shorthand crashes `vite build`'s
+production codegen (a Vue compiler issue, not a `@yatoi/vue` one; see
+`examples/todo-vue/README.md`'s "Friction" section for the repro).
+
 `usePlugin(plugin)` loads on `onMounted`, disposes on `onBeforeUnmount` —
 Vue has no StrictMode double-invoke, but a component that unmounts and is
 immediately remounted at the same spot (a `:key` change, HMR) exercises
@@ -405,7 +411,9 @@ false` and reads them off `attrs` instead:
 PR/commit that added this binding for why a shared `Slots` interface
 isn't the right call. The tests in `packages/vue/test/vue.test.ts` and
 `packages/vue-slots/test/vue-slots.test.ts` port every claim from the
-React/`@yatoi/slots` suites; read those before reading the source.
+React/`@yatoi/slots` suites; read those before reading the source. See
+[examples/todo-vue](../examples/todo-vue/README.md) for a full app built on
+this binding, chapter 1 of `examples/todo` ported field for field.
 
 ## Load plugins from a manifest
 

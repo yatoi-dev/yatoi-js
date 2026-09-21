@@ -18,6 +18,12 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "yatoi-example-todo", "serve:plugin"],
       "port": 5174
+    },
+    {
+      "name": "todo-vue-example",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "yatoi-example-todo-vue", "dev", "--", "--port", "5175"],
+      "port": 5175
     }
   ]
 }

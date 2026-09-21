@@ -1,0 +1,244 @@
+:root {
+  color-scheme: light dark;
+  --bg: #ffffff;
+  --bg-subtle: #f4f4f6;
+  --fg: #1a1a1f;
+  --fg-muted: #6b6b76;
+  --border: #dcdce2;
+  --accent: #4f46e5;
+  --accent-fg: #ffffff;
+  --danger: #d1435b;
+  --today: #fff6da;
+  --radius: 8px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #16161a;
+    --bg-subtle: #1f1f25;
+    --fg: #ececf1;
+    --fg-muted: #97979f;
+    --border: #303038;
+    --accent: #8180f0;
+    --accent-fg: #16161a;
+    --danger: #ef6b81;
+    --today: #3a3320;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+}
+
+.app {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+.app-header h1 {
+  font-size: 1.25rem;
+  margin: 0 0 0.75rem;
+}
+
+.app-nav {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.nav-btn {
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--fg-muted);
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.nav-btn:hover {
+  background: var(--bg-subtle);
+}
+
+.nav-btn.active {
+  color: var(--fg);
+  background: var(--bg-subtle);
+  font-weight: 600;
+}
+
+button {
+  font: inherit;
+}
+
+.loading,
+.empty {
+  color: var(--fg-muted);
+}
+
+/* ── todos ─────────────────────────────────────────────────────────── */
+
+.todo-add {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.todo-add input {
+  flex: 1;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.todo-add button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--accent-fg);
+  cursor: pointer;
+}
+
+.todo-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.todo-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.todo-row.done .todo-title {
+  text-decoration: line-through;
+  color: var(--fg-muted);
+}
+
+.todo-title {
+  flex: 1;
+}
+
+.todo-delete {
+  border: none;
+  background: transparent;
+  color: var(--fg-muted);
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 6px;
+}
+
+.todo-delete:hover {
+  background: var(--bg-subtle);
+  color: var(--danger);
+}
+
+/* ── marketplace ───────────────────────────────────────────────────── */
+
+.marketplace {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.plugin-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  background: var(--bg-subtle);
+}
+
+.plugin-card-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.plugin-card-header h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.plugin-version {
+  color: var(--fg-muted);
+  font-size: 0.8rem;
+}
+
+.plugin-badge {
+  margin-left: auto;
+  font-size: 0.7rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: var(--border);
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.plugin-badge-active {
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+
+.plugin-card p {
+  margin: 0;
+  color: var(--fg-muted);
+  font-size: 0.9rem;
+  flex: 1;
+}
+
+.plugin-card-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.plugin-card button {
+  align-self: flex-start;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.plugin-card button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.plugin-error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 0.8rem;
+}

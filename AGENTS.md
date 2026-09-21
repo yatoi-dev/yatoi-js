@@ -22,6 +22,8 @@ packages/vue-slots/       @yatoi/vue-slots   contribute(), <Slot>, Slots augment
 examples/todo/            yatoi-example-todo   Vite app: todo + installable calendar plugin,
                            chapter 1 in one `pnpm dev`; chapter 2 delivers the same plugin as a
                            separately built file, opt-in (see examples/todo/README.md)
+examples/todo-vue/        yatoi-example-todo-vue   Vue 3 port of chapter 1 only, on @yatoi/vue +
+                           @yatoi/vue-slots (see examples/todo-vue/README.md)
 examples/agent-host/      yatoi-example-agent-host   Node program, no React, no DOM: skills as
                            plugins around a scripted (offline) model (see examples/agent-host/README.md)
 docs/                     concepts, guide, pitfalls, architecture, design, spec, proposals/
@@ -45,6 +47,7 @@ pnpm --filter yatoi-example-todo dev          # example on :5173 (also .claude/l
 pnpm --filter yatoi-example-todo dev:remote   # same app, calendar plugin loaded from :5174 instead of bundled
 pnpm --filter yatoi-example-todo build        # tsc --noEmit && vite build
 pnpm --filter yatoi-example-todo serve:plugin # builds + serves the calendar plugin on :5174 (also .claude/launch.json → todo-plugin-cdn)
+pnpm --filter yatoi-example-todo-vue dev      # Vue example on :5175 (also .claude/launch.json → todo-vue-example)
 pnpm --filter yatoi-example-agent-host start   # runs the agent-host demo to completion, no server
 pnpm test -- --project agent-host              # just the agent-host example's tests
 ```

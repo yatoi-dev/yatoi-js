@@ -1,0 +1,14 @@
+[
+  {
+    "id": "calendar",
+    "name": "Calendar",
+    "version": "0.1.0",
+    "description": "Due dates on todos and a month view."
+  },
+  {
+    "id": "tags",
+    "name": "Tags",
+    "version": "0.1.0",
+    "description": "Label todos and filter by label."
+  }
+]
