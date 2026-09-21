@@ -14,11 +14,15 @@ contributor can start without a discussion first; read
 
 ## Now — v0.1, done
 
-Three packages (`@yatoi/kernel`, `@yatoi/react`, `@yatoi/slots`), the
-todo example with its two chapters, developer docs, and the
-[protocol spec](docs/spec.md). 72 tests: the kernel in plain Node, the
-React layer under `<StrictMode>` on a concurrent root, plus the torture
-case. Not yet published. Also done: an
+Five packages (`@yatoi/kernel`, `@yatoi/react`, `@yatoi/slots`,
+`@yatoi/vue`, `@yatoi/vue-slots`), the todo example with its two
+chapters, developer docs, and the [protocol spec](docs/spec.md). 95
+tests: the kernel in plain Node, the React layer under `<StrictMode>` on
+a concurrent root, the Vue layer asserting unmount/remount explicitly
+(Vue has no StrictMode), plus the torture case. A second JS binding
+(Vue) landed here rather than in *Later* — it reuses `@yatoi/kernel`
+unchanged, which is the proof that the layering is real rather than
+convenient for React. Not yet published. Also done: an
 [agent-host example](examples/agent-host/README.md), a Node program with
 no React and no DOM where skills are plugins, tools/prompt/middleware are
 collections read fresh each turn, and revoking a credential cascades a
@@ -58,10 +62,12 @@ skill's tools out before the model's next turn.
   repo under `yatoi-dev`, built against the spec. Spec §16 sketches the
   mapping. Blocked on nothing now; sequenced after v0.2 publishing so the
   JS side is stable while it's being ported.
-- **A second JS binding** (Solid is the natural candidate). The kernel
-  has no React in it; a binding that reuses `@yatoi/kernel` unchanged is
-  the proof that the layering is real, and would shake out anything
-  React-shaped that leaked into the kernel.
+- **A Solid binding.** Cheaper now than Vue was: the pattern (typed
+  signature over an untyped implementation for anything generic, a
+  tearing-safe read tied to the framework's own subscription primitive)
+  is established, and Solid's fine-grained signals are, if anything, a
+  closer match to `kernel.subscribe` than Vue's component-level
+  reactivity was. The next proof, not the first one.
 - **Namespace isolation** — per-scope resolution of a token, so two
   instances of the same plugin set can be live at once (split views,
   multiple workspaces). [Proposal 0001](docs/proposals/0001-namespace-isolation.md),

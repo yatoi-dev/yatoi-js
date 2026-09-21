@@ -158,11 +158,13 @@ root so you don't have to discover the double-invoke bugs yourself.
 ## Packages
 
 
-| Package                            | What                                                                                                 | React? |
-| ---------------------------------- | ---------------------------------------------------------------------------------------------------- | ------ |
-| [`@yatoi/kernel`](packages/kernel) | Plugins, services, scope tree, cascade unload. Runs in plain Node — no DOM, enforced at compile time | No     |
-| [`@yatoi/react`](packages/react)   | `<KernelProvider>`, `useService`, `<Requires>`, `usePlugin`, `useContributions`                      | Yes    |
-| [`@yatoi/slots`](packages/slots)   | Typed contribution points: `contribute()`, `<Slot>`                                                  | Yes    |
+| Package                                    | What                                                                                                 | React? |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------ |
+| [`@yatoi/kernel`](packages/kernel)         | Plugins, services, scope tree, cascade unload. Runs in plain Node — no DOM, enforced at compile time | No     |
+| [`@yatoi/react`](packages/react)           | `<KernelProvider>`, `useService`, `<Requires>`, `usePlugin`, `useContributions`                      | Yes    |
+| [`@yatoi/slots`](packages/slots)           | Typed contribution points: `contribute()`, `<Slot>`                                                  | Yes    |
+| [`@yatoi/vue`](packages/vue)               | `provideKernel`/`<KernelProvider>`, `useService`, `<Requires>`, `usePlugin`, `useContributions` — the Vue 3 equivalent of `@yatoi/react` | No (Vue) |
+| [`@yatoi/vue-slots`](packages/vue-slots)   | Typed contribution points for Vue: `contribute()`, `<Slot>` — the Vue 3 equivalent of `@yatoi/slots` | No (Vue) |
 
 
 Stop at the layer you need. A shell developer drives the kernel from
@@ -181,15 +183,20 @@ package is the rest.
 
 ## Status
 
-v0.1 is implemented and tested — 72 tests, the kernel's in plain Node, the
-React layer's under `<StrictMode>` on a concurrent root, plus a torture
-test for a service that unloads while dependents are mid-async. Not yet
-on npm; clone it and run the example.
+v0.1 is implemented and tested — 95 tests, the kernel's in plain Node, the
+React layer's under `<StrictMode>` on a concurrent root, the Vue layer
+asserting unmount/remount explicitly since Vue has no StrictMode, plus a
+torture test for a service that unloads while dependents are mid-async.
+`@yatoi/vue` and `@yatoi/vue-slots` are a second framework binding built
+without changing `@yatoi/kernel` — the proof that the layering is real,
+not just convenient for React. Not yet on npm; clone it and run the
+example.
 
 What's next — devtools, Suspense integration, token versioning, a Dart
-implementation for Flutter — and what's deliberately not planned is in
-[ROADMAP.md](ROADMAP.md). [CONTRIBUTING.md](CONTRIBUTING.md) is the short
-version of how to help; [AGENTS.md](AGENTS.md) is the long one.
+implementation for Flutter, a Solid binding — and what's deliberately not
+planned is in [ROADMAP.md](ROADMAP.md). [CONTRIBUTING.md](CONTRIBUTING.md)
+is the short version of how to help; [AGENTS.md](AGENTS.md) is the long
+one.
 
 ## Documentation
 

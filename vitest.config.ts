@@ -9,6 +9,8 @@ const alias = {
   '@yatoi/kernel': src('kernel'),
   '@yatoi/react': src('react'),
   '@yatoi/slots': src('slots'),
+  '@yatoi/vue': src('vue'),
+  '@yatoi/vue-slots': src('vue-slots'),
 }
 
 export default defineConfig({
@@ -39,6 +41,26 @@ export default defineConfig({
         test: {
           name: 'slots',
           root: './packages/slots',
+          environment: 'jsdom',
+          setupFiles: ['./test/setup.ts'],
+          include: ['test/**/*.test.{ts,tsx}'],
+        },
+      },
+      {
+        resolve: { alias },
+        test: {
+          name: 'vue',
+          root: './packages/vue',
+          environment: 'jsdom',
+          setupFiles: ['./test/setup.ts'],
+          include: ['test/**/*.test.{ts,tsx}'],
+        },
+      },
+      {
+        resolve: { alias },
+        test: {
+          name: 'vue-slots',
+          root: './packages/vue-slots',
           environment: 'jsdom',
           setupFiles: ['./test/setup.ts'],
           include: ['test/**/*.test.{ts,tsx}'],

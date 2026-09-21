@@ -124,6 +124,8 @@ commitment. **Do not merge these.**
 | `/kernel` | Scope tree + disposer stack, typed token registry, dependency graph with cascade unload/reload | No |
 | `/react` | `<KernelProvider>`, `useService`, `useSyncExternalStore` bridge, Suspense + error boundary integration | Yes |
 | `/slots` | Typed contribution points, `<Slot>`, resolution policy | Yes |
+| `/vue` | `provideKernel`/`<KernelProvider>`, `useService`, `shallowRef` + `kernel.subscribe` bridge, `<Requires>` | No (Vue instead) |
+| `/vue-slots` | Typed contribution points, `<Slot>`, resolution policy — the Vue equivalent of `/slots` | No (Vue instead) |
 | `/loader` | Manifests, lazy activation, remote loading, isolation | Yes |
 | `/devtools` | Graph inspector, why-did-this-unload traces | Yes |
 
@@ -132,11 +134,13 @@ load-bearing — it keeps the protocol honest and makes a server-side or
 worker-side kernel possible later.
 
 "Framework-agnostic" here means agnostic within JavaScript: a Solid or
-Vue binding reuses `@yatoi/kernel` unchanged. A different language
-(Dart for Flutter, say) is a second *implementation* of the protocol,
-not a binding — which is why the protocol is written down separately
-in [spec.md](spec.md), and why the kernel's test suite is organised as
-numbered semantics that the spec cites.
+Vue binding reuses `@yatoi/kernel` unchanged. `/vue` and `/vue-slots` are
+that claim tested, not asserted: `@yatoi/kernel` did not change to build
+them. A different language (Dart for Flutter, say) is a second
+*implementation* of the protocol, not a binding — which is why the
+protocol is written down separately in [spec.md](spec.md), and why the
+kernel's test suite is organised as numbered semantics that the spec
+cites.
 
 ---
 
@@ -369,7 +373,10 @@ error for contributing the wrong shape.
 - A shell developer drives `kernel.load()` from config and treats React as a
   projection — and their kernel is unit-testable without rendering anything.
 
-If either of those stops being true, the API is wrong.
+If either of those stops being true, the API is wrong. `@yatoi/vue` exists
+because the same two audiences, and the same test, apply verbatim with
+"Vue" substituted for "React" — a second binding is what makes that a
+claim about the *kernel's* design rather than a coincidence of React's.
 
 ### The honest cost — put this in the README
 

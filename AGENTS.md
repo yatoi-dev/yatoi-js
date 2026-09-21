@@ -6,9 +6,10 @@ read it before proposing architecture, not before fixing a typo.
 
 ## What this is
 
-**yatoi** — a plugin kernel for React: reversible effects, typed service
-discovery, cascade unload. Three packages, layered; a React example app.
-v0.1 is implemented and tested. Not yet published.
+**yatoi** — a plugin kernel with reversible effects, typed service
+discovery, and cascade unload, bound to React and to Vue. Five packages,
+layered; a React example app. v0.1 is implemented and tested. Not yet
+published.
 
 ## Layout
 
@@ -16,6 +17,8 @@ v0.1 is implemented and tested. Not yet published.
 packages/kernel/          @yatoi/kernel   plugins, services, scope tree, cascade unload   no React, no DOM
 packages/react/           @yatoi/react    KernelProvider, useService, <Requires>, usePlugin
 packages/slots/           @yatoi/slots    contribute(), <Slot>, Slots augmentation
+packages/vue/             @yatoi/vue      provideKernel/KernelProvider, useService, Requires, usePlugin (Vue 3)
+packages/vue-slots/       @yatoi/vue-slots   contribute(), <Slot>, Slots augmentation (Vue 3)
 examples/todo/            yatoi-example-todo   Vite app: todo + installable calendar plugin,
                            chapter 1 in one `pnpm dev`; chapter 2 delivers the same plugin as a
                            separately built file, opt-in (see examples/todo/README.md)
@@ -35,7 +38,7 @@ Run from the repo root. pnpm 9, Node ≥ 20.
 ```bash
 pnpm install
 pnpm test                                  # all packages
-pnpm test -- --project kernel              # one package: kernel | react | slots
+pnpm test -- --project kernel              # one package: kernel | react | slots | vue | vue-slots
 pnpm typecheck                             # every package, in parallel
 pnpm build                                 # tsc -b, topological
 pnpm --filter yatoi-example-todo dev          # example on :5173 (also .claude/launch.json → todo-example)
@@ -68,12 +71,22 @@ These are load-bearing. Don't relax them without changing
 2. **Never mutate the kernel during render.** In library code, tests, docs
    and the example: `kernel.load/unload`, `scope.provide/contribute` only
    in event handlers, effects, or bootstrap. There is no runtime guard.
-3. **The three packages stay separate.** Don't merge them, don't make
-   `kernel` import from `react` or `slots`.
+3. **The five packages stay separate.** `kernel`, `react`, `slots`, `vue`,
+   `vue-slots` — don't merge any of them, don't make `kernel` import from
+   any binding, and don't make a binding for one framework import from a
+   binding for another (`vue` doesn't import `react`, `slots` doesn't
+   import `vue-slots`, and so on). Each binding depends only on `kernel`
+   and, for the two slots packages, on its own framework's binding
+   package.
 4. **The kernel stores opaque values.** It never learns a value is a React
-   component. React meaning is added in `slots`.
+   component (or a Vue component). Framework meaning is added in the
+   `slots`/`vue-slots` layer, per framework.
 5. **All React tests run under `<StrictMode>` on a concurrent root.** If a
-   change doesn't survive double-invoke, the change is wrong.
+   change doesn't survive double-invoke, the change is wrong. Vue has no
+   StrictMode, so Vue tests assert unmount and remount explicitly instead
+   (mount → unmount → mount must leave exactly one active instance and run
+   the first instance's disposers once) — see `packages/vue/test/vue.test.ts`'s
+   `usePlugin` tests.
 6. **Don't add `/loader` or `/devtools`** until someone files an issue.
    The example's manifest + `examples/todo/src/plugins/registry.ts` (id →
    `import()`), plus the `VITE_PLUGIN_BASE` seam in
@@ -125,7 +138,7 @@ passing; it encodes the sync-facade guarantee.
 | Protocol-level problems under design | [docs/proposals/](docs/proposals/README.md) — one file per problem, with per-implementation status |
 | Real usage, end to end | [examples/todo](examples/todo/README.md) |
 | What the kernel guarantees | [docs/spec.md](docs/spec.md) (normative), pinned by `packages/kernel/test/kernel.test.ts` (numbered semantics) and `torture.test.ts` |
-| Slot resolution semantics | `packages/slots/test/slots.test.tsx` |
+| Slot resolution semantics | `packages/slots/test/slots.test.tsx` (React), `packages/vue-slots/test/vue-slots.test.ts` (Vue) |
 
 ## Known gaps (don't be surprised)
 

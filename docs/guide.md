@@ -11,7 +11,9 @@ pnpm add @yatoi/kernel @yatoi/react @yatoi/slots
 ```
 
 `@yatoi/kernel` has no dependencies. The other two peer-depend on
-`react ^18 || ^19`.
+`react ^18 || ^19`. For Vue, see ["Using it from Vue"](#using-it-from-vue)
+below — `@yatoi/vue` and `@yatoi/vue-slots` peer-depend on `vue ^3.4.0`
+instead.
 
 ## Create a kernel
 
@@ -322,6 +324,88 @@ scope.contribute(Views, { id: 'calendar', label: 'Calendar', View })
 `useContributions` works on any `CollectionToken`; slots are collections
 underneath. Each `Contribution` carries `value`, `priority`, `mode` and
 `owner` (the contributing plugin's name).
+
+## Using it from Vue
+
+`@yatoi/vue` and `@yatoi/vue-slots` are the same two layers, aimed at
+Vue 3 instead of React. Everything above still applies conceptually — the
+kernel, tokens, plugins, `inject`/`provides`, cascade unload — only the
+binding changes. Install:
+
+```bash
+pnpm add @yatoi/kernel @yatoi/vue @yatoi/vue-slots
+```
+
+Provide the kernel from your root component's `setup()`:
+
+```ts
+import { provideKernel } from '@yatoi/vue'
+import { kernel } from './kernel'
+
+export default defineComponent({
+  setup() {
+    provideKernel(kernel)
+    // ...
+  },
+})
+```
+
+or, template-first, with `<KernelProvider :kernel="kernel">` wrapping your
+app. Note the name collision this whole binding lives next to: Vue's own
+`inject()` (what `useKernel()` is built on) has nothing to do with a
+plugin's `inject:` field on the kernel side — every doc comment in
+`@yatoi/vue` says "Vue's `inject()`" when it means Vue's, to keep the two
+apart.
+
+`useService`/`useServiceState`/`useContributions` return read-only refs
+instead of hook return values — there's no `useSyncExternalStore` in Vue,
+so `kernel.subscribe` plus a `shallowRef` (written only when the kernel's
+answer actually changed) is the tearing-safe equivalent:
+
+```ts
+const clock = useService(Clock)   // Readonly<ShallowRef<Clock | undefined>>
+// in a render function: clock.value
+// in a template:         {{ clock }}
+```
+
+`<Requires>` is the same cascade-unload boundary, with the values handed
+to the default slot as a single tuple argument — which is also why
+`v-slot="[clock, store]"` (array destructuring) works in a template, the
+same way `v-slot="{ x }"` does for objects:
+
+```html
+<Requires :of="[Clock, Store]">
+  <template #fallback><Spinner /></template>
+  <template #default="[clock, store]">
+    <Dashboard :clock="clock" :store="store" />
+  </template>
+</Requires>
+```
+
+`usePlugin(plugin)` loads on `onMounted`, disposes on `onBeforeUnmount` —
+Vue has no StrictMode double-invoke, but a component that unmounts and is
+immediately remounted at the same spot (a `:key` change, HMR) exercises
+the same load → unload → load contract.
+
+`<Slot>` from `@yatoi/vue-slots` works the same way as `@yatoi/slots`'s,
+with one mechanical difference: a slot's own props (e.g. `task` for
+`task.card`) are passed as plain attrs, not typed component props — Vue
+has no way to spread an arbitrary typed prop bag onto a component's
+declared props the way JSX does, so `<Slot>` declares `inheritAttrs:
+false` and reads them off `attrs` instead:
+
+```html
+<Slot name="task.card" mode="single" :task="task">
+  <template #default="{ task }"><DefaultCard :task="task" /></template>
+</Slot>
+```
+
+`declare module '@yatoi/vue-slots' { interface Slots { ... } }` is a
+**separate augmentation from `@yatoi/slots`'s** — see the report in the
+PR/commit that added this binding for why a shared `Slots` interface
+isn't the right call. The tests in `packages/vue/test/vue.test.ts` and
+`packages/vue-slots/test/vue-slots.test.ts` port every claim from the
+React/`@yatoi/slots` suites; read those before reading the source.
 
 ## Load plugins from a manifest
 

@@ -1,0 +1,45 @@
+{
+  "name": "@yatoi/vue-slots",
+  "version": "0.0.0",
+  "description": "Typed contribution points for @yatoi/kernel, for Vue: contribute() and <Slot>.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yatoi-dev/yatoi-js.git",
+    "directory": "packages/vue-slots"
+  },
+  "homepage": "https://github.com/yatoi-dev/yatoi-js/tree/main/packages/vue-slots#readme",
+  "bugs": "https://github.com/yatoi-dev/yatoi-js/issues",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b tsconfig.build.json",
+    "typecheck": "tsc -b tsconfig.json && tsc -b tsconfig.test.json",
+    "test": "vitest run --project vue-slots --root ../.."
+  },
+  "peerDependencies": {
+    "vue": "^3.4.0"
+  },
+  "dependencies": {
+    "@yatoi/kernel": "workspace:*",
+    "@yatoi/vue": "workspace:*"
+  },
+  "keywords": [
+    "vue",
+    "plugin-architecture",
+    "plugin-system",
+    "extension-points",
+    "slots"
+  ]
+}

@@ -210,6 +210,54 @@ There is deliberately no render-time-mutation guard. One was planned; a
 reliable one under concurrent rendering isn't cheap, and a guard that
 lies is worse than none. The rule is documented instead.
 
+## Vue binding
+
+`@yatoi/vue` mirrors `@yatoi/react` layer for layer; the differences all
+trace back to Vue's reactivity model not being React's.
+
+- Vue has no `useSyncExternalStore`. Its analogue is a `shallowRef` seeded
+  from a synchronous read, written back inside a `kernel.subscribe`
+  callback **only when the new read is `!==` the ref's current value**.
+  That identity check is the load-bearing part — without it, every kernel
+  mutation would write the ref and trigger every reader's render effect,
+  even ones whose own answer didn't change. `useService`, `useServiceState`
+  and `useContributions` are each one `shallowRef` plus this pattern, and
+  each returns a `shallowReadonly` wrapper so callers can't write into
+  what's meant to be a one-way snapshot. Unsubscription happens on
+  `onScopeDispose`, so the pattern works equally in a component's
+  `setup()` and in a plain composable called from one.
+- `Requires` is the same cached-tuple-by-element-identity trick as
+  React's, but the default slot receives the tuple as a single argument
+  (Vue scoped slots only ever bind one), which is also what makes
+  `v-slot="[clock, store]"` compile in a template — array destructuring is
+  valid anywhere `v-slot="pattern"` compiles to a function parameter.
+- `usePlugin` is `onMounted`/`onBeforeUnmount` around `kernel.load`/
+  `handle.dispose()`. There's no StrictMode-style double-invoke to survive,
+  but the same load → unload → load contract is real for Vue too: a
+  component instance that unmounts and is immediately replaced at the same
+  spot (a `:key` change, HMR) must leave exactly one active instance and
+  run the first instance's disposers exactly once. The Vue test suite
+  asserts this remount case explicitly rather than relying on a framework
+  double-invoke to exercise it for free.
+- **The naming clash.** Vue's own `provide`/`inject` is the mechanism
+  `provideKernel`/`useKernel` are built on, and it collides in vocabulary
+  — not behavior — with a *plugin's* `inject:` field on the kernel side
+  (`packages/kernel/src/types.ts`'s `PluginDef.inject`). The two are
+  unrelated: one is Vue wiring a value through the component tree, the
+  other is the kernel's dependency graph. Every doc comment in
+  `@yatoi/vue` that says "inject" says whose.
+- `KernelProvider`/`useKernel` use an `InjectionKey<Kernel>` symbol;
+  `provideKernel(kernel)` is the same thing called directly, for setups
+  that don't want a wrapper component.
+- No generic component can be declared without an SFC's `<script setup
+  generic="T">` macro (which needs `vue-tsc`, off the table under this
+  repo's plain-`tsc -b` toolchain). `Requires` and `@yatoi/vue-slots`'s
+  `Slot` both use the same fix as React's `Slot.tsx`: an untyped
+  `defineComponent` implementation, exported under a cast to a generic
+  function *signature* that only exists for the type checker. `h()`
+  validates real call sites against it; nothing checks it against the
+  runtime object it's a lie about, same as `Slot.tsx`'s `as never`.
+
 ## Slots
 
 `@yatoi/slots` is thin on purpose:
@@ -231,15 +279,35 @@ lies is worse than none. The rule is documented instead.
 The file is `token.ts` rather than `slot.ts` because macOS's
 case-insensitive filesystem collides `slot.ts` with `Slot.tsx`.
 
+`@yatoi/vue-slots` is the same design over `@yatoi/vue` instead: same
+`slot:${name}` key format (so a React `<Slot>` host and a Vue plugin, or
+vice versa, land in the same kernel collection if they ever need to — not
+a promise either binding makes today, just a consequence of the key being
+the only shared contract), same `composeSingle` fold, same
+typed-signature-over-untyped-implementation trick for its `Slot`. The one
+real mechanical difference: a slot's own props are read off `attrs`
+(`inheritAttrs: false`) rather than being part of the component's typed
+props, because Vue has no equivalent of JSX's arbitrary-prop-bag spread
+onto a statically-typed component. `Slots` is declared separately in each
+package (`@yatoi/slots` vs. `@yatoi/vue-slots`) rather than shared, since
+a renderer's type (`ComponentType` vs. `FunctionalComponent`) is
+framework-specific either way — see the guide's Vue section and the
+commit's report for whether that split is the right long-term call.
+
 ## Build and test topology
 
-- TypeScript project references (`tsc -b`). `react` references
-  `kernel/tsconfig.build.json`; `slots` references both. Typecheck uses
-  the non-composite `tsconfig.json` with the same references.
-- Vitest projects, one per package: `kernel` in `node`, `react` and
-  `slots` in `jsdom` with a `setup.ts` that calls testing-library's
-  `cleanup`. All React tests render inside `<StrictMode>` on a
-  `createRoot` (concurrent) root.
+- TypeScript project references (`tsc -b`). `react` and `vue` each
+  reference `kernel/tsconfig.build.json`; `slots` references `kernel` and
+  `react`, `vue-slots` references `kernel` and `vue`. Typecheck uses the
+  non-composite `tsconfig.json` with the same references.
+- Vitest projects, one per package: `kernel` in `node`; `react`, `slots`,
+  `vue` and `vue-slots` in `jsdom`, each with its own `setup.ts`. React's
+  calls testing-library's `cleanup`; Vue's resets `document.body.innerHTML`
+  (`@vue/test-utils` has no equivalent global auto-cleanup). All React
+  tests render inside `<StrictMode>` on a `createRoot` (concurrent) root;
+  Vue tests have no such mode to render under, so they assert unmount and
+  remount behavior explicitly instead of relying on a framework
+  double-invoke to exercise it.
 - Cross-package imports in tests and the example resolve to
   `packages/*/src/index.ts` by alias, so neither depends on a prior build.
 - TypeScript is pinned to 5.9. 6.x changed defaults and 7.x is the native
@@ -253,4 +321,5 @@ case-insensitive filesystem collides `slot.ts` with `Slot.tsx`.
 | change plugin activation rules | `KernelImpl.pass()` and `depsPresent()`; the torture test must still pass |
 | add a scope capability | `Scope` in `types.ts`, `ScopeImpl`, and `ScopeHost` if it needs the kernel |
 | add a React hook | one file in `react/src`, exported from `index.ts`, tested under StrictMode |
-| add a slot resolution mode | `ContributionMode` in kernel `types.ts` (a string; kernel doesn't interpret it), then `Slot.tsx` |
+| add a Vue composable | one file in `vue/src`, exported from `index.ts`, tested with explicit unmount/remount assertions |
+| add a slot resolution mode | `ContributionMode` in kernel `types.ts` (a string; kernel doesn't interpret it), then `Slot.tsx` and `@yatoi/vue-slots`'s `Slot.ts` (both, same algorithm) |

@@ -1,0 +1,7 @@
+export { KernelProvider, provideKernel, useKernel } from './context.js'
+export type { KernelProviderProps } from './context.js'
+export { useService, useServiceState } from './useService.js'
+export { useContributions } from './useContributions.js'
+export { Requires } from './Requires.js'
+export type { RequiresProps } from './Requires.js'
+export { usePlugin } from './usePlugin.js'
