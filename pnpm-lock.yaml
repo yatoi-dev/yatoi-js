@@ -58,6 +58,22 @@ importers:
         specifier: ^5.9.0
         version: 5.9.3
 
+  examples/server:
+    dependencies:
+      '@yatoi/kernel':
+        specifier: workspace:*
+        version: link:../../packages/kernel
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.20.4
+      tsx:
+        specifier: ^4.19.0
+        version: 4.23.15
+      typescript:
+        specifier: ^5.9.0
+        version: 5.9.3
+
   examples/todo:
     dependencies:
       '@yatoi/kernel':

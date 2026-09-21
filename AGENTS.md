@@ -27,6 +27,8 @@ examples/todo-vue/        yatoi-example-todo-vue   Vue 3 port of chapter 1 only,
                            @yatoi/slots + @yatoi/vue-slots (see examples/todo-vue/README.md)
 examples/agent-host/      yatoi-example-agent-host   Node program, no React, no DOM: skills as
                            plugins around a scripted (offline) model (see examples/agent-host/README.md)
+examples/server/          yatoi-example-server   node:http host: routes, jobs, middleware, async
+                           database capability, config reload (see examples/server/README.md)
 docs/                     concepts, guide, pitfalls, architecture, design, spec, proposals/
 ROADMAP.md, CONTRIBUTING.md
 ```
@@ -51,6 +53,8 @@ pnpm --filter yatoi-example-todo serve:plugin # builds + serves the calendar plu
 pnpm --filter yatoi-example-todo-vue dev      # Vue example on :5175 (also .claude/launch.json → todo-vue-example)
 pnpm --filter yatoi-example-agent-host start   # runs the agent-host demo to completion, no server
 pnpm test -- --project agent-host              # just the agent-host example's tests
+pnpm --filter yatoi-example-server start       # runs the node:http demo, reloads config, then exits
+pnpm test -- --project server                  # just the server example's tests
 ```
 
 Tests and the example alias `@yatoi/*` to `packages/*/src`, so no build

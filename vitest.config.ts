@@ -87,6 +87,16 @@ export default defineConfig({
           include: ['test/**/*.test.ts'],
         },
       },
+      {
+        resolve: { alias },
+        test: {
+          name: 'server',
+          root: './examples/server',
+          // Plain node:http and kernel primitives; no DOM or framework.
+          environment: 'node',
+          include: ['test/**/*.test.ts'],
+        },
+      },
     ],
   },
 })
