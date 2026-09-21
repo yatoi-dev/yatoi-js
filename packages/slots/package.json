@@ -3,6 +3,13 @@
   "version": "0.0.0",
   "description": "Typed contribution points for @yatoi/kernel: contribute() and <Slot>.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yatoi-dev/yatoi-js.git",
+    "directory": "packages/slots"
+  },
+  "homepage": "https://github.com/yatoi-dev/yatoi-js/tree/main/packages/slots#readme",
+  "bugs": "https://github.com/yatoi-dev/yatoi-js/issues",
   "type": "module",
   "sideEffects": false,
   "main": "./dist/index.js",

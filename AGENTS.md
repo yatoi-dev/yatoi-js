@@ -108,7 +108,7 @@ passing; it encodes the sync-facade guarantee.
   "Generated with …", whichever tool wrote the message. Claude Code users:
   `.claude/settings.json` is gitignored, so set locally
   `{ "attribution": { "commit": "", "pr": "" } }`.
-- Commit only when asked. Don't push; there is no remote yet.
+- Commit only when asked. Push only when asked; `origin` is github.com/yatoi-dev/yatoi-js.
 
 ## Where to look
 
