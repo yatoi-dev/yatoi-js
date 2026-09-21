@@ -162,9 +162,10 @@ root so you don't have to discover the double-invoke bugs yourself.
 | ------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------ |
 | [`@yatoi/kernel`](packages/kernel)         | Plugins, services, scope tree, cascade unload. Runs in plain Node — no DOM, enforced at compile time | No     |
 | [`@yatoi/react`](packages/react)           | `<KernelProvider>`, `useService`, `<Requires>`, `usePlugin`, `useContributions`                      | Yes    |
-| [`@yatoi/slots`](packages/slots)           | Typed contribution points: `contribute()`, `<Slot>`                                                  | Yes    |
+| [`@yatoi/slots`](packages/slots)           | Framework-neutral slot contract: the `Slots` interface, `SlotName`, `SlotProps`, `slot()`. Depends on `@yatoi/kernel` only | No     |
+| [`@yatoi/react-slots`](packages/react-slots) | React binding for `@yatoi/slots`: `contribute()`, `<Slot>`                                         | Yes    |
 | [`@yatoi/vue`](packages/vue)               | `provideKernel`/`<KernelProvider>`, `useService`, `<Requires>`, `usePlugin`, `useContributions` — the Vue 3 equivalent of `@yatoi/react` | No (Vue) |
-| [`@yatoi/vue-slots`](packages/vue-slots)   | Typed contribution points for Vue: `contribute()`, `<Slot>` — the Vue 3 equivalent of `@yatoi/slots` | No (Vue) |
+| [`@yatoi/vue-slots`](packages/vue-slots)   | Vue binding for `@yatoi/slots`: `contribute()`, `<Slot>` — the Vue 3 equivalent of `@yatoi/react-slots` | No (Vue) |
 
 
 Stop at the layer you need. A shell developer drives the kernel from
@@ -216,7 +217,7 @@ against.
 plugin, exercising all three packages end to end; chapter 2 loads the
 plugin from another origin.
 - [Vue example app](examples/todo-vue/README.md) — the same app, chapter 1
-only, ported to `@yatoi/vue` + `@yatoi/vue-slots` — what a Vue plugin
+only, ported to `@yatoi/vue` + `@yatoi/slots` + `@yatoi/vue-slots` — what a Vue plugin
 author actually writes.
 - [Agent-host example](examples/agent-host/README.md) — a Node program,
 no React and no DOM, where skills are plugins and revoking a credential
@@ -230,7 +231,7 @@ Node ≥ 20, pnpm 9 (`packageManager` is pinned).
 
 ```bash
 pnpm install
-pnpm test          # all packages; kernel in node, react/slots in jsdom under StrictMode
+pnpm test          # all packages; kernel/slots in node, react/react-slots/vue/vue-slots in jsdom under StrictMode
 pnpm typecheck
 pnpm build         # tsc -b → dist/ in each package
 pnpm --filter yatoi-example-todo dev   # the example app; see its README

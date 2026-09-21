@@ -123,9 +123,10 @@ commitment. **Do not merge these.**
 |---|---|---|
 | `/kernel` | Scope tree + disposer stack, typed token registry, dependency graph with cascade unload/reload | No |
 | `/react` | `<KernelProvider>`, `useService`, `useSyncExternalStore` bridge, Suspense + error boundary integration | Yes |
-| `/slots` | Typed contribution points, `<Slot>`, resolution policy | Yes |
+| `/slots` | Framework-neutral slot contract: `Slots` interface, `SlotName`, `SlotProps`, `slot()` | No |
+| `/react-slots` | React binding for `/slots`: typed `contribute()`, `<Slot>`, resolution policy | Yes |
 | `/vue` | `provideKernel`/`<KernelProvider>`, `useService`, `shallowRef` + `kernel.subscribe` bridge, `<Requires>` | No (Vue instead) |
-| `/vue-slots` | Typed contribution points, `<Slot>`, resolution policy — the Vue equivalent of `/slots` | No (Vue instead) |
+| `/vue-slots` | Vue binding for `/slots`: typed `contribute()`, `<Slot>`, resolution policy — the Vue equivalent of `/react-slots` | No (Vue instead) |
 | `/loader` | Manifests, lazy activation, remote loading, isolation | Yes |
 | `/devtools` | Graph inspector, why-did-this-unload traces | Yes |
 
@@ -209,8 +210,9 @@ the shape and the reasoning. If the implementation argues for a different
 shape, the implementation wins — update this section and the guide.
 
 The property that makes the layer split work: **the kernel stores opaque
-values.** It never knows a value is a React component. `/slots` is what
-gives stored values React meaning.
+values.** It never knows a value is a React component. `/react-slots` is
+what gives stored values React meaning — `/slots` only owns the
+framework-neutral contract (names, prop shapes).
 
 ### `/kernel` — no React anywhere
 
@@ -323,10 +325,12 @@ function Editor() {
 }
 ```
 
-### `/slots` — contribution
+### `/slots` and `/react-slots` — contribution
 
 Host declares the contract; augmentation is what lets third parties
-participate:
+participate. The augmentation target is `@yatoi/slots` — the
+framework-neutral package — regardless of which binding renders it, so a
+host using both React and Vue surfaces declares this once:
 
 ```ts
 declare module '@yatoi/slots' {
@@ -338,12 +342,18 @@ declare module '@yatoi/slots' {
 ```
 
 A plugin contributes and gets a disposer for free, because contribution is
-a scope effect. `/slots` exports a typed `contribute` that maps the slot
-name onto a kernel collection — the kernel itself only ever sees
-`scope.contribute(collectionToken, opaqueValue, meta)`:
+a scope effect. `/react-slots` exports a typed `contribute` that maps the
+slot name (via `/slots`' `slot()`) onto a kernel collection — the kernel
+itself only ever sees `scope.contribute(collectionToken, opaqueValue,
+meta)`. `slot()` in the neutral package returns `CollectionToken<unknown>`
+since it can't know what a "renderer" is; `/react-slots` narrows it to
+`CollectionToken<SlotRenderer<N>>` with one cast at the top of
+`contribute()` and `<Slot>` — that cast is where React meaning gets
+assigned; `/vue-slots` has the same cast, narrowing to its own Vue
+`SlotRenderer` instead:
 
 ```tsx
-import { contribute } from '@yatoi/slots'
+import { contribute } from '@yatoi/react-slots'
 
 contribute(scope, 'sidebar.item', ({ collapsed }) =>
   <ClockWidget compact={collapsed} />, { priority: 10 })

@@ -12,6 +12,7 @@
   "dependencies": {
     "@yatoi/kernel": "workspace:*",
     "@yatoi/vue": "workspace:*",
+    "@yatoi/slots": "workspace:*",
     "@yatoi/vue-slots": "workspace:*",
     "vue": "^3.5.0"
   },

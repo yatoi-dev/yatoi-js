@@ -1,8 +1,8 @@
 import { computed, defineComponent, h, type FunctionalComponent, type PropType, type VNode } from 'vue'
-import type { Contribution } from '@yatoi/kernel'
+import type { CollectionToken, Contribution } from '@yatoi/kernel'
 import { useContributions } from '@yatoi/vue'
-import { slot } from './token.js'
-import type { SlotName, SlotProps } from './types.js'
+import { slot } from '@yatoi/slots'
+import type { SlotName, SlotProps, SlotRenderer } from './types.js'
 
 export interface SlotOwnProps<N extends SlotName> {
   name: N
@@ -59,7 +59,10 @@ const SlotImpl = defineComponent({
   inheritAttrs: false,
   setup(props, { attrs, slots: rawSlots }) {
     const slots = rawSlots as LooseSlots
-    const contributions = useContributions(slot(props.name as SlotName))
+    // Same boundary cast as `contribute.ts`: the neutral package hands back
+    // CollectionToken<unknown>, and this is where Vue meaning is assigned.
+    const token = slot(props.name as SlotName) as CollectionToken<SlotRenderer<SlotName>>
+    const contributions = useContributions(token)
 
     // The default slot, wrapped so it can be passed around as `Default` —
     // a plain functional component that, when invoked, calls the scoped

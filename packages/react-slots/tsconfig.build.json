@@ -1,13 +1,10 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "lib": [
-      "ES2022",
-      "DOM",
-      "DOM.Iterable"
-    ],
-    "rootDir": "src",
-    "noEmit": true
+    "composite": true,
+    "noEmit": false,
+    "outDir": "dist",
+    "tsBuildInfoFile": "dist/.tsbuildinfo"
   },
   "include": [
     "src"
@@ -20,7 +17,7 @@
       "path": "../slots/tsconfig.build.json"
     },
     {
-      "path": "../vue/tsconfig.build.json"
+      "path": "../react/tsconfig.build.json"
     }
   ]
 }

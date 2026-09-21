@@ -1,8 +1,8 @@
 import { createElement, useMemo, type ComponentType, type ReactNode } from 'react'
-import type { Contribution } from '@yatoi/kernel'
+import type { CollectionToken, Contribution } from '@yatoi/kernel'
 import { useContributions } from '@yatoi/react'
-import { slot } from './token.js'
-import type { SlotName, SlotProps } from './types.js'
+import { slot } from '@yatoi/slots'
+import type { SlotName, SlotProps, SlotRenderer } from './types.js'
 
 type SlotOwnProps<N extends SlotName> = {
   name: N
@@ -47,7 +47,10 @@ const Nothing: AnyRenderer = () => null
 
 function SlotImpl(props: LooseProps): ReactNode {
   const { name, mode = 'list', children, fallback = null, ...slotProps } = props
-  const contributions = useContributions(slot(name as SlotName)) as readonly Contribution<AnyRenderer>[]
+  // Same boundary cast as `contribute.ts`: the neutral package hands back
+  // CollectionToken<unknown>, and this is where React meaning is assigned.
+  const token = slot(name as SlotName) as CollectionToken<SlotRenderer<SlotName>>
+  const contributions = useContributions(token) as readonly Contribution<AnyRenderer>[]
 
   // Composed once per (contributions, default) — both are referentially
   // stable until they actually change, so contributed components keep their

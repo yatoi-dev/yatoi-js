@@ -20,7 +20,7 @@
       "path": "../slots/tsconfig.build.json"
     },
     {
-      "path": "../vue/tsconfig.build.json"
+      "path": "../react/tsconfig.build.json"
     }
   ]
 }

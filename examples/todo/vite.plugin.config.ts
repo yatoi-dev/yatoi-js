@@ -29,8 +29,8 @@ export default defineConfig({
       // React is the ONLY thing this bundle externalizes. The host shares
       // one React instance with every plugin it loads by URL via an import
       // map (see vite/react-import-map.ts). @yatoi/kernel, @yatoi/slots,
-      // and the contract (src/contract) are bundled in on purpose, not
-      // left external. A token's identity is its string `key`
+      // @yatoi/react-slots, and the contract (src/contract) are bundled in
+      // on purpose, not left external. A token's identity is its string `key`
       // (packages/kernel/src/token.ts), not the object `defineService` /
       // `defineCollection` returned, so this plugin's own copy of the
       // kernel protocol still resolves the host's `Todos` service and

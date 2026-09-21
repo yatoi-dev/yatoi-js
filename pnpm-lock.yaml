@@ -66,6 +66,9 @@ importers:
       '@yatoi/react':
         specifier: workspace:*
         version: link:../../packages/react
+      '@yatoi/react-slots':
+        specifier: workspace:*
+        version: link:../../packages/react-slots
       '@yatoi/slots':
         specifier: workspace:*
         version: link:../../packages/slots
@@ -97,6 +100,9 @@ importers:
       '@yatoi/kernel':
         specifier: workspace:*
         version: link:../../packages/kernel
+      '@yatoi/slots':
+        specifier: workspace:*
+        version: link:../../packages/slots
       '@yatoi/vue':
         specifier: workspace:*
         version: link:../../packages/vue
@@ -131,7 +137,7 @@ importers:
         specifier: ^18.0.0 || ^19.0.0
         version: 19.3.0
 
-  packages/slots:
+  packages/react-slots:
     dependencies:
       '@yatoi/kernel':
         specifier: workspace:*
@@ -139,9 +145,18 @@ importers:
       '@yatoi/react':
         specifier: workspace:*
         version: link:../react
+      '@yatoi/slots':
+        specifier: workspace:*
+        version: link:../slots
       react:
         specifier: ^18.0.0 || ^19.0.0
         version: 19.3.0
+
+  packages/slots:
+    dependencies:
+      '@yatoi/kernel':
+        specifier: workspace:*
+        version: link:../kernel
 
   packages/vue:
     dependencies:
@@ -157,6 +172,9 @@ importers:
       '@yatoi/kernel':
         specifier: workspace:*
         version: link:../kernel
+      '@yatoi/slots':
+        specifier: workspace:*
+        version: link:../slots
       '@yatoi/vue':
         specifier: workspace:*
         version: link:../vue

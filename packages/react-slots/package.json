@@ -1,14 +1,14 @@
 {
-  "name": "@yatoi/vue-slots",
+  "name": "@yatoi/react-slots",
   "version": "0.0.0",
-  "description": "Typed contribution points for @yatoi/kernel, for Vue: contribute() and <Slot>.",
+  "description": "React binding for @yatoi/slots: contribute() and <Slot>.",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/yatoi-dev/yatoi-js.git",
-    "directory": "packages/vue-slots"
+    "directory": "packages/react-slots"
   },
-  "homepage": "https://github.com/yatoi-dev/yatoi-js/tree/main/packages/vue-slots#readme",
+  "homepage": "https://github.com/yatoi-dev/yatoi-js/tree/main/packages/react-slots#readme",
   "bugs": "https://github.com/yatoi-dev/yatoi-js/issues",
   "type": "module",
   "sideEffects": false,
@@ -26,18 +26,18 @@
   "scripts": {
     "build": "tsc -b tsconfig.build.json",
     "typecheck": "tsc -b tsconfig.json && tsc -b tsconfig.test.json",
-    "test": "vitest run --project vue-slots --root ../.."
+    "test": "vitest run --project react-slots --root ../.."
   },
   "peerDependencies": {
-    "vue": "^3.4.0"
+    "react": "^18.0.0 || ^19.0.0"
   },
   "dependencies": {
     "@yatoi/kernel": "workspace:*",
-    "@yatoi/slots": "workspace:*",
-    "@yatoi/vue": "workspace:*"
+    "@yatoi/react": "workspace:*",
+    "@yatoi/slots": "workspace:*"
   },
   "keywords": [
-    "vue",
+    "react",
     "plugin-architecture",
     "plugin-system",
     "extension-points",

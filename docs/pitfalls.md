@@ -125,10 +125,11 @@ its own build — the shim has to name its exports explicitly, not
 `export * from 'react'`).
 
 The plugin does **not** need to externalize `@yatoi/kernel`, `@yatoi/slots`,
-or its contract package — it may bundle its own copies of all three. A
-service, collection, or slot's identity is its string `key`
-(`packages/kernel/src/token.ts`), and `/slots`' slot names are just
-collection keys of the form `slot:${name}` (`packages/slots/src/token.ts`).
+`@yatoi/react-slots`, or its contract package — it may bundle its own
+copies of all four. A service, collection, or slot's identity is its
+string `key` (`packages/kernel/src/token.ts`), and slot names are just
+collection keys of the form `slot:${name}`, defined once in
+`packages/slots/src/token.ts` and shared by every binding.
 Two independently bundled tokens with the same key name the same
 capability to the host's kernel, no shared object or shared module
 instance required. That's what makes "externalize React, bundle

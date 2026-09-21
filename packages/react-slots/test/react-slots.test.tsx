@@ -10,7 +10,7 @@ interface Task {
   id: string
   title: string
 }
-declare module '../src/index.js' {
+declare module '@yatoi/slots' {
   interface Slots {
     'sidebar.item': { collapsed: boolean }
     'task.card': { task: Task }

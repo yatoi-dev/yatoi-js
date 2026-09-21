@@ -3,8 +3,9 @@
 The same app, the same kernel, a different framework. A Vue 3 port of
 [`examples/todo`](../todo/README.md)'s **chapter 1 only** — todos, a
 kernel-scoped store, an installable calendar plugin that adds a due-date
-field and a month view — on `@yatoi/kernel`, `@yatoi/vue`, and
-`@yatoi/vue-slots` instead of `@yatoi/react`/`@yatoi/slots`. No chapter 2:
+field and a month view — on `@yatoi/kernel`, `@yatoi/vue`, `@yatoi/slots`,
+and `@yatoi/vue-slots` instead of `@yatoi/react`/`@yatoi/react-slots`. No
+chapter 2:
 no remote loading, no import map, no `VITE_PLUGIN_BASE` seam. That story
 is about bundlers, not frameworks, and the React example already tells it.
 
@@ -148,7 +149,7 @@ contract**: `vue-tsc` cannot check that a `<Slot name="todo.item.extra">`
 call site passes a `todo` of the right shape, or that it's passed at all.
 Get the slot name right and the prop wrong (or missing), and nothing red-
 squiggles; you find out at runtime, or not at all if the contributed
-renderer silently accepts `undefined`. `@yatoi/slots`' React `<Slot>` has
+renderer silently accepts `undefined`. `@yatoi/react-slots`' React `<Slot>` has
 the same gap in principle (extra JSX props aren't checked against
 `Slots[N]` by the compiler either in every case), but attrs make Vue's
 version more visible — attrs are *designed* to be an escape hatch from
@@ -263,7 +264,7 @@ bypass `vue-tsc` entirely for slot props; `<Requires>`'s typed signature
 doesn't reach `v-slot` template destructuring). Smaller notes:
 
 - `contribute()`'s `Scope<any>` parameter type (in
-  `packages/vue-slots/src/contribute.ts`, matching `@yatoi/slots`) means a
+  `packages/vue-slots/src/contribute.ts`, matching `@yatoi/react-slots`) means a
   plugin's `setup(scope)` parameter isn't narrowed by `contribute` calls
   either way — not new to this port, just newly visible writing a second
   plugin against it.

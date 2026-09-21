@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { definePlugin } from '@yatoi/kernel'
-import { contribute, type SlotRendererProps } from '@yatoi/slots'
+import { contribute, type SlotRendererProps } from '@yatoi/react-slots'
 import { Todos, Views, useTodos, type Todo, type TodoStore } from '../../contract/index.js'
 import css from './calendar.css?inline'
 

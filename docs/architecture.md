@@ -8,9 +8,10 @@ implements both. File references are to `packages/*/src`.
 ## Layering and the no-DOM constraint
 
 ```
-slots/   Slot.tsx  contribute.ts  token.ts  types.ts      → depends on react, kernel
-react/   context  useService  useContributions  Requires  usePlugin   → depends on kernel
-kernel/  token  types  registry  scope  kernel  plugin    → depends on nothing
+react-slots/  Slot.tsx  contribute.ts  types.ts           → depends on react, slots, kernel
+react/        context  useService  useContributions  Requires  usePlugin   → depends on kernel
+slots/        token.ts  types.ts                          → depends on kernel only, no React
+kernel/       token  types  registry  scope  kernel  plugin    → depends on nothing
 ```
 
 `kernel/tsconfig.json` sets `lib: ["ES2022"]` and `types: []`. Any
@@ -20,8 +21,8 @@ the kernel testable in plain Node, and leaves the door open to a worker-
 or server-side kernel. `console` is the one exception, declared minimally
 in `globals.d.ts`.
 
-The three packages are separate publishable units with their own
-stability commitments. Do not merge them.
+These packages (and their Vue counterparts) are separate publishable
+units with their own stability commitments. Do not merge them.
 
 ## Kernel data model
 
@@ -252,56 +253,85 @@ trace back to Vue's reactivity model not being React's.
 - No generic component can be declared without an SFC's `<script setup
   generic="T">` macro (which needs `vue-tsc`, off the table under this
   repo's plain-`tsc -b` toolchain). `Requires` and `@yatoi/vue-slots`'s
-  `Slot` both use the same fix as React's `Slot.tsx`: an untyped
-  `defineComponent` implementation, exported under a cast to a generic
-  function *signature* that only exists for the type checker. `h()`
-  validates real call sites against it; nothing checks it against the
-  runtime object it's a lie about, same as `Slot.tsx`'s `as never`.
+  `Slot` both use the same fix as `@yatoi/react-slots`' `Slot.tsx`: an
+  untyped `defineComponent` implementation, exported under a cast to a
+  generic function *signature* that only exists for the type checker.
+  `h()` validates real call sites against it; nothing checks it against
+  the runtime object it's a lie about, same as `Slot.tsx`'s `as never`.
 
 ## Slots
 
-`@yatoi/slots` is thin on purpose:
+The contract and its bindings are three packages now, not one:
 
-- `token.ts`: `slot(name)` memoises one `CollectionToken<SlotRenderer>`
-  per name. The kernel sees an ordinary collection. The `slot:${name}` key
-  format is stable for cross-bundle interop — a plugin carrying its own
-  copy of `@yatoi/slots` reaches the same collection by key alone.
-- `contribute.ts`: a typed wrapper over `scope.contribute(slot(name), …)`.
-  All the type-checking of props against `Slots[name]` happens here.
-- `Slot.tsx`: the public `Slot` is a typed *signature* over an untyped
-  implementation. Inside the package `Slots` is empty, so `SlotName` is
-  `never` and generic code doesn't type-check; the implementation works
-  on loose shapes and the export restores the generic type for consumers.
-  `composeSingle` folds contributions lowest-priority-first so the
-  highest ends up outermost; it's memoised on `(contributions, children)`
-  so contributed components keep identity across host re-renders.
+- **`@yatoi/slots`** is the framework-neutral contract, and depends on
+  `@yatoi/kernel` only — no React, no Vue, same `lib`/`types`
+  discipline as the kernel itself.
+  - `types.ts`: the `Slots` augmentation point, `SlotName = keyof Slots &
+    string`, `SlotProps<N> = Slots[N]`. This is what a host augments —
+    once — regardless of which binding renders it.
+  - `token.ts`: `slot(name)` memoises one `CollectionToken<unknown>` per
+    name. The kernel sees an ordinary collection; this package can't
+    narrow the token's value type further because it doesn't know what a
+    "renderer" is. The `slot:${name}` key format is stable for
+    cross-bundle interop — a plugin carrying its own copy of
+    `@yatoi/slots` reaches the same collection by key alone.
+- **`@yatoi/react-slots`** is the React binding. It re-exports
+  `Slots`/`SlotName`/`SlotProps`/`slot` from `@yatoi/slots` so
+  `import { contribute, type Slots } from '@yatoi/react-slots'` still
+  works, and adds:
+  - `types.ts`: `SlotRendererProps<N>` (slot props + `Default`) and
+    `SlotRenderer<N>`, both React-specific (`ComponentType`/`ReactNode`).
+  - `contribute.ts`: a typed wrapper over `scope.contribute(token, …)`.
+    All the type-checking of props against `Slots[name]` happens here.
+    `slot(name)` returns `CollectionToken<unknown>`; the one cast —
+    `as CollectionToken<SlotRenderer<N>>` — narrows it. That cast is the
+    layering, not a workaround: it's the exact point where a contribution
+    becomes "a React renderer" rather than an opaque value.
+  - `Slot.tsx`: the public `Slot` is a typed *signature* over an untyped
+    implementation. Inside the package `Slots` is empty (it's declared in
+    `@yatoi/slots`, re-exported here), so `SlotName` is `never` and
+    generic code doesn't type-check; the implementation works on loose
+    shapes and the export restores the generic type for consumers.
+    `composeSingle` folds contributions lowest-priority-first so the
+    highest ends up outermost; it's memoised on `(contributions,
+    children)` so contributed components keep identity across host
+    re-renders. Same boundary cast as `contribute.ts`, once, at the top
+    of the component.
 
-The file is `token.ts` rather than `slot.ts` because macOS's
-case-insensitive filesystem collides `slot.ts` with `Slot.tsx`.
+The file is `token.ts` (in `@yatoi/slots`) rather than `slot.ts` because
+macOS's case-insensitive filesystem collides `slot.ts` with `Slot.tsx` in
+the binding packages.
 
-`@yatoi/vue-slots` is the same design over `@yatoi/vue` instead: same
-`slot:${name}` key format (so a React `<Slot>` host and a Vue plugin, or
-vice versa, land in the same kernel collection if they ever need to — not
-a promise either binding makes today, just a consequence of the key being
-the only shared contract), same `composeSingle` fold, same
-typed-signature-over-untyped-implementation trick for its `Slot`. The one
-real mechanical difference: a slot's own props are read off `attrs`
-(`inheritAttrs: false`) rather than being part of the component's typed
-props, because Vue has no equivalent of JSX's arbitrary-prop-bag spread
-onto a statically-typed component. `Slots` is declared separately in each
-package (`@yatoi/slots` vs. `@yatoi/vue-slots`) rather than shared, since
-a renderer's type (`ComponentType` vs. `FunctionalComponent`) is
-framework-specific either way — see the guide's Vue section and the
-commit's report for whether that split is the right long-term call.
+`@yatoi/vue-slots` is the same design over `@yatoi/vue` instead, and
+depends on `@yatoi/slots` the same way `@yatoi/react-slots` does — same
+re-exports, same one boundary cast (to its own `CollectionToken<
+SlotRenderer<N>>`, where `SlotRenderer` is a Vue `FunctionalComponent`),
+same `composeSingle` fold, same typed-signature-over-untyped-
+implementation trick for its `Slot`. Because both bindings now import
+`slot()` from the same `@yatoi/slots`, a React `<Slot>` host and a Vue
+plugin (or vice versa) land in the same kernel collection for a given
+name — not a promise either binding makes about cross-framework
+rendering, just a consequence of sharing the token. The one real
+mechanical difference from the React binding: a slot's own props are read
+off `attrs` (`inheritAttrs: false`) rather than being part of the
+component's typed props, because Vue has no equivalent of JSX's
+arbitrary-prop-bag spread onto a statically-typed component. `Slots`
+itself is **not** declared separately per binding anymore — both re-export
+the one interface from `@yatoi/slots`, which is the whole point of the
+split: a host using both React and Vue surfaces for the same product
+declares its slots once.
 
 ## Build and test topology
 
 - TypeScript project references (`tsc -b`). `react` and `vue` each
-  reference `kernel/tsconfig.build.json`; `slots` references `kernel` and
-  `react`, `vue-slots` references `kernel` and `vue`. Typecheck uses the
-  non-composite `tsconfig.json` with the same references.
-- Vitest projects, one per package: `kernel` in `node`; `react`, `slots`,
-  `vue` and `vue-slots` in `jsdom`, each with its own `setup.ts`. React's
+  reference `kernel/tsconfig.build.json`; `slots` references `kernel` only
+  (like the kernel, `lib: ["ES2022"]`/`types: []`); `react-slots`
+  references `kernel`, `slots` and `react`; `vue-slots` references
+  `kernel`, `slots` and `vue`. Typecheck uses the non-composite
+  `tsconfig.json` with the same references.
+- Vitest projects, one per package: `kernel` and `slots` in `node` (no
+  DOM in either); `react`, `react-slots`, `vue` and `vue-slots` in
+  `jsdom`, each with its own `setup.ts`. React's
   calls testing-library's `cleanup`; Vue's resets `document.body.innerHTML`
   (`@vue/test-utils` has no equivalent global auto-cleanup). All React
   tests render inside `<StrictMode>` on a `createRoot` (concurrent) root;
@@ -322,4 +352,5 @@ commit's report for whether that split is the right long-term call.
 | add a scope capability | `Scope` in `types.ts`, `ScopeImpl`, and `ScopeHost` if it needs the kernel |
 | add a React hook | one file in `react/src`, exported from `index.ts`, tested under StrictMode |
 | add a Vue composable | one file in `vue/src`, exported from `index.ts`, tested with explicit unmount/remount assertions |
-| add a slot resolution mode | `ContributionMode` in kernel `types.ts` (a string; kernel doesn't interpret it), then `Slot.tsx` and `@yatoi/vue-slots`'s `Slot.ts` (both, same algorithm) |
+| add a slot resolution mode | `ContributionMode` in kernel `types.ts` (a string; kernel doesn't interpret it), then `@yatoi/react-slots`' `Slot.tsx` and `@yatoi/vue-slots`'s `Slot.ts` (both, same algorithm) |
+| change the slot contract itself (`Slots`, `SlotName`, `SlotProps`, `slot()`) | `packages/slots/src` — both bindings re-export, so this is the one place |

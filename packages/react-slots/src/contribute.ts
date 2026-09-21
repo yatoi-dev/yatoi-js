@@ -1,5 +1,5 @@
-import type { ContributionMode, Scope } from '@yatoi/kernel'
-import { slot } from './token.js'
+import type { CollectionToken, ContributionMode, Scope } from '@yatoi/kernel'
+import { slot } from '@yatoi/slots'
 import type { SlotName, SlotRenderer } from './types.js'
 
 export interface ContributeOptions {
@@ -24,7 +24,11 @@ export function contribute<N extends SlotName>(
   renderer: SlotRenderer<N>,
   options?: ContributeOptions,
 ): void {
-  scope.contribute(slot(name), renderer, {
+  // `slot()` returns CollectionToken<unknown> from the neutral package —
+  // it can't know a contribution is a React renderer. This cast is where
+  // that meaning gets assigned; the kernel itself only ever sees `unknown`.
+  const token = slot(name) as CollectionToken<SlotRenderer<N>>
+  scope.contribute(token, renderer, {
     ...(options?.priority !== undefined && { priority: options.priority }),
     ...(options?.mode !== undefined && { mode: options.mode }),
   })

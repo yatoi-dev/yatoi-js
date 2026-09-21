@@ -15,12 +15,13 @@ and **inverted contribution** (a plugin pushes UI into a surface it doesn't
 own). It does this with a small kernel that knows nothing about React, and
 a thin React binding that only ever *observes* the kernel.
 
-## Three layers
+## Four layers
 
 ```
-@yatoi/slots    typed contribution points, <Slot>        React
-@yatoi/react    KernelProvider, useService, <Requires>   React
-@yatoi/kernel   plugins, services, cascade unload        no React, no DOM
+@yatoi/react-slots   contribute(), <Slot> for React        React
+@yatoi/react         KernelProvider, useService, <Requires> React
+@yatoi/slots         Slots interface, SlotName, slot()      no React, no Vue
+@yatoi/kernel        plugins, services, cascade unload       no React, no DOM
 ```
 
 You stop at the layer you need. A shell developer drives the kernel from
@@ -47,7 +48,9 @@ There are two kinds:
   Contributed to by any number of plugins. Slots are built on collections.
 
 The kernel stores values opaquely. It never knows a value is a React
-component; `@yatoi/slots` is what gives a stored value React meaning.
+component; `@yatoi/react-slots` is what gives a stored value React
+meaning — `@yatoi/slots` only declares the contract (names and prop
+shapes), framework-neutral.
 
 Tokens like `Clock` above are the documented default. There is a second
 form, `service(key)`/`collection(key)`, for a plugin that can't depend on

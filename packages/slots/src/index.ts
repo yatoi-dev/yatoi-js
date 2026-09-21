@@ -1,6 +1,2 @@
-export type { Slots, SlotName, SlotProps, SlotRenderer, SlotRendererProps } from './types.js'
+export type { Slots, SlotName, SlotProps } from './types.js'
 export { slot } from './token.js'
-export { contribute } from './contribute.js'
-export type { ContributeOptions } from './contribute.js'
-export { Slot } from './Slot.js'
-export type { SlotComponentProps } from './Slot.js'

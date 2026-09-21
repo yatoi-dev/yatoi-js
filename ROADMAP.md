@@ -14,15 +14,19 @@ contributor can start without a discussion first; read
 
 ## Now — v0.1, done
 
-Five packages (`@yatoi/kernel`, `@yatoi/react`, `@yatoi/slots`,
-`@yatoi/vue`, `@yatoi/vue-slots`), the todo example with its two
-chapters, developer docs, and the [protocol spec](docs/spec.md). 95
-tests: the kernel in plain Node, the React layer under `<StrictMode>` on
-a concurrent root, the Vue layer asserting unmount/remount explicitly
-(Vue has no StrictMode), plus the torture case. A second JS binding
-(Vue) landed here rather than in *Later* — it reuses `@yatoi/kernel`
-unchanged, which is the proof that the layering is real rather than
-convenient for React. Not yet published. Also done: an
+Six packages (`@yatoi/kernel`, `@yatoi/react`, `@yatoi/slots`,
+`@yatoi/react-slots`, `@yatoi/vue`, `@yatoi/vue-slots`), the todo example
+with its two chapters, developer docs, and the
+[protocol spec](docs/spec.md). `@yatoi/slots` is the framework-neutral
+slot contract (depends on `@yatoi/kernel` only); `@yatoi/react-slots` and
+`@yatoi/vue-slots` are thin bindings over it, so a host declares its
+`Slots` augmentation once. Tests: the kernel and the neutral `slots`
+package in plain Node, the React layer under `<StrictMode>` on a
+concurrent root, the Vue layer asserting unmount/remount explicitly (Vue
+has no StrictMode), plus the torture case. A second JS binding (Vue)
+landed here rather than in *Later* — it reuses `@yatoi/kernel` unchanged,
+which is the proof that the layering is real rather than convenient for
+React. Not yet published. Also done: an
 [agent-host example](examples/agent-host/README.md), a Node program with
 no React and no DOM where skills are plugins, tools/prompt/middleware are
 collections read fresh each turn, and revoking a credential cascades a
@@ -124,3 +128,8 @@ Kept briefly so the history is visible without reading git log.
   `service(key)` for third parties (decision 4).
 - Cross-bundle identity → by key, tested (spec §2.2).
 - Name → `yatoi`, org `yatoi-dev`, repo `yatoi-js`.
+- Shared slot-names package for React + Vue hosts (raised while writing
+  the Vue example) → `@yatoi/slots` split out as the framework-neutral
+  contract (`Slots`, `SlotName`, `SlotProps`, `slot()`), with
+  `@yatoi/react-slots` and `@yatoi/vue-slots` as thin bindings over it. A
+  host declares `Slots` once and both bindings type-check against it.

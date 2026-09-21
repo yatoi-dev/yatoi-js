@@ -1,26 +1,14 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": [
-      "ES2022",
-      "DOM",
-      "DOM.Iterable"
-    ],
-    "types": [
-      "node"
-    ],
+    "lib": ["ES2022"],
+    "types": ["node"],
     "noEmit": true
   },
-  "include": [
-    "src",
-    "test"
-  ],
+  "include": ["src", "test"],
   "references": [
     {
       "path": "../kernel/tsconfig.build.json"
-    },
-    {
-      "path": "../react/tsconfig.build.json"
     }
   ]
 }

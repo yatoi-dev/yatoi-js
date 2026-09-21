@@ -1,7 +1,7 @@
 {
   "name": "@yatoi/slots",
   "version": "0.0.0",
-  "description": "Typed contribution points for @yatoi/kernel: contribute() and <Slot>.",
+  "description": "Framework-neutral slot contract for @yatoi/kernel: the Slots interface and slot().",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -25,18 +25,13 @@
   ],
   "scripts": {
     "build": "tsc -b tsconfig.build.json",
-    "typecheck": "tsc -b tsconfig.json && tsc -b tsconfig.test.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json --noEmit",
     "test": "vitest run --project slots --root ../.."
   },
-  "peerDependencies": {
-    "react": "^18.0.0 || ^19.0.0"
-  },
   "dependencies": {
-    "@yatoi/kernel": "workspace:*",
-    "@yatoi/react": "workspace:*"
+    "@yatoi/kernel": "workspace:*"
   },
   "keywords": [
-    "react",
     "plugin-architecture",
     "plugin-system",
     "extension-points",

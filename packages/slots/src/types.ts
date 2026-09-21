@@ -1,8 +1,9 @@
-import type { ComponentType, ReactNode } from 'react'
-
 /**
  * The host declares its contribution points by augmenting this interface.
  * Keys are slot names; values are the props a contribution receives.
+ *
+ * Augment **this** module — `@yatoi/slots` — once, regardless of how many
+ * framework bindings the host uses:
  *
  * ```ts
  * declare module '@yatoi/slots' {
@@ -13,8 +14,13 @@ import type { ComponentType, ReactNode } from 'react'
  * }
  * ```
  *
- * Props are checked on both sides: the host's `<Slot>` must pass them, and
- * a plugin's `contribute` renderer must accept them.
+ * `Slots` is one interface in one module; every binding's `contribute()`
+ * and `<Slot>` re-export `SlotName`/`SlotProps` from here, so they all
+ * type-check against the same augmentation without the host declaring it
+ * twice. Framework-specific shapes (what a contribution receives beyond
+ * its own props, what a renderer *is*) live in each binding package, not
+ * here — this package only owns the contract's neutral half: names and
+ * prop shapes.
  */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface Slots {}
@@ -22,15 +28,3 @@ export interface Slots {}
 export type SlotName = keyof Slots & string
 
 export type SlotProps<N extends SlotName> = Slots[N]
-
-/**
- * What a contribution receives: the slot's props plus `Default`, the
- * renderer it sits on top of (the host default, or a lower-priority
- * contribution). `wrap` contributions call through to it; `append` and
- * `replace` contributions usually ignore it.
- */
-export type SlotRendererProps<N extends SlotName> = SlotProps<N> & {
-  Default: ComponentType<SlotProps<N>>
-}
-
-export type SlotRenderer<N extends SlotName> = (props: SlotRendererProps<N>) => ReactNode
