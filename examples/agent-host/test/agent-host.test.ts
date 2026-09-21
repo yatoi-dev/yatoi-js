@@ -1,6 +1,6 @@
 import { createKernel, definePlugin } from '@yatoi/kernel'
 import { describe, expect, it } from 'vitest'
-import { PromptSections, Tools } from '../src/contract.js'
+import { PromptSections, SubAgentSession, Tools } from '../src/contract.js'
 import { createAgentHost } from '../src/host.js'
 import { scriptedModelPlugin } from '../src/plugins/scripted-model.js'
 import { googleAuthPlugin } from '../src/plugins/google-auth.js'
@@ -8,6 +8,9 @@ import { calendarSkillPlugin, lastClient } from '../src/plugins/calendar-skill.j
 import { summarizerAgentPlugin } from '../src/plugins/summarizer-agent.js'
 import { tracingPlugin } from '../src/plugins/tracing.js'
 import { guardrailPlugin } from '../src/plugins/guardrail.js'
+import { fakeMcpTransportPlugin, lastMcpTransport } from '../src/plugins/mcp-transport.js'
+import { mcpConnectionPlugin } from '../src/plugins/mcp-connection.js'
+import { delegationPlugin } from '../src/plugins/delegation.js'
 
 function deferred<T = void>() {
   let resolve!: (value: T) => void
@@ -184,6 +187,90 @@ describe('agent-host', () => {
     // The turn completes: the second model call still runs and produces a reply.
     expect(result.reply).toBeTruthy()
 
+    await kernel.dispose()
+  })
+
+  it('removes MCP tools when the transport drops and never invokes one after disconnect', async () => {
+    const kernel = createKernel()
+    const gate = deferred()
+    const modelPlugin = scriptedModelPlugin({ beforeToolCallReply: () => gate.promise })
+    const transportPlugin = fakeMcpTransportPlugin()
+    kernel.load(modelPlugin, transportPlugin, mcpConnectionPlugin)
+    await kernel.settle()
+
+    const host = createAgentHost(kernel)
+    gate.resolve()
+    const first = await host.runTurn('What is the weather?')
+    expect(first.toolCalls[0]?.tool).toBe('mcp.weather')
+    expect(lastMcpTransport?.calls).toBe(1)
+
+    const secondGate = deferred()
+    const gatedModel = scriptedModelPlugin({ beforeToolCallReply: () => secondGate.promise })
+    kernel.unload(modelPlugin)
+    kernel.load(gatedModel)
+    const pending = host.runTurn('What is the weather?')
+
+    kernel.unload(transportPlugin)
+    await kernel.settle()
+    expect(kernel.pluginState(mcpConnectionPlugin)).toBe('inactive')
+    expect(kernel.list(Tools).map((c) => c.value.name)).not.toContain('mcp.weather')
+    expect(lastMcpTransport?.connected).toBe(false)
+
+    secondGate.resolve()
+    const dropped = await pending
+    expect(dropped.reply).toMatch(/no longer available/)
+    expect(lastMcpTransport?.calls).toBe(1)
+
+    const next = await host.runTurn('What is the weather?')
+    expect(next.toolCalls).toHaveLength(0)
+    expect(lastMcpTransport?.calls).toBe(1)
+    await kernel.dispose()
+  })
+
+  it('loads a sub-agent as a child for one nested turn, then disposes it once', async () => {
+    const kernel = createKernel()
+    const modelPlugin = scriptedModelPlugin()
+    let disposals = 0
+    const delegation = delegationPlugin(kernel, { childDisposed: () => disposals++ })
+    kernel.load(modelPlugin, delegation)
+
+    const host = createAgentHost(kernel)
+    const result = await host.runTurn('Please delegate this task')
+
+    expect(result.toolCalls[0]?.tool).toBe('delegate')
+    expect(kernel.get(SubAgentSession)).toBeUndefined()
+    expect(kernel.list(Tools).map((c) => c.value.name)).toEqual(['delegate'])
+    expect(disposals).toBe(1)
+    await kernel.dispose()
+  })
+
+  it('disposes the child when delegation is unloaded during the nested turn', async () => {
+    const kernel = createKernel()
+    const started = deferred()
+    const release = deferred()
+    let disposals = 0
+    const delegation = delegationPlugin(kernel, {
+      childStarted: () => started.resolve(),
+      beforeChildReply: () => release.promise,
+      childDisposed: () => disposals++,
+    })
+    kernel.load(scriptedModelPlugin(), delegation)
+
+    const host = createAgentHost(kernel)
+    const pending = host.runTurn('Please delegate this task')
+    await started.promise
+    expect(kernel.get(SubAgentSession)).toBeDefined()
+    expect(kernel.list(Tools).map((c) => c.value.name)).toContain('subagent.echo')
+
+    kernel.unload(delegation)
+    await kernel.settle()
+    expect(kernel.get(SubAgentSession)).toBeUndefined()
+    expect(kernel.list(Tools).map((c) => c.value.name)).not.toContain('subagent.echo')
+    expect(disposals).toBe(1)
+
+    release.resolve()
+    await pending
+    expect(disposals).toBe(1)
     await kernel.dispose()
   })
 })

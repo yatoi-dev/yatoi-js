@@ -38,6 +38,26 @@ export function scriptedModelPlugin(hooks: ScriptedModelHooks = {}) {
 
       const lower = user.toLowerCase()
 
+      if (lower.includes('sub-agent')) {
+        const tool = tools.find((t) => t.name === 'subagent.echo')
+        if (tool) return { kind: 'tool', call: { tool: tool.name, args: {} } }
+      }
+
+      if (lower.includes('delegate')) {
+        const tool = tools.find((t) => t.name === 'delegate')
+        if (tool) return { kind: 'tool', call: { tool: tool.name, args: { task: user } } }
+      }
+
+      if (lower.includes('weather')) {
+        const tool = tools.find((t) => t.name === 'mcp.weather')
+        if (tool) {
+          await hooks.beforeToolCallReply?.()
+          return { kind: 'tool', call: { tool: tool.name, args: {} } }
+        }
+        await hooks.beforeToolCallReply?.()
+        return { kind: 'text', text: 'The MCP weather server is not connected.' }
+      }
+
       if (lower.includes('calendar')) {
         const tool = tools.find((t) => t.name === 'calendar.list')
         if (tool) {

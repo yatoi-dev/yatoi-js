@@ -41,10 +41,25 @@ export interface Summarizer {
   summarize(text: string): Promise<string>
 }
 
+export interface McpTransport {
+  connected: boolean
+  calls: number
+  connect(): void
+  disconnect(): void
+  listTools(): readonly ToolDef[]
+}
+
+export interface SubAgentSession {
+  id: string
+  closed: boolean
+}
+
 // Services: single-value capabilities. Exactly one active provider at a time.
 export const Model = defineService<ModelProvider>('agent.model')
 export const GoogleAuth = defineService<OAuthSession>('auth.google')
 export const SummarizerSvc = defineService<Summarizer>('agent.summarizer')
+export const McpTransport = defineService<McpTransport>('agent.mcp-transport')
+export const SubAgentSession = defineService<SubAgentSession>('agent.sub-agent-session')
 
 // Collections: many skills contribute, the host reads a priority-sorted list.
 export const Tools = defineCollection<ToolDef>('agent.tools')

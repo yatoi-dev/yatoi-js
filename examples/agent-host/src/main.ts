@@ -8,6 +8,9 @@ import { calendarSkillPlugin, lastClient } from './plugins/calendar-skill.js'
 import { summarizerAgentPlugin } from './plugins/summarizer-agent.js'
 import { tracingPlugin } from './plugins/tracing.js'
 import { guardrailPlugin } from './plugins/guardrail.js'
+import { fakeMcpTransportPlugin } from './plugins/mcp-transport.js'
+import { mcpConnectionPlugin } from './plugins/mcp-connection.js'
+import { delegationPlugin } from './plugins/delegation.js'
 
 const kernel = createKernel()
 kernel.on('error', (error, plugin) => {
@@ -16,11 +19,21 @@ kernel.on('error', (error, plugin) => {
 
 const modelPlugin = scriptedModelPlugin()
 const trace = tracingPlugin((line) => console.log(`  [trace] ${line}`))
+const transportPlugin = fakeMcpTransportPlugin()
+const delegation = delegationPlugin(kernel)
 
 // Print a compact state-change line whenever any of these plugins moves,
 // so the terminal run makes the cascade visible as it happens rather than
 // only in the "before/after" snapshots below.
-const watched: AnyPlugin[] = [modelPlugin, googleAuthPlugin, calendarSkillPlugin, summarizerAgentPlugin]
+const watched: AnyPlugin[] = [
+  modelPlugin,
+  googleAuthPlugin,
+  calendarSkillPlugin,
+  summarizerAgentPlugin,
+  transportPlugin,
+  mcpConnectionPlugin,
+  delegation,
+]
 let lastStates = new Map<AnyPlugin, PluginState>(watched.map((p) => [p, kernel.pluginState(p)]))
 kernel.subscribe(() => {
   for (const p of watched) {
@@ -47,7 +60,17 @@ function printSystemPrompt() {
 
 async function main() {
   console.log('=== load ===')
-  kernel.load(modelPlugin, googleAuthPlugin, calendarSkillPlugin, summarizerAgentPlugin, trace, guardrailPlugin)
+  kernel.load(
+    modelPlugin,
+    googleAuthPlugin,
+    calendarSkillPlugin,
+    summarizerAgentPlugin,
+    transportPlugin,
+    mcpConnectionPlugin,
+    delegation,
+    trace,
+    guardrailPlugin,
+  )
   await kernel.settle()
   printTools('initial')
   printSystemPrompt()
@@ -56,6 +79,18 @@ async function main() {
 
   console.log('\n=== turn: "What\'s on my calendar today?" ===')
   console.log((await host.runTurn("What's on my calendar today?")).reply)
+
+  console.log('\n=== turn: MCP weather ===')
+  console.log((await host.runTurn('What is the weather?')).reply)
+
+  console.log('\n=== drop MCP transport ===')
+  kernel.unload(transportPlugin)
+  await kernel.settle()
+  printTools('after MCP drop')
+
+  console.log('\n=== turn: delegate to a short-lived child ===')
+  console.log((await host.runTurn('Please delegate this task')).reply)
+  printTools('after delegation')
 
   console.log('\n=== revoke google auth ===')
   kernel.unload(googleAuthPlugin)
