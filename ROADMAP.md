@@ -61,6 +61,41 @@ skill's tools out before the model's next turn.
   `any` there. Declare the default slot's shape on the component (Vue's
   `SlotsType`) so a typo inside the slot is a `vue-tsc` error. Same check
   for `<Slot>`'s `Default`. See `examples/todo-vue/README.md` "Friction".
+- **Framework seams, batch 1 — cross-cutting library changes** —
+  *pick-up-able*, sequenced first. [Proposal 0004](docs/proposals/0004-contribution-identity-and-render-isolation.md):
+  a stable `id` on every contribution (kernel; both `<Slot>`s key on it so
+  a reorder or a sibling unloading no longer remounts unrelated items); a
+  per-contribution error boundary in both `<Slot>`s that renders nothing
+  for the failing item and reports through `kernel.on('error')` with the
+  owner; devtools names for anonymous factory-made renderers. One change
+  set, spec §11/§13.6, tests in all three slots packages.
+- **Framework seams, batch 2 — Vue ergonomics** — *pick-up-able*,
+  sequenced second. `app.use(yatoi, { kernel })` as a Vue plugin doing the
+  app-level provide (removes the "a component can't provide to itself"
+  footgun and speaks Vue's dialect); `useContributionValues(col)` so
+  `views.value.find(c => c.value.id)` stops meaning two different
+  `.value`s; `createSlot('todo.item.extra')` returning a component whose
+  *type* declares that slot's props so `vue-tsc` checks `:todo="todo"`
+  while the runtime still reads attrs. Update `examples/todo-vue` to use
+  the first and third — that's the test they feel right.
+- **Framework seams, batch 3 — `docs/framework-notes.md`** — sequenced
+  third; docs only. One page for the decisions that stay with the
+  developer, with one-line pointers from `pitfalls.md`:
+  *cross-cutting* — SSR/hydration (one kernel per request; load sync
+  plugins before hydrate, async after); transitions (kernel mutations are
+  urgent, `useSyncExternalStore` de-opts them); host framework context as
+  an undeclared dependency (cross-plugin needs are services); CSS
+  lifecycle (`<style>` as scope effect vs bundler-injected/`scoped`, which
+  persists); plugin configuration and instances via factories (until
+  proposal 0001); portals/Teleport (prefer a host slot); testing with a
+  provider; React Compiler is fine because all reads go through
+  `useSyncExternalStore`; refs into contributions are services, not refs.
+  *Vue* — deep `reactive()` wrapping kernel objects (use `shallowRef` /
+  `markRaw`; the test-utils `mount(props)` gotcha); `<KeepAlive>` keeps
+  `usePlugin` loaded while deactivated (the Suspense-hide analogue, not
+  Activity); `defineAsyncComponent` carries its own loading/error UI so a
+  lazy Vue contribution needs no boundary; the word "plugin" already means
+  `app.use` in Vue.
 - **Conformance scenarios as data.** Spec §15's scenarios expressed as
   JSON (load/unload sequences with expected observable states) so every
   implementation runs the same suite. Worth doing when the second
