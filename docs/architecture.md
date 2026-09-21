@@ -250,6 +250,16 @@ trace back to Vue's reactivity model not being React's.
 - `KernelProvider`/`useKernel` use an `InjectionKey<Kernel>` symbol;
   `provideKernel(kernel)` is the same thing called directly, for setups
   that don't want a wrapper component.
+- `yatoi` (the `app.use(yatoi, { kernel })` Vue plugin) calls `app.provide`
+  on the same `InjectionKey`, so it's `provideKernel` at the app root
+  instead of a component instance — the difference that lets the root
+  component itself be a consumer, since `app.provide` isn't tied to any
+  one component's `provide()` call site.
+- `useContributionValues` wraps `useContributions` and maps
+  `Contribution<T>[]` to `T[]`, caching the mapped array on the identity
+  of the underlying `kernel.list()` result so it inherits the same
+  no-spurious-trigger guarantee instead of remapping (and re-triggering)
+  on every unrelated kernel change.
 - No generic component can be declared without an SFC's `<script setup
   generic="T">` macro (which needs `vue-tsc`, off the table under this
   repo's plain-`tsc -b` toolchain). `Requires` and `@yatoi/vue-slots`'s

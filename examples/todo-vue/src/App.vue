@@ -1,31 +1,28 @@
 <script setup lang="ts">
 import { computed, ref, watchEffect } from 'vue'
-import { Requires, useContributions } from '@yatoi/vue'
+import { Requires, useContributionValues } from '@yatoi/vue'
 import { Todos, Views } from './contract/index.js'
 import TodoList from './TodoList.vue'
 import Marketplace from './Marketplace.vue'
 
-// The kernel is provided by `<KernelProvider>` in main.ts, one level
-// above this component — not here. `App` is itself a *consumer*
-// (`useContributions`, `<Requires>` below), and Vue's `provide()`/
-// `inject()` only reaches descendant components, never the instance that
-// called `provide()`; a component can't supply its own dependency. See
-// this example's README for the trade-off against wrapping every
-// root-level piece individually.
+// The kernel is provided by `app.use(yatoi, { kernel })` in main.ts —
+// not here. `App` is itself a consumer (`useContributionValues`,
+// `<Requires>` below), and a component can't provide to itself; see
+// main.ts.
 const active = ref('todos')
 // A kernel collection, not a slot: the shell needs the actual set of
-// view ids to build nav and route — `useContributions` works on any
+// view ids to build nav and route — `useContributionValues` works on any
 // `CollectionToken`, slot-backed or not.
-const views = useContributions(Views)
+const views = useContributionValues(Views)
 
 // Exact now: a view is "dead" iff no contribution claims its id, for
 // any number of view plugins — not just an empty-collection guess.
 watchEffect(() => {
   if (active.value === 'todos' || active.value === 'marketplace') return
-  if (!views.value.some((c) => c.value.id === active.value)) active.value = 'todos'
+  if (!views.value.some((v) => v.id === active.value)) active.value = 'todos'
 })
 
-const activeView = computed(() => views.value.find((c) => c.value.id === active.value))
+const activeView = computed(() => views.value.find((v) => v.id === active.value))
 </script>
 
 <template>
@@ -59,20 +56,20 @@ const activeView = computed(() => views.value.find((c) => c.value.id === active.
           <!-- Inverted contribution: plugins push view descriptors in, the
                shell never imports Calendar to know it exists. -->
           <button
-            v-for="c in views"
-            :key="c.value.id"
+            v-for="v in views"
+            :key="v.id"
             type="button"
-            :class="active === c.value.id ? 'nav-btn active' : 'nav-btn'"
-            @click="active = c.value.id"
+            :class="active === v.id ? 'nav-btn active' : 'nav-btn'"
+            @click="active = v.id"
           >
-            {{ c.value.label }}
+            {{ v.label }}
           </button>
         </nav>
       </header>
       <main class="app-main">
         <TodoList v-if="active === 'todos'" :todos="todos" />
         <Marketplace v-else-if="active === 'marketplace'" />
-        <component :is="activeView.value.View" v-else-if="activeView" />
+        <component :is="activeView.View" v-else-if="activeView" />
         <TodoList v-else :todos="todos" />
       </main>
     </div>

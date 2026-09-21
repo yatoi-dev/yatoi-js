@@ -81,6 +81,14 @@ site of `provide()`, because `provide()` itself never throws; only the
 later `inject()` does, on a component that looks, at a glance, like it
 should already have it.
 
+**Resolved by** `app.use(yatoi, { kernel })` (`@yatoi/vue`'s batch-2
+ergonomics): installing the kernel at the app level, above the whole
+component tree including the root, makes this trap unreachable —
+`main.ts` now does `createApp(App).use(yatoi, { kernel }).mount(...)`
+instead of wrapping with `<KernelProvider>`. `provideKernel`/
+`<KernelProvider>` are still here (see `docs/guide.md`) for a nested or
+scoped kernel, where the trap doesn't apply.
+
 ### SFCs are allowed here, but not in the library
 
 `@yatoi/vue`/`@yatoi/vue-slots` themselves ship no `.vue` files —
@@ -262,6 +270,15 @@ pnpm test
 See "What's different here" above for the two substantive findings (attrs
 bypass `vue-tsc` entirely for slot props; `<Requires>`'s typed signature
 doesn't reach `v-slot` template destructuring). Smaller notes:
+
+- The `.value`/`.value` collision — `useContributions(Views).value.find(c
+  => c.value.id === x)` reads oddly, two `.value`s meaning different
+  things (the outer ref, the inner `Contribution`). **Resolved by**
+  `useContributionValues(Views)`, which returns the contributed values
+  directly (`views.value.find(v => v.id === x)`); this example now uses
+  it in `App.vue` for the nav list, active-view lookup, and the dead-view
+  check. `useContributions` is still there for when `priority`/`mode`/
+  `owner` are needed.
 
 - `contribute()`'s `Scope<any>` parameter type (in
   `packages/vue-slots/src/contribute.ts`, matching `@yatoi/react-slots`) means a

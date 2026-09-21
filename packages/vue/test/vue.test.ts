@@ -1,15 +1,18 @@
-import { defineComponent, h, nextTick, onUnmounted, type Component } from 'vue'
+import { createApp, defineComponent, h, nextTick, onUnmounted, type Component } from 'vue'
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
-import { createKernel, definePlugin, defineService, type Kernel } from '@yatoi/kernel'
+import { createKernel, definePlugin, defineCollection, defineService, type Kernel } from '@yatoi/kernel'
 import {
   KernelProvider,
   Requires,
   provideKernel,
+  useContributionValues,
+  useContributions,
   useKernel,
   usePlugin,
   useService,
   useServiceState,
+  yatoi,
 } from '../src/index.js'
 
 interface Clock {
@@ -51,7 +54,7 @@ describe('provideKernel / useKernel / KernelProvider', () => {
         return () => null
       },
     })
-    expect(() => mount(Probe)).toThrow(/no provideKernel\(\)\/<KernelProvider>/)
+    expect(() => mount(Probe)).toThrow(/app\.use\(yatoi.*provideKernel.*<KernelProvider>/s)
   })
 
   it('provideKernel makes the kernel available to useKernel below it', () => {
@@ -92,6 +95,53 @@ describe('provideKernel / useKernel / KernelProvider', () => {
       }),
     )
     expect(wrapper.text()).toBe('true')
+  })
+})
+
+describe('app.use(yatoi, { kernel })', () => {
+  it('installs the kernel app-wide: a deep descendant gets it via useKernel, and the root component can call useService on itself', async () => {
+    const kernel = createKernel()
+    kernel.load(clockPlugin)
+
+    let deepKernel: Kernel | undefined
+    const Deep = defineComponent({
+      setup() {
+        deepKernel = useKernel()
+        return () => null
+      },
+    })
+    const Mid = defineComponent({
+      setup() {
+        return () => h(Deep)
+      },
+    })
+
+    // The root component itself reads a service — the case that fails
+    // with a self-provideKernel() call, because Vue's provide() never
+    // reaches the instance that called it.
+    let rootClock: ReturnType<typeof useService<Clock>> | undefined
+    const Root = defineComponent({
+      setup() {
+        rootClock = useService(Clock)
+        return () => h(Mid)
+      },
+    })
+
+    const el = document.createElement('div')
+    const app = createApp(Root)
+    app.use(yatoi, { kernel })
+    app.mount(el)
+    await nextTick()
+
+    expect(deepKernel).toBe(kernel)
+    expect(rootClock?.value?.now()).toBe(42)
+    app.unmount()
+  })
+
+  it('throws a clear error when kernel is missing', () => {
+    const app = createApp(defineComponent({ setup: () => () => null }))
+    // @ts-expect-error missing required `kernel`
+    expect(() => app.use(yatoi, {})).toThrow(/kernel.*required/)
   })
 })
 
@@ -408,6 +458,92 @@ describe('usePlugin', () => {
 
     second.unmount()
     expect(disposals).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('useContributionValues', () => {
+  const Items = defineCollection<{ id: string; label: string }>('items')
+
+  function itemsPlugin(id: string, label: string, priority?: number) {
+    return definePlugin({
+      name: `item-${id}`,
+      setup(scope) {
+        scope.contribute(Items, { id, label }, priority !== undefined ? { priority } : undefined)
+      },
+    })
+  }
+
+  it('returns values only, in collection order', async () => {
+    const kernel = createKernel()
+    kernel.load(itemsPlugin('b', 'B', 10), itemsPlugin('a', 'A', 5))
+    const Probe = defineComponent({
+      setup() {
+        const values = useContributionValues(Items)
+        return () => h('span', values.value.map((v) => v.id).join(','))
+      },
+    })
+    const wrapper = mountWithKernel(kernel, Probe)
+    // Priority-sorted, same order useContributions gives Contribution<T>[].
+    expect(wrapper.text()).toBe('b,a')
+  })
+
+  it('ref identity unchanged for unrelated kernel changes; updates when the collection changes', async () => {
+    const kernel = createKernel()
+    kernel.load(itemsPlugin('a', 'A'))
+    let triggers = 0
+    let lastArray: readonly { id: string; label: string }[] | undefined
+    const Probe = defineComponent({
+      setup() {
+        const values = useContributionValues(Items)
+        return () => {
+          if (values.value !== lastArray) {
+            triggers++
+            lastArray = values.value
+          }
+          return h('span', values.value.length)
+        }
+      },
+    })
+    mountWithKernel(kernel, Probe)
+    const after = triggers
+    const firstArray = lastArray
+
+    kernel.load(storePlugin) // unrelated
+    await nextTick()
+    expect(triggers).toBe(after)
+    expect(lastArray).toBe(firstArray)
+
+    const b = itemsPlugin('b', 'B')
+    kernel.load(b)
+    await nextTick()
+    expect(triggers).toBe(after + 1)
+    expect(lastArray).not.toBe(firstArray)
+  })
+
+  it('same array reference as useContributionValues until the collection changes, tracking useContributions', async () => {
+    const kernel = createKernel()
+    kernel.load(itemsPlugin('a', 'A'))
+    let values1: readonly { id: string; label: string }[] | undefined
+    let contributions1: unknown
+    const Probe = defineComponent({
+      setup() {
+        const values = useContributionValues(Items)
+        const contributions = useContributions(Items)
+        return () => {
+          values1 = values.value
+          contributions1 = contributions.value
+          return null
+        }
+      },
+    })
+    mountWithKernel(kernel, Probe)
+    const firstValues = values1
+    const firstContributions = contributions1
+
+    kernel.load(storePlugin) // unrelated: neither should change reference
+    await nextTick()
+    expect(values1).toBe(firstValues)
+    expect(contributions1).toBe(firstContributions)
   })
 })
 

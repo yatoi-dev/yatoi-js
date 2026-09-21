@@ -70,14 +70,16 @@ skill's tools out before the model's next turn.
   owner; devtools names for anonymous factory-made renderers. One change
   set, spec §11/§13.6, tests in all three slots packages.
 - **Framework seams, batch 2 — Vue ergonomics** — *pick-up-able*,
-  sequenced second. `app.use(yatoi, { kernel })` as a Vue plugin doing the
-  app-level provide (removes the "a component can't provide to itself"
-  footgun and speaks Vue's dialect); `useContributionValues(col)` so
-  `views.value.find(c => c.value.id)` stops meaning two different
-  `.value`s; `createSlot('todo.item.extra')` returning a component whose
-  *type* declares that slot's props so `vue-tsc` checks `:todo="todo"`
-  while the runtime still reads attrs. Update `examples/todo-vue` to use
-  the first and third — that's the test they feel right.
+  sequenced second.
+  - done: `app.use(yatoi, { kernel })` as a Vue plugin doing the
+    app-level provide (removes the "a component can't provide to itself"
+    footgun and speaks Vue's dialect).
+  - done: `useContributionValues(col)` so `views.value.find(c =>
+    c.value.id)` stops meaning two different `.value`s.
+  - `createSlot('todo.item.extra')` returning a component whose *type*
+    declares that slot's props so `vue-tsc` checks `:todo="todo"` while
+    the runtime still reads attrs. Update `examples/todo-vue` to use it
+    — that's the test it feels right.
 - **Framework seams, batch 3 — `docs/framework-notes.md`** — sequenced
   third; docs only. One page for the decisions that stay with the
   developer, with one-line pointers from `pitfalls.md`:

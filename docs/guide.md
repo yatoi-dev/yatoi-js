@@ -341,23 +341,41 @@ binding changes. Install:
 pnpm add @yatoi/kernel @yatoi/vue @yatoi/slots @yatoi/vue-slots
 ```
 
-Provide the kernel from your root component's `setup()`:
+Install the kernel app-wide with `app.use(yatoi, { kernel })` — this is
+the default:
+
+```ts
+import { createApp } from 'vue'
+import { yatoi } from '@yatoi/vue'
+import { kernel } from './kernel'
+import App from './App.vue'
+
+createApp(App).use(yatoi, { kernel }).mount('#app')
+```
+
+Prefer this over calling `provideKernel(kernel)` in a component's
+`setup()`: Vue's `provide()` only reaches *descendant* components, never
+the instance that called `provide()` itself, so a root component that
+provides the kernel can't also consume it (`useKernel`/`useService`/
+`useContributions`/`<Requires>`) — a real footgun the first version of
+`examples/todo-vue` hit. `provideKernel`/`<KernelProvider>` remain the
+right tool for a nested or scoped kernel — a subtree that needs a
+*different* kernel than the app-level one:
 
 ```ts
 import { provideKernel } from '@yatoi/vue'
-import { kernel } from './kernel'
 
 export default defineComponent({
   setup() {
-    provideKernel(kernel)
+    provideKernel(nestedKernel)
     // ...
   },
 })
 ```
 
-or, template-first, with `<KernelProvider :kernel="kernel">` wrapping your
-app. Note the name collision this whole binding lives next to: Vue's own
-`inject()` (what `useKernel()` is built on) has nothing to do with a
+or, template-first, with `<KernelProvider :kernel="kernel">` wrapping the
+subtree. Note the name collision this whole binding lives next to: Vue's
+own `inject()` (what `useKernel()` is built on) has nothing to do with a
 plugin's `inject:` field on the kernel side — every doc comment in
 `@yatoi/vue` says "Vue's `inject()`" when it means Vue's, to keep the two
 apart.
@@ -371,6 +389,17 @@ answer actually changed) is the tearing-safe equivalent:
 const clock = useService(Clock)   // Readonly<ShallowRef<Clock | undefined>>
 // in a render function: clock.value
 // in a template:         {{ clock }}
+```
+
+`useContributionValues(collection)` is `useContributions` minus the
+`Contribution<T>` wrapper, for the common case that just wants the
+values: `useContributions(Views).value.find(c => c.value.id === x)` has
+two `.value`s meaning different things; `useContributionValues(Views)
+.value.find(v => v.id === x)` doesn't. Reach for `useContributions` when
+you need `priority`, `mode`, or `owner`.
+
+```ts
+const views = useContributionValues(Views)   // Readonly<ShallowRef<readonly ViewDescriptor[]>>
 ```
 
 `<Requires>` is the same cascade-unload boundary, with the values handed
