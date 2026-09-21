@@ -454,6 +454,19 @@ host or be persisted as an installed plugin.
 14.4. Hosts SHOULD persist installed ids and re-activate them at startup,
 outside the render phase.
 
+*Non-normative — delivery on mobile.* Loading plugin code at runtime is
+a platform and policy question, not a protocol one. On the web it is
+`import(url)`. In React Native the default bundler cannot fetch code, but
+runtime loaders exist (Re.Pack's `ScriptManager`), and store policy
+permits downloaded interpreted code that extends the app itself rather
+than acting as a store for other apps (Apple 2.5.2; Google Play allows
+interpreted code in a VM or WebView); a WebView shell running the web
+build is the simplest fully-permitted route, and is how Obsidian ships
+community plugins on iOS. Ahead-of-time compiled platforms (Flutter) have
+no interpreter: plugins compile in, and post-install dynamism is data —
+see proposal 0003. The protocol is the same in every case; only §14.2's
+activation mapping differs.
+
 ---
 
 ## 15. Conformance scenarios
@@ -553,7 +566,7 @@ another language.
 | requirement boundary (§13.4) | `<Requires>` render prop | a widget that rebuilds its child subtree only while present |
 | component-scoped load (§13.5) | `useEffect` load/unload | `StatefulWidget`: `initState` load, `dispose` unload |
 | render-phase mutation (§13.1) | no runtime guard | Flutter throws on `setState` during `build`; the rule is the same |
-| manifest activation (§14.2) | registry map or `import(url)` | compiled-in `Map<String, Plugin Function()>`; no runtime code loading |
+| manifest activation (§14.2) | registry map or `import(url)` | compiled-in `Map<String, Plugin Function()>`; Dart AOT has no interpreter, so post-install dynamism is declarative (proposal 0003) |
 
 Things ports commonly get wrong, in order of how much they matter:
 

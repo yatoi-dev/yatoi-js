@@ -66,6 +66,12 @@ case. Not yet published.
   draft. Large: it makes lookup, activation and cascade path-relative and
   gives bindings a scope in context. Workarounds exist and are listed
   there; the agent platform's multi-workspace case is what will force it.
+- **Declarative contributions** — contributions as data the host
+  renders, plus a commands collection for interactivity.
+  [Proposal 0003](docs/proposals/0003-declarative-contributions.md), draft.
+  What makes plugins dynamic on platforms with no runtime code (Dart
+  AOT), lets agents add UI safely, and lets a manifest contribute a menu
+  item before its code loads. Sequences with `yatoi-dart`.
 - **Move the spec and proposals to `yatoi-dev/spec`** once two
   implementations cite them.
 

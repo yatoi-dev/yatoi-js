@@ -13,6 +13,7 @@ example — is an ordinary issue in the repo it belongs to.
 |---|---|---|
 | [0001](0001-namespace-isolation.md) | Namespace isolation — per-scope resolution of a token | draft |
 | [0002](0002-token-versioning.md) | Token versioning across breaking changes | draft |
+| [0003](0003-declarative-contributions.md) | Declarative contributions — UI as data the host renders | draft |
 
 **Statuses:** `draft` (being written or argued about) → `accepted` (the
 design is settled; implementation issues opened per repo) → `implemented`
