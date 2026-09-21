@@ -180,7 +180,9 @@ Define the plugin at module scope so its identity is stable. Under
 StrictMode this becomes load → unload → load; the kernel handles it and
 you end up with exactly one active instance. Two mounted components using
 the same plugin object is an error — give each its own, or hoist to a
-kernel-scoped load.
+kernel-scoped load. Inside a hidden `<Activity>` a component-scoped plugin
+unloads and reloads on show — see "Lazy loading and Suspense" in
+[docs/pitfalls.md](pitfalls.md).
 
 ## Consume a service in React
 
@@ -275,7 +277,9 @@ setup(scope) {
 The renderer is a React component — hooks are fine inside it. It receives
 the slot's props plus `Default` (the renderer beneath it; a no-op in list
 mode). Props are checked against `Slots[name]`, so the wrong shape is a
-compile error. Removal on unload is automatic.
+compile error. Removal on unload is automatic. If the renderer is
+`React.lazy`, wrap it in your own `<Suspense>` rather than relying on the
+host's — see [docs/pitfalls.md](pitfalls.md) "Lazy loading and Suspense".
 
 ### Closing over services
 

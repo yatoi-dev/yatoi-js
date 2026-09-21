@@ -1,5 +1,6 @@
 import { definePlugin } from '@yatoi/kernel'
 import { Todos, type Todo, type TodoStore } from '../contract/index.js'
+import { kernel } from '../kernel.js'
 
 // The `Todos` token and the `Todo`/`TodoStore` types live in `../contract`
 // now — both the host (this file, the implementation) and any plugin
@@ -91,3 +92,11 @@ export const todosPlugin = definePlugin({
     scope.provide(Todos, createTodoStore())
   },
 })
+
+// HMR replaces this module's exports with new objects (same `name`, new
+// identity). Without this, the old `todosPlugin` stays loaded and the new
+// one fails trying to provide `Todos` a second time. See docs/pitfalls.md
+// "HMR replaces plugin objects".
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => kernel.unload(todosPlugin))
+}

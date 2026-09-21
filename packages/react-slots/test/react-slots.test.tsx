@@ -1,4 +1,4 @@
-import { StrictMode, useEffect, type ReactNode } from 'react'
+import { StrictMode, Suspense, lazy, useEffect, type ReactNode } from 'react'
 import { act, render, screen } from '@testing-library/react'
 import { describe, expect, expectTypeOf, it, vi } from 'vitest'
 import { createKernel, defineCollection, definePlugin, defineService, type Kernel, type Scope } from '@yatoi/kernel'
@@ -226,6 +226,86 @@ describe('cross-bundle interop', () => {
     kernel.load(p)
     mount(kernel, <Slot name="sidebar.item" collapsed={false} fallback={<i>empty</i>} />)
     expect(screen.getByText('foreign')).toBeTruthy()
+  })
+})
+
+describe('lazy contributions', () => {
+  it('a lazy contribution suspends to the host Suspense boundary and renders once resolved', async () => {
+    const kernel = createKernel()
+    let resolve!: (mod: { default: (props: { collapsed: boolean }) => ReactNode }) => void
+    const deferred = new Promise<{ default: (props: { collapsed: boolean }) => ReactNode }>((r) => {
+      resolve = r
+    })
+    const LazyWidget = lazy(() => deferred)
+
+    kernel.load(
+      plugin('lazy', (scope) => {
+        contribute(scope, 'sidebar.item', (props) => <LazyWidget {...props} />)
+      }),
+    )
+    mount(
+      kernel,
+      <Suspense fallback={<i>loading</i>}>
+        <Slot name="sidebar.item" collapsed={false} />
+      </Suspense>,
+    )
+    expect(screen.getByText('loading')).toBeTruthy()
+
+    await act(async () => {
+      resolve({ default: ({ collapsed }) => <li>widget {String(collapsed)}</li> })
+      await deferred
+    })
+    expect(screen.getByText('widget false')).toBeTruthy()
+  })
+
+  it('the composed renderer keeps identity across host re-renders — the resolved lazy component does not remount', async () => {
+    const kernel = createKernel()
+    let resolve!: (mod: { default: (props: { collapsed: boolean }) => ReactNode }) => void
+    const deferred = new Promise<{ default: (props: { collapsed: boolean }) => ReactNode }>((r) => {
+      resolve = r
+    })
+    const LazyWidget = lazy(() => deferred)
+    const mounted = vi.fn()
+
+    kernel.load(
+      plugin('lazy', (scope) => {
+        contribute(scope, 'sidebar.item', (props) => <LazyWidget {...props} />)
+      }),
+    )
+    const { rerender } = mount(
+      kernel,
+      <Suspense fallback={<i>loading</i>}>
+        <Slot name="sidebar.item" collapsed={false} />
+      </Suspense>,
+    )
+    expect(screen.getByText('loading')).toBeTruthy()
+
+    await act(async () => {
+      resolve({
+        default: ({ collapsed }) => {
+          useEffect(() => {
+            mounted()
+          }, [])
+          return <li>widget {String(collapsed)}</li>
+        },
+      })
+      await deferred
+    })
+    expect(screen.getByText('widget false')).toBeTruthy()
+    const after = mounted.mock.calls.length
+
+    rerender(
+      <StrictMode>
+        <KernelProvider kernel={kernel}>
+          <Suspense fallback={<i>loading</i>}>
+            <Slot name="sidebar.item" collapsed={true} />
+          </Suspense>
+        </KernelProvider>
+      </StrictMode>,
+    )
+    expect(screen.getByText('widget true')).toBeTruthy()
+    expect(screen.queryByText('loading')).toBeNull()
+    expect(mounted.mock.calls.length).toBe(after)
   })
 })
 

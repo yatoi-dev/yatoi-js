@@ -63,6 +63,89 @@ error, and the tempting fix (`as any`) hides a real problem: the `Scope`
 only exists during `setup`, so a closure is the only thing that can carry
 the dependency into a component React calls later.
 
+## Lazy loading and Suspense
+
+Plugin activation (`kernel.load`, `registry[id]()`) and `React.lazy` /
+`<Suspense>` are orthogonal — one is a kernel mutation, the other a
+render-tree concern. They don't interfere by default, but four seams do.
+
+- **Module-evaluation side effects in a lazily-loaded module.** Fine from
+  `bootstrap.ts`; wrong when the module is reached via `React.lazy`,
+  because then module evaluation happens *during render* and the kernel's
+  synchronous notification changes other components' snapshots mid-render.
+
+  ```ts
+  // wrong — runs during React.lazy's render-time import
+  kernel.load(spellcheckPlugin)
+  export default SpellcheckPanel
+
+  // right — the module exports the plugin, a handler or effect loads it
+  export default definePlugin({ name: 'spellcheck', setup(scope) { … } })
+  ```
+
+  `usePlugin(spellcheckPlugin)` inside the lazy component is the natural
+  form — it's a `useEffect`, so it runs after the Suspense boundary commits.
+
+- **Re-suspension vs. `<Activity>`.** A mounted subtree that suspends again
+  is hidden but stays mounted — layout effects tear down and rerun, passive
+  effects (so `usePlugin`) are untouched. `<Activity mode="hidden">`
+  (React 19.2) is different: it unmounts effects of hidden content and
+  recreates them on show, so a component-scoped plugin inside a hidden
+  `<Activity>` unloads and reloads with fresh state. Coherent, but anything
+  that must survive being hidden belongs kernel-scoped, not component-scoped.
+
+- **Lazy contributions need a `<Suspense>` boundary; `<Slot>` doesn't add
+  one.** A plugin may contribute `React.lazy(() => import('./Heavy'))`.
+  `<Slot>` renders it and suspends to the nearest `<Suspense>` above the
+  *host* — deliberate, a slot shouldn't pick the host's fallback UI. Either
+  the host wraps `<Slot>` in `<Suspense>`, or, more politely, the plugin
+  wraps its own lazy component so it controls its own placeholder:
+
+  ```tsx
+  contribute(scope, 'sidebar.item', () => (
+    <Suspense fallback={<Spinner size="sm" />}>
+      <LazyWidget />
+    </Suspense>
+  ))
+  ```
+
+  `<Slot>` memoises the composed renderer on the contributions array (see
+  `packages/react-slots/src/Slot.tsx`), so the lazy component's identity is
+  stable across host re-renders — it doesn't re-suspend or remount when an
+  unrelated slot prop changes.
+
+- **`<Requires>` fallback ≠ `<Suspense>` fallback.** `<Requires>` answers
+  "is the capability present"; `<Suspense>` answers "has the code arrived".
+  They compose but aren't interchangeable — the kernel's `loading` status
+  isn't a Suspense signal today, `<Requires>` treats it like absent.
+  Bridging it (`useServiceSuspense`) is on the roadmap.
+
+## HMR replaces plugin objects
+
+The kernel identifies a plugin by object reference (see "The plugin object
+is the identity" above). Vite HMR hot-replacing a plugin module produces a
+*new* object with the same `name` but a different identity.
+
+Component-scoped, this is harmless: `usePlugin`'s dependency changes, the
+old instance unloads, the new one loads. Kernel-scoped and loaded at
+bootstrap, it isn't — the old object stays loaded, the new one isn't
+recognised as a duplicate, so it loads beside the old one, tries to
+provide the same token a second time, and fails (spec §10.4: first
+provider wins). Nothing throws at the call site; the new plugin just sits
+`failed` with an error report. Guard it in the module:
+
+```ts
+export const todosPlugin = definePlugin({ … })
+
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => kernel.unload(todosPlugin))
+}
+```
+
+Dev-only, and it only bites the first time someone edits a kernel-scoped
+plugin's module with HMR on — without the guard, accept a full reload
+instead.
+
 ## Async `setup`: check `scope.active` after `await`
 
 If a dependency disappears while your `setup` is awaiting, the scope is
