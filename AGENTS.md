@@ -19,6 +19,8 @@ packages/slots/           @yatoi/slots    contribute(), <Slot>, Slots augmentati
 examples/todo/            yatoi-example-todo   Vite app: todo + installable calendar plugin,
                            chapter 1 in one `pnpm dev`; chapter 2 delivers the same plugin as a
                            separately built file, opt-in (see examples/todo/README.md)
+examples/agent-host/      yatoi-example-agent-host   Node program, no React, no DOM: skills as
+                           plugins around a scripted (offline) model (see examples/agent-host/README.md)
 docs/                     concepts, guide, pitfalls, architecture, design, spec, proposals/
 ROADMAP.md, CONTRIBUTING.md
 ```
@@ -40,6 +42,8 @@ pnpm --filter yatoi-example-todo dev          # example on :5173 (also .claude/l
 pnpm --filter yatoi-example-todo dev:remote   # same app, calendar plugin loaded from :5174 instead of bundled
 pnpm --filter yatoi-example-todo build        # tsc --noEmit && vite build
 pnpm --filter yatoi-example-todo serve:plugin # builds + serves the calendar plugin on :5174 (also .claude/launch.json → todo-plugin-cdn)
+pnpm --filter yatoi-example-agent-host start   # runs the agent-host demo to completion, no server
+pnpm test -- --project agent-host              # just the agent-host example's tests
 ```
 
 Tests and the example alias `@yatoi/*` to `packages/*/src`, so no build

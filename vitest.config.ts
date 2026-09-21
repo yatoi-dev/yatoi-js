@@ -44,6 +44,16 @@ export default defineConfig({
           include: ['test/**/*.test.{ts,tsx}'],
         },
       },
+      {
+        resolve: { alias },
+        test: {
+          name: 'agent-host',
+          root: './examples/agent-host',
+          // No DOM here either — this example is the no-React, no-DOM case.
+          environment: 'node',
+          include: ['test/**/*.test.ts'],
+        },
+      },
     ],
   },
 })

@@ -16,9 +16,13 @@ contributor can start without a discussion first; read
 
 Three packages (`@yatoi/kernel`, `@yatoi/react`, `@yatoi/slots`), the
 todo example with its two chapters, developer docs, and the
-[protocol spec](docs/spec.md). 65 tests: the kernel in plain Node, the
+[protocol spec](docs/spec.md). 72 tests: the kernel in plain Node, the
 React layer under `<StrictMode>` on a concurrent root, plus the torture
-case. Not yet published.
+case. Not yet published. Also done: an
+[agent-host example](examples/agent-host/README.md), a Node program with
+no React and no DOM where skills are plugins, tools/prompt/middleware are
+collections read fresh each turn, and revoking a credential cascades a
+skill's tools out before the model's next turn.
 
 ## Next — v0.2
 
@@ -58,8 +62,6 @@ case. Not yet published.
   has no React in it; a binding that reuses `@yatoi/kernel` unchanged is
   the proof that the layering is real, and would shake out anything
   React-shaped that leaked into the kernel.
-- **A worker- or server-side kernel example.** The no-DOM constraint
-  exists to make this possible; nothing demonstrates it yet.
 - **Namespace isolation** — per-scope resolution of a token, so two
   instances of the same plugin set can be live at once (split views,
   multiple workspaces). [Proposal 0001](docs/proposals/0001-namespace-isolation.md),

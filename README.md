@@ -181,7 +181,7 @@ package is the rest.
 
 ## Status
 
-v0.1 is implemented and tested — 65 tests, the kernel's in plain Node, the
+v0.1 is implemented and tested — 72 tests, the kernel's in plain Node, the
 React layer's under `<StrictMode>` on a concurrent root, plus a torture
 test for a service that unloads while dependents are mid-async. Not yet
 on npm; clone it and run the example.
@@ -208,6 +208,9 @@ against.
 - [Example app](examples/todo/README.md) — todo + an installable calendar
 plugin, exercising all three packages end to end; chapter 2 loads the
 plugin from another origin.
+- [Agent-host example](examples/agent-host/README.md) — a Node program,
+no React and no DOM, where skills are plugins and revoking a credential
+cascades its tools out before the model's next turn.
 
 
 

@@ -128,6 +128,11 @@ A plugin's lifetime is owned either by the kernel or by React:
 
 Both are the same plugin type; only who calls `load` differs.
 
+[examples/agent-host](../examples/agent-host/README.md) is the kernel-scoped
+case in full, with no React and no DOM in sight: a Node agent host where
+skills are plugins, revoking a credential cascades a skill's tools out
+before the next turn, and the whole thing runs under a plain test runner.
+
 ## Observing from React
 
 React never mutates the kernel during render and never sees a pending

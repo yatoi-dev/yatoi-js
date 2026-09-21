@@ -388,8 +388,12 @@ development-mode guard; it MUST NOT offer one that gives false negatives.
 13.2. **Subscription.** Reads MUST be tied to `subscribe` so that a
 change is reflected in the next render, and MUST use the framework's
 tearing-safe primitive where one exists (React: `useSyncExternalStore`).
-A component reading one token MUST NOT re-render for changes that leave
-that token's snapshot identical (§9.7 makes this cheap).
+Where the framework cannot tear (Vue's refs), the binding MUST still
+write its snapshot only when the underlying value's identity changed —
+that identity check, not the primitive, is what keeps unrelated kernel
+changes from re-running readers. A component reading one token MUST NOT
+re-render for changes that leave that token's snapshot identical (§9.7
+makes this cheap).
 
 13.3. **Optional read.** A binding MUST offer a read that yields the value
 or absent (`useService(token) → T?`), and SHOULD offer the three-state
@@ -408,6 +412,8 @@ plugin for the lifetime of a component: load on mount, unload on unmount.
 It MUST survive the framework's double-invocation of lifecycle (React
 StrictMode; Flutter hot reload): mount → unmount → mount MUST end with
 exactly one active instance and the first instance's disposers run once.
+A framework with no such mechanism (Vue) gets no free exercise of this
+path, so its binding's tests MUST perform the remount explicitly.
 
 13.6. **Slots.** A slots layer declares named contribution points with a
 props type, and maps slot `<name>` to the collection with key
@@ -516,7 +522,7 @@ injected token MUST still return the value.
 
 | Spec | Test |
 |---|---|
-| §2.2, §2.5 | `kernel.test.ts` 11; `slots.test.tsx` "cross-bundle interop"; `react.test.tsx` `<Requires>` "resolves a token created separately" |
+| §2.2, §2.5 | `kernel.test.ts` 11; `slots.test.tsx` "cross-bundle interop"; `react.test.tsx` `<Requires>` "resolves a token created separately"; `vue-slots.test.ts` "cross-bundle interop"; `vue.test.ts` `Requires` "resolves a token created separately" |
 | §2.4 | `tokens.test.ts` "service() / collection()" |
 | §3.1 `name` | `tokens.test.ts` "requires a name" |
 | §5.1–5.3 | `kernel.test.ts` 1 |
@@ -532,16 +538,16 @@ injected token MUST still return the value.
 | §8.6 | `kernel.test.ts` 8 "a stale disposer never evicts…" |
 | §9.4 | `kernel.test.ts` 4 "reports loading…", "…reads absent, not loading" |
 | §9.5, §9.6 | `kernel.test.ts` 4 "subscribe fires once…", "version bumps…" |
-| §9.7 | `kernel.test.ts` 10; `react.test.tsx` "does not re-render for unrelated…" |
+| §9.7 | `kernel.test.ts` 10; `react.test.tsx` "does not re-render for unrelated…"; `vue.test.ts` `useService` "does not trigger for unrelated…" |
 | §10.1, §10.5, §10.6 | `kernel.test.ts` 6 |
 | §10.3 | `kernel.test.ts` 7 |
 | §10.4 | `kernel.test.ts` 8 |
 | §11 | `kernel.test.ts` 10 |
-| §13.2 | `react.test.tsx` "concurrent rendering" |
-| §13.3 | `react.test.tsx` `useService`, `useServiceState` |
-| §13.4 | `react.test.tsx` `<Requires>` |
-| §13.5 | `react.test.tsx` `usePlugin`; `torture.test.ts` T3 |
-| §13.6 | `slots.test.tsx` (all) |
+| §13.2 | `react.test.tsx` "concurrent rendering"; `vue.test.ts` "reactivity sanity" (Vue's reactivity can't tear; the test asserts the guarantee anyway) |
+| §13.3 | `react.test.tsx` `useService`, `useServiceState`; `vue.test.ts` `useService`, `useServiceState` |
+| §13.4 | `react.test.tsx` `<Requires>`; `vue.test.ts` `Requires` |
+| §13.5 | `react.test.tsx` `usePlugin`; `torture.test.ts` T3; `vue.test.ts` `usePlugin` (including the explicit mount → unmount → mount remount case, Vue's stand-in for StrictMode double-invoke) |
+| §13.6 | `slots.test.tsx` (all); `vue-slots.test.ts` (all) |
 | §14 | `examples/todo` (not a test; the reference host) |
 | T1, T2 | `torture.test.ts` "provider unloads while dependents are mid-async setup" |
 | `dispose()` / `settle()` | `kernel.test.ts` "kernel.dispose" |
