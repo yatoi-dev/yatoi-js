@@ -44,6 +44,16 @@ skill's tools out before the model's next turn.
   is why this is optional in the package list but not in practice. Design
   constraint: observe through `subscribe`/`state`/`pluginState` only;
   anything the devtools need that isn't exposed is a kernel API question
+  first. Two such questions came out of building the agent-host example
+  and should be answered *before* devtools, since a Node host has no
+  framework devtools to fall back on: (a) a scoped subscription —
+  `kernel.observe(token, cb)` and/or `onPluginState(plugin, cb)` — so a
+  host reacts to one thing changing instead of diffing snapshots inside
+  `subscribe`; (b) a structured reason on a handle for why a plugin is
+  not active — `{ cause: 'dependency-absent', token }` vs
+  `{ cause: 'setup-error', error }` — which is the "why did this unload"
+  trace at its source. Both are kernel API additions and therefore spec
+  §4/§7 changes; small, but they need a proposal or at least a spec edit
   first.
 - **Suspense integration** — *pick-up-able.* The kernel exposes
   `loading` (spec §9.4); the React layer doesn't use it. Likely shape: a
