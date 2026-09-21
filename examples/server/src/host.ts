@@ -1,10 +1,11 @@
 import { createServer, type Server } from 'node:http'
 import type { Kernel } from '@yatoi/kernel'
 import { Jobs, Middleware, Routes } from './contract.js'
-import type { RequestHandler, ServerRequest, ServerResponse } from './contract.js'
+import type { Job, RequestHandler, ServerRequest, ServerResponse } from './contract.js'
 
 export function createServerHost(kernel: Kernel) {
-  const lastRun = new Map<object, number>()
+  // A re-contributed job is a new object, so it intentionally runs on the next tick.
+  const lastRun = new WeakMap<Job, number>()
 
   async function core(req: ServerRequest): Promise<ServerResponse> {
     const route = kernel

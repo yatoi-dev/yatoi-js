@@ -24,13 +24,13 @@ Expected output, abbreviated:
 initial tools: [calendar.list, calendar.create, summarize, mcp.weather, delegate]
 ...
 === turn: "What's on my calendar today?" ===
-  [trace] → turn (tools: 3)
+  [trace] → turn (tools: 5)
   [trace] ← reply: Here's what I found: events for mj@example.com: [...]
 
 === revoke google auth ===
 [kernel] google-auth: inactive
 [kernel] calendar-skill: inactive
-after revoke tools: [summarize]
+after revoke tools: [summarize, delegate]
 calendar client closed: true
 
 === same turn again (no calendar tool this time) ===
@@ -39,7 +39,7 @@ calendar client closed: true
 === reload google auth ===
 [kernel] google-auth: active
 [kernel] calendar-skill: active
-after reload tools: [summarize, calendar.list, calendar.create]
+after reload tools: [summarize, delegate, calendar.list, calendar.create]
 ...
 === disposed ===
 ```

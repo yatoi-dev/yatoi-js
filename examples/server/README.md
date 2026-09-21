@@ -59,6 +59,10 @@ exists during its lifetime.
 or database cascade does not touch it, demonstrating that unload is
 scoped to actual dependency edges rather than restarting the whole host.
 
+**db-starting-guard** also has no dependencies. It reads
+`kernel.state(DbConnection)` at the request boundary and returns 503 for
+`/todos` while the database provider is starting.
+
 **feature-export** injects `Config` and contributes `GET /export` only
 when `features` contains `export`. Returning from `setup` without
 contributing is the simplest feature-flag pattern: the plugin remains
@@ -81,16 +85,9 @@ appear without calling the export plugin or editing a central router.
 ## Loading versus absent at the HTTP boundary
 
 A route whose provider is still loading is not in `Routes`, so the honest
-default is 404. A host that wants 503 while the database is starting can
-express that policy as middleware rather than changing the kernel:
-
-```ts
-async (req, next) => {
-  if (req.path === '/todos' && kernel.state(DbConnection).status === 'loading')
-    return { status: 503, body: 'Database starting' }
-  return next(req)
-}
-```
+default is 404. This example opts into 503 for `/todos` through
+[`db-starting-guard.ts`](src/plugins/db-starting-guard.ts), a middleware
+policy layered above route lookup rather than a change to the kernel.
 
 Absence remains first-class: the host may translate it into whichever
 protocol response fits its boundary.

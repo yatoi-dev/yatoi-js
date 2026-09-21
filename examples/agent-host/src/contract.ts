@@ -42,6 +42,7 @@ export interface Summarizer {
 }
 
 export interface McpTransport {
+  name: string
   connected: boolean
   calls: number
   connect(): void

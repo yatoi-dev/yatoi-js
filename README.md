@@ -184,7 +184,7 @@ package is the rest.
 
 ## Status
 
-v0.1 is implemented and tested — 124 tests, the kernel's in plain Node, the
+v0.1 is implemented and tested — 125 tests, the kernel's in plain Node, the
 React layer's under `<StrictMode>` on a concurrent root, the Vue layer
 asserting unmount/remount explicitly since Vue has no StrictMode, plus a
 torture test for a service that unloads while dependents are mid-async.

@@ -49,14 +49,12 @@ export function delegationPlugin(kernel: Kernel, hooks: DelegationHooks = {}) {
           })
 
           const handle = scope.load(child)
-          await kernel.settle()
           try {
             const nested = createAgentHost(kernel)
             const result = await nested.runTurn(`sub-agent task: ${String(args['task'] ?? 'help')}`)
             return result.reply
           } finally {
             handle.dispose()
-            await kernel.settle()
           }
         },
       })

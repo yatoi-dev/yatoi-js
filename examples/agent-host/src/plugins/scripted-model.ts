@@ -38,9 +38,11 @@ export function scriptedModelPlugin(hooks: ScriptedModelHooks = {}) {
 
       const lower = user.toLowerCase()
 
+      // Must precede `delegate`: a nested turn's text matches both branches.
       if (lower.includes('sub-agent')) {
         const tool = tools.find((t) => t.name === 'subagent.echo')
         if (tool) return { kind: 'tool', call: { tool: tool.name, args: {} } }
+        return { kind: 'text', text: 'The sub-agent tool is no longer available.' }
       }
 
       if (lower.includes('delegate')) {

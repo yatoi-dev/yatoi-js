@@ -3,6 +3,7 @@ import { Routes } from './contract.js'
 import { createServerHost } from './host.js'
 import { configPlugin } from './plugins/config.js'
 import { databasePlugin } from './plugins/database.js'
+import { dbStartingGuardPlugin } from './plugins/db-starting-guard.js'
 import { featureExportPlugin } from './plugins/feature-export.js'
 import { nightlyCleanupPlugin } from './plugins/nightly-cleanup.js'
 import { requestLogPlugin } from './plugins/request-log.js'
@@ -18,12 +19,14 @@ function printRoutes(label: string) {
 
 async function main() {
   let config = configPlugin({ dbUrl: 'memory://todos', features: [] })
+  const dbStartingGuard = dbStartingGuardPlugin(kernel)
   kernel.load(
     config,
     databasePlugin,
     todosApiPlugin,
     nightlyCleanupPlugin,
     requestLogPlugin((line) => console.log(`[request] ${line}`)),
+    dbStartingGuard,
     featureExportPlugin,
   )
   await kernel.settle()

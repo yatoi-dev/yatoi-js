@@ -4,6 +4,7 @@ import { DbConnection, Routes } from '../src/contract.js'
 import { createServerHost } from '../src/host.js'
 import { configPlugin } from '../src/plugins/config.js'
 import { databasePlugin } from '../src/plugins/database.js'
+import { dbStartingGuardPlugin } from '../src/plugins/db-starting-guard.js'
 import { featureExportPlugin } from '../src/plugins/feature-export.js'
 import { nightlyCleanupPlugin } from '../src/plugins/nightly-cleanup.js'
 import { requestLogPlugin } from '../src/plugins/request-log.js'
@@ -15,13 +16,22 @@ function boot(features: string[] = []) {
   let logDisposals = 0
   const config = configPlugin({ dbUrl: 'memory://one', features })
   const requestLog = requestLogPlugin((line) => logLines.push(line), () => logDisposals++)
-  kernel.load(config, databasePlugin, todosApiPlugin, nightlyCleanupPlugin, requestLog, featureExportPlugin)
-  return { kernel, config, requestLog, logLines, logDisposals: () => logDisposals }
+  const dbStartingGuard = dbStartingGuardPlugin(kernel)
+  kernel.load(
+    config,
+    databasePlugin,
+    todosApiPlugin,
+    nightlyCleanupPlugin,
+    requestLog,
+    dbStartingGuard,
+    featureExportPlugin,
+  )
+  return { kernel, config, requestLog, dbStartingGuard, logLines, logDisposals: () => logDisposals }
 }
 
 describe('server example', () => {
   it('boots the capability graph and serves the contributed route', async () => {
-    const { kernel, config, requestLog } = boot()
+    const { kernel, config, requestLog, dbStartingGuard } = boot()
     expect(kernel.state(DbConnection).status).toBe('loading')
     await kernel.settle()
 
@@ -31,6 +41,7 @@ describe('server example', () => {
       todosApiPlugin,
       nightlyCleanupPlugin,
       requestLog,
+      dbStartingGuard,
       featureExportPlugin,
     ]) {
       expect(kernel.pluginState(plugin)).toBe('active')
@@ -40,6 +51,21 @@ describe('server example', () => {
     expect(response.status).toBe(200)
     expect(response.body).toContain('select * from todos')
     expect(await host.tickJobs(1_000)).toEqual(['nightly-cleanup'])
+    await kernel.dispose()
+  })
+
+  it('returns 503 for the database-backed route while the database is starting', async () => {
+    const { kernel } = boot()
+    const host = createServerHost(kernel)
+
+    expect(kernel.state(DbConnection).status).toBe('loading')
+    expect(await host.handle({ method: 'GET', path: '/todos' })).toEqual({
+      status: 503,
+      body: 'Database starting',
+    })
+
+    await kernel.settle()
+    expect((await host.handle({ method: 'GET', path: '/todos' })).status).toBe(200)
     await kernel.dispose()
   })
 

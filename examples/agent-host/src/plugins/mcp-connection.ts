@@ -15,6 +15,6 @@ export const mcpConnectionPlugin = definePlugin({
     scope.defer(() => transport.disconnect())
 
     for (const tool of transport.listTools()) scope.contribute(Tools, tool)
-    scope.contribute(PromptSections, { text: 'An MCP server named demo-weather is connected.' })
+    scope.contribute(PromptSections, { text: `An MCP server named ${transport.name} is connected.` })
   },
 })

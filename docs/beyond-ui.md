@@ -83,7 +83,7 @@ Yatoi is not trying to provide:
 - DI-container ergonomics such as decorators, reflection, or auto-wiring;
 - sandboxing or security isolation for untrusted plugins;
 - durable workflow execution, retries, or persisted process state;
-- module loading, bundling, remote-code delivery, or version negotiation;
+- module loading, bundling, or remote-code delivery;
 - application state management.
 
 Those systems can sit beside or inside a yatoi plugin. The kernel's job is

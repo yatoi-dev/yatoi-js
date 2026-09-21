@@ -20,6 +20,7 @@ export let lastMcpTransport: McpTransport | undefined
 /** A deterministic stand-in for one MCP server transport. */
 export function fakeMcpTransportPlugin() {
   const transport: McpTransport = {
+    name: 'demo-weather',
     connected: false,
     calls: 0,
     connect() {
