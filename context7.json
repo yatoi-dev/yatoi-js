@@ -10,5 +10,7 @@
     "Tokens are imported symbols from one contract module, never string literals at call sites.",
     "Prefer <Requires of={[Token]}> over useService(Token)! so removal unmounts the dependent subtree.",
     "After an await inside setup, check scope.active before provide or contribute."
-  ]
+  ],
+  "url": "https://context7.com/yatoi-dev/yatoi-js",
+  "public_key": "pk_TF8c1nCyBrmEGnSeJ2bj6"
 }
