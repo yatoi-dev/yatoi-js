@@ -1,4 +1,4 @@
-# yatoi
+# Yatoi
 
 [![CI](https://github.com/yatoi-dev/yatoi-js/actions/workflows/ci.yml/badge.svg)](https://github.com/yatoi-dev/yatoi-js/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/@yatoi/kernel.svg)](https://www.npmjs.com/package/@yatoi/kernel)
@@ -9,7 +9,7 @@ JavaScript runtime with the two properties a plugin system needs — remove
 a plugin and *everything it did is undone*; a plugin runs *only while what
 it needs exists* — and React and Vue bindings that only ever observe it.
 
-A **yatoi** is the loose tenon in Japanese joinery: a separate piece,
+**A yatoi is the loose tenon in Japanese joinery**: a separate piece,
 belonging to neither board, cut to fit slots in both and inserted to hold
 them together. Literally, a hired hand. It carries load without being
 glued in place, and the joint comes apart without damaging either side.
@@ -38,9 +38,7 @@ deactivates each dependent and reverses its effects. Consumers keep a
 stale or absent reference instead.
 
 Add a third, quieter one: long-lived things that aren't UI — sockets,
-schedulers, agent runners — need a lifecycle that can be reversed. The
-[agent-host](examples/agent-host/README.md) and
-[server](examples/server/README.md) examples exercise exactly that.
+schedulers, agent runners — need a lifecycle that can be reversed.
 
 ## Two properties
 
@@ -65,6 +63,7 @@ and its reference implementation, [Cordis](https://github.com/cordiverse/cordis)
 which powers DeepSeek Harness. yatoi keeps the vocabulary — effects,
 inject, scope — and takes no dependency on it.
 
+### What's the difference?
 The difference is who owns the runtime. Cordis owns its own; UI schedulers
 — React's concurrent renderer, Vue's flush queue — can observe state
 between two steps of an update, and a Node host reading the kernel between
@@ -202,7 +201,7 @@ have to discover the lifecycle bugs yourself.
 | [`@yatoi/vue-slots`](packages/vue-slots)   | Vue binding for `@yatoi/slots`: `contribute()`, `<Slot>`                                                               | Vue 3                |
 
 
-Stop at the layer you need. A shell developer drives the kernel from
+**Stop at the layer you need**. A shell developer drives the kernel from
 config and unit-tests it without rendering anything. An app developer
 writes `usePlugin` and `<Slot>` and never touches the kernel. If either of
 those stops being true, the API is wrong.
@@ -220,6 +219,8 @@ imports because your bundler and editor cannot show the whole graph.
 The kernel makes it inspectable through `pluginState`, `state`, `list`, and
 `on('error')`. A future devtools package can make the graph visible, but it
 cannot remove the underlying complexity.
+
+- Read [Pitfalls](docs/pitfalls.md) for more details.
 
 ## Status
 
@@ -278,7 +279,7 @@ tarball verification, and the npm publishing checklist.
 
 ## Development
 
-Node ≥ 20, pnpm 9 (`packageManager` is pinned).
+Node ≥ 22.22.2, pnpm 9 (`packageManager` is pinned).
 
 ```bash
 pnpm install
@@ -288,11 +289,6 @@ pnpm build         # tsc -b → dist/ in each package
 pnpm pack:check    # build and audit the six npm tarballs without publishing
 pnpm --filter yatoi-example-todo dev   # the example app; see its README
 ```
-
-See the example README's [chapter
-2](examples/todo/README.md#chapter-2--the-same-plugin-delivered-as-a-file)
-for loading the calendar plugin from another origin, the way a plugin from
-a CDN would arrive.
 
 Tests and the example resolve `@yatoi/*` straight to source, so no build
 step sits in the inner loop. Commit conventions are in

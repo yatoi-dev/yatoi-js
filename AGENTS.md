@@ -39,7 +39,7 @@ Each package: `src/` (source), `test/` (vitest), `tsconfig.json`
 
 ## Commands
 
-Run from the repo root. pnpm 9, Node ≥ 20.
+Run from the repo root. pnpm 9, Node ≥ 22.22.2.
 
 ```bash
 pnpm install
