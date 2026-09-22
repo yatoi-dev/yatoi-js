@@ -8,13 +8,15 @@ Vue 3 bindings that observe an `@yatoi/kernel` through an app plugin, providers,
 ## Install
 
 ```bash
-npm i @yatoi/kernel @yatoi/vue vue
+npm i @yatoi/vue vue
 ```
 
 ```ts
 import { createApp, defineComponent, h } from 'vue'
 import { createKernel, definePlugin, defineService } from '@yatoi/kernel'
 import { Requires, yatoi } from '@yatoi/vue'
+import { Slot } from '@yatoi/vue/slots'
+declare module '@yatoi/slots' { interface Slots { 'sidebar.item': Record<never, never> } }
 const Clock = defineService<{ now(): number }>('clock')
 const clock = definePlugin({ name: 'clock', provides: [Clock], setup(scope) {
   scope.provide(Clock, { now: () => Date.now() })
@@ -23,7 +25,7 @@ const clock = definePlugin({ name: 'clock', provides: [Clock], setup(scope) {
 const kernel = createKernel()
 kernel.load(clock)
 const App = defineComponent(() => () => h(Requires, { of: [Clock] }, {
-  default: ([value]) => h('time', value.now()),
+  default: ([value]) => [h('time', value.now()), h(Slot, { name: 'sidebar.item' })],
 }))
 createApp(App).use(yatoi, { kernel }).mount('#app')
 ```
@@ -34,6 +36,7 @@ createApp(App).use(yatoi, { kernel }).mount('#app')
 - Import token symbols from one contract module; never use string literals at call sites.
 - Prefer `<Requires>` over asserting that `useService(Token).value` is present.
 - Define plugin objects outside components so their identity survives remounts.
+- Declare the host's `Slots` interface once in `@yatoi/slots`; import renderers from `@yatoi/vue/slots`.
 
 [Specification](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/spec.md) · [Guide](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/guide.md) · [Pitfalls](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/pitfalls.md) · [Vue example](https://github.com/yatoi-dev/yatoi-js/tree/main/examples/todo-vue)
 

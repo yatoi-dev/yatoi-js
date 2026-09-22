@@ -7,7 +7,7 @@ read it before proposing architecture, not before fixing a typo.
 ## What this is
 
 **yatoi** — a plugin kernel with reversible effects, typed service
-discovery, and cascade unload, bound to React and to Vue. Six packages,
+discovery, and cascade unload, bound to React and to Vue. Four active packages,
 layered; React, Vue and Node examples. v0.1.0 published to npm on
 2026-09-22.
 
@@ -15,16 +15,16 @@ layered; React, Vue and Node examples. v0.1.0 published to npm on
 
 ```
 packages/kernel/          @yatoi/kernel   plugins, services, scope tree, cascade unload   no React, no DOM
-packages/react/           @yatoi/react    KernelProvider, useService, <Requires>, usePlugin
+packages/react/           @yatoi/react    KernelProvider, hooks, <Requires>, and the ./slots binding
 packages/slots/           @yatoi/slots    Slots interface, SlotName, SlotProps, slot() — framework-neutral, no React, no Vue
-packages/react-slots/     @yatoi/react-slots   contribute(), <Slot> for React
-packages/vue/             @yatoi/vue      provideKernel/KernelProvider, useService, Requires, usePlugin (Vue 3)
-packages/vue-slots/       @yatoi/vue-slots   contribute(), <Slot> for Vue 3
+packages/react-slots/     @yatoi/react-slots   deprecated 0.2 compatibility shim; remove in 0.3
+packages/vue/             @yatoi/vue      providers, composables, Requires, and the ./slots binding (Vue 3)
+packages/vue-slots/       @yatoi/vue-slots   deprecated 0.2 compatibility shim; remove in 0.3
 examples/todo/            yatoi-example-todo   Vite app: todo + installable calendar plugin,
                            chapter 1 in one `pnpm dev`; chapter 2 delivers the same plugin as a
                            separately built file, opt-in (see examples/todo/README.md)
 examples/todo-vue/        yatoi-example-todo-vue   Vue 3 port of chapter 1 only, on @yatoi/vue +
-                           @yatoi/slots + @yatoi/vue-slots (see examples/todo-vue/README.md)
+                           @yatoi/slots + @yatoi/vue/slots (see examples/todo-vue/README.md)
 examples/agent-host/      yatoi-example-agent-host   Node program, no React, no DOM: skills as
                            plugins around a scripted (offline) model (see examples/agent-host/README.md)
 examples/server/          yatoi-example-server   node:http host: routes, jobs, middleware, async
@@ -44,7 +44,7 @@ Run from the repo root. pnpm 9, Node ≥ 22.22.2.
 ```bash
 pnpm install
 pnpm test                                  # all packages
-pnpm test -- --project kernel              # one package: kernel | react | slots | react-slots | vue | vue-slots
+pnpm test -- --project kernel              # one package: kernel | react | slots | vue
 pnpm typecheck                             # every package, in parallel
 pnpm build                                 # tsc -b, topological
 pnpm build:llms                            # regenerate llms.txt and llms-full.txt
@@ -62,10 +62,9 @@ pnpm test -- --project server                  # just the server example's tests
 ```
 
 Tests and the example alias `@yatoi/*` to `packages/*/src`, so no build
-is needed in the inner loop. Typechecking `react`/`react-slots`/`vue-slots`
-goes through `tsc -b` with project references, so each builds its
-dependencies (`kernel`, and `slots` for the two `*-slots` packages) first
-itself.
+is needed in the inner loop. Typechecking `react`/`vue` goes through
+`tsc -b` with project references, so each builds its `kernel` and `slots`
+dependencies first. The deprecated shims reference their replacement binding.
 
 Chapter 2 of the example needs both servers running, to demonstrate the
 loaded-by-URL plugin: `todo-plugin-cdn` (:5174, serves `calendar.js`) and
@@ -85,19 +84,16 @@ These are load-bearing. Don't relax them without changing
 2. **Never mutate the kernel during render.** In library code, tests, docs
    and the example: `kernel.load/unload`, `scope.provide/contribute` only
    in event handlers, effects, or bootstrap. There is no runtime guard.
-3. **The six packages stay separate.** `kernel`, `react`, `slots`,
-   `react-slots`, `vue`, `vue-slots` — don't merge any of them, don't make
-   `kernel` import from any binding, and don't make a binding for one
-   framework import from a binding for another (`vue` doesn't import
-   `react`, `react-slots` doesn't import `vue-slots`, and so on).
-   `slots` depends only on `kernel` — no React, no Vue. Both `react-slots`
-   and `vue-slots` depend on `slots` (for the shared `Slots` contract) and
-   on `kernel`, plus their own framework's core binding package
-   (`react-slots` → `react`, `vue-slots` → `vue`).
+3. **Four packages stay separate:** `kernel`, `slots`, `react`, `vue`.
+   `kernel` imports no binding; `slots` imports only `kernel`; `react` and
+   `vue` import `kernel` and `slots` and never each other. Slot bindings live
+   at `@yatoi/react/slots` and `@yatoi/vue/slots` as subpath exports, not
+   separate packages. The two old package directories are deprecated shims
+   for 0.2 only.
 4. **The kernel stores opaque values.** It never learns a value is a React
    component (or a Vue component). Framework meaning is added in the
-   `react-slots`/`vue-slots` layer, per framework — see the one cast at
-   the top of each package's `contribute()` and `<Slot>`.
+   slots layer of each binding — see the one cast at the top of each
+   binding's `src/slots/contribute.ts` and `Slot.*`.
 5. **All React tests run under `<StrictMode>` on a concurrent root.** If a
    change doesn't survive double-invoke, the change is wrong. Vue has no
    StrictMode, so Vue tests assert unmount and remount explicitly instead
@@ -161,7 +157,7 @@ passing; it encodes the sync-facade guarantee.
 | Protocol-level problems under design | [docs/proposals/](docs/proposals/README.md) — one file per problem, with per-implementation status |
 | Real usage, end to end | [examples/todo](examples/todo/README.md) |
 | What the kernel guarantees | [docs/spec.md](docs/spec.md) (normative), pinned by `packages/kernel/test/kernel.test.ts` (numbered semantics) and `torture.test.ts` |
-| Slot resolution semantics | `packages/react-slots/test/react-slots.test.tsx` (React), `packages/vue-slots/test/vue-slots.test.ts` (Vue), `packages/slots/test/slots.test.ts` (neutral contract) |
+| Slot resolution semantics | `packages/react/test/react-slots.test.tsx` (React), `packages/vue/test/vue-slots.test.ts` (Vue), `packages/slots/test/slots.test.ts` (neutral contract) |
 
 ## Known gaps (don't be surprised)
 

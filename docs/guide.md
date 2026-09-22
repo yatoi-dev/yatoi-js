@@ -7,14 +7,14 @@ in doubt, those are the compiled truth.
 ## Install
 
 ```bash
-pnpm add @yatoi/kernel @yatoi/react @yatoi/slots @yatoi/react-slots
+pnpm add @yatoi/kernel @yatoi/react react react-dom
 ```
 
 `@yatoi/kernel` has no dependencies. `@yatoi/slots` depends only on
-`@yatoi/kernel` — no React. `@yatoi/react` and `@yatoi/react-slots`
-peer-depend on `react ^18 || ^19`. For Vue, see
-["Using it from Vue"](#using-it-from-vue) below — `@yatoi/vue` and
-`@yatoi/vue-slots` peer-depend on `vue ^3.4.0` instead.
+`@yatoi/kernel` — no React. `@yatoi/react` (including its `./slots` subpath)
+peer-depends on `react ^18 || ^19`. For Vue, see
+["Using it from Vue"](#using-it-from-vue) below — `@yatoi/vue`
+peer-depends on Vue instead.
 
 ## Create a kernel
 
@@ -258,7 +258,7 @@ contribution:
 ## Contribute to a slot (plugin side)
 
 ```tsx
-import { contribute } from '@yatoi/react-slots'
+import { contribute } from '@yatoi/react/slots'
 
 setup(scope) {
   const todos = scope.get(Todos)
@@ -332,13 +332,13 @@ underneath. Each `Contribution` carries `value`, `priority`, `mode` and
 
 ## Using it from Vue
 
-`@yatoi/vue` and `@yatoi/vue-slots` are the same two layers, aimed at
+`@yatoi/vue` and its `./slots` subpath are the same two layers, aimed at
 Vue 3 instead of React. Everything above still applies conceptually — the
 kernel, tokens, plugins, `inject`/`provides`, cascade unload — only the
 binding changes. Install:
 
 ```bash
-pnpm add @yatoi/kernel @yatoi/vue @yatoi/slots @yatoi/vue-slots
+pnpm add @yatoi/kernel @yatoi/vue vue
 ```
 
 Install the kernel app-wide with `app.use(yatoi, { kernel })` — this is
@@ -427,7 +427,7 @@ Vue has no StrictMode double-invoke, but a component that unmounts and is
 immediately remounted at the same spot (a `:key` change, HMR) exercises
 the same load → unload → load contract.
 
-`<Slot>` from `@yatoi/vue-slots` works the same way as `@yatoi/react-slots`'s,
+`<Slot>` from `@yatoi/vue/slots` works the same way as `@yatoi/react/slots`'s,
 with one mechanical difference: a slot's own props (e.g. `task` for
 `task.card`) are passed as plain attrs, not typed component props — Vue
 has no way to spread an arbitrary typed prop bag onto a component's
@@ -441,12 +441,12 @@ false` and reads them off `attrs` instead:
 ```
 
 `declare module '@yatoi/slots' { interface Slots { ... } }` is the
-**same augmentation** `@yatoi/react-slots` type-checks against — both
+**same augmentation** `@yatoi/react/slots` type-checks against — both
 bindings re-export `Slots`/`SlotName`/`SlotProps`/`slot` from
 `@yatoi/slots`, so a host using both React and Vue surfaces for the same
 product declares its slots once. The tests in
-`packages/vue/test/vue.test.ts` and `packages/vue-slots/test/vue-slots.test.ts`
-port every claim from the React/`@yatoi/react-slots` suites; read those
+`packages/vue/test/vue.test.ts` and `packages/vue/test/vue-slots.test.ts`
+port every claim from the React/`@yatoi/react/slots` suites; read those
 before reading the source. See
 [examples/todo-vue](../examples/todo-vue/README.md) for a full app built on
 this binding, chapter 1 of `examples/todo` ported field for field.
@@ -502,7 +502,7 @@ on an env var (`VITE_PLUGIN_BASE`), and the plugin's own source doesn't
 change either way. That's the whole "loader" a v0.1 app needs.
 
 **Bundling.** A plugin built to ship as a separate file can bundle its own
-copy of `@yatoi/kernel`, `@yatoi/slots`, `@yatoi/react-slots`, and
+copy of `@yatoi/kernel`, `@yatoi/slots`, `@yatoi/react/slots`, and
 whatever contract it depends on — the kernel identifies services,
 collections and slots by a token's
 string `key`, not by object identity (`packages/kernel/src/token.ts`), so a

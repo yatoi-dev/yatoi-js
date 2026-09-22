@@ -18,7 +18,7 @@ a thin React binding that only ever *observes* the kernel.
 ## Four layers
 
 ```
-@yatoi/react-slots   contribute(), <Slot> for React        React
+@yatoi/react/slots   contribute(), <Slot> for React        React
 @yatoi/react         KernelProvider, useService, <Requires> React
 @yatoi/slots         Slots interface, SlotName, slot()      no React, no Vue
 @yatoi/kernel        plugins, services, cascade unload       no React, no DOM
@@ -48,7 +48,7 @@ There are two kinds:
   Contributed to by any number of plugins. Slots are built on collections.
 
 The kernel stores values opaquely. It never knows a value is a React
-component; `@yatoi/react-slots` is what gives a stored value React
+component; `@yatoi/react/slots` is what gives a stored value React
 meaning — `@yatoi/slots` only declares the contract (names and prop
 shapes), framework-neutral.
 

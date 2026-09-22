@@ -4,7 +4,7 @@ The same app, the same kernel, a different framework. A Vue 3 port of
 [`examples/todo`](../todo/README.md)'s **chapter 1 only** — todos, a
 kernel-scoped store, an installable calendar plugin that adds a due-date
 field and a month view — on `@yatoi/kernel`, `@yatoi/vue`, `@yatoi/slots`,
-and `@yatoi/vue-slots` instead of `@yatoi/react`/`@yatoi/react-slots`. No
+and `@yatoi/vue/slots` instead of `@yatoi/react`/`@yatoi/react/slots`. No
 chapter 2:
 no remote loading, no import map, no `VITE_PLUGIN_BASE` seam. That story
 is about bundlers, not frameworks, and the React example already tells it.
@@ -91,7 +91,7 @@ scoped kernel, where the trap doesn't apply.
 
 ### SFCs are allowed here, but not in the library
 
-`@yatoi/vue`/`@yatoi/vue-slots` themselves ship no `.vue` files —
+`@yatoi/vue` and its `./slots` export ship no `.vue` files —
 `Slot.ts`, `Requires.ts` are `defineComponent`/functional-component
 TypeScript, because a library can't assume its consumer's build pipeline
 compiles SFCs. An *app* can assume that about itself, so `App.vue`,
@@ -150,14 +150,14 @@ zero-prop functional component that supplies `todos` via `h()`.
 Confirmed: the contributed component receives `todo` correctly at
 runtime. But `:todo="todo"` is a plain Vue attr binding, not a typed
 component prop — `<Slot>` declares `inheritAttrs: false` and reads
-`attrs` internally (see `packages/vue-slots/src/Slot.ts`), because Vue has
+`attrs` internally (see `packages/vue/src/slots/Slot.ts`), because Vue has
 no way to spread an arbitrary typed prop bag onto a component's declared
 prop set the way JSX does. **This is the real Vue cost of the slot
 contract**: `vue-tsc` cannot check that a `<Slot name="todo.item.extra">`
 call site passes a `todo` of the right shape, or that it's passed at all.
 Get the slot name right and the prop wrong (or missing), and nothing red-
 squiggles; you find out at runtime, or not at all if the contributed
-renderer silently accepts `undefined`. `@yatoi/react-slots`' React `<Slot>` has
+renderer silently accepts `undefined`. `@yatoi/react/slots`' React `<Slot>` has
 the same gap in principle (extra JSX props aren't checked against
 `Slots[N]` by the compiler either in every case), but attrs make Vue's
 version more visible — attrs are *designed* to be an escape hatch from
@@ -281,7 +281,7 @@ doesn't reach `v-slot` template destructuring). Smaller notes:
   `owner` are needed.
 
 - `contribute()`'s `Scope<any>` parameter type (in
-  `packages/vue-slots/src/contribute.ts`, matching `@yatoi/react-slots`) means a
+  `packages/vue/src/slots/contribute.ts`, matching `@yatoi/react/slots`) means a
   plugin's `setup(scope)` parameter isn't narrowed by `contribute` calls
   either way — not new to this port, just newly visible writing a second
   plugin against it.

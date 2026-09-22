@@ -16,8 +16,8 @@ const tokens = new Map<string, CollectionToken<unknown>>()
  * The `slot:${name}` key format is a stable cross-bundle contract (spec
  * §2.5), not an implementation detail: a plugin bundling its own copy of
  * a binding reaches the same collection by building that key itself. This
- * package is its only home now — both `@yatoi/react-slots` and
- * `@yatoi/vue-slots` re-export this `slot()` rather than defining their
+ * package is its only home now — both `@yatoi/react/slots` and
+ * `@yatoi/vue/slots` re-export this `slot()` rather than defining their
  * own, so a React contribution and a Vue contribution to the same slot
  * name always land in the same kernel collection.
  *

@@ -110,7 +110,7 @@ render-tree concern. They don't interfere by default, but four seams do.
   ```
 
   `<Slot>` memoises the composed renderer on the contributions array (see
-  `packages/react-slots/src/Slot.tsx`), so the lazy component's identity is
+  `packages/react/src/slots/Slot.tsx`), so the lazy component's identity is
   stable across host re-renders — it doesn't re-suspend or remount when an
   unrelated slot prop changes.
 
@@ -208,7 +208,7 @@ its own build — the shim has to name its exports explicitly, not
 `export * from 'react'`).
 
 The plugin does **not** need to externalize `@yatoi/kernel`, `@yatoi/slots`,
-`@yatoi/react-slots`, or its contract package — it may bundle its own
+`@yatoi/react/slots`, or its contract package — it may bundle its own
 copies of all four. A service, collection, or slot's identity is its
 string `key` (`packages/kernel/src/token.ts`), and slot names are just
 collection keys of the form `slot:${name}`, defined once in

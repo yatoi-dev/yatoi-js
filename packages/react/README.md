@@ -8,12 +8,14 @@ React bindings that observe an `@yatoi/kernel` through providers, hooks, capabil
 ## Install
 
 ```bash
-npm i @yatoi/kernel @yatoi/react react react-dom
+npm i @yatoi/react react react-dom
 ```
 
 ```tsx
 import { createKernel, definePlugin, defineService } from '@yatoi/kernel'
 import { KernelProvider, Requires } from '@yatoi/react'
+import { Slot } from '@yatoi/react/slots'
+declare module '@yatoi/slots' { interface Slots { 'sidebar.item': Record<never, never> } }
 const Clock = defineService<{ now(): number }>('clock')
 const clock = definePlugin({ name: 'clock', provides: [Clock], setup(scope) {
   scope.provide(Clock, { now: () => Date.now() })
@@ -23,6 +25,7 @@ const kernel = createKernel()
 kernel.load(clock)
 export function App() { return <KernelProvider kernel={kernel}>
   <Requires of={[Clock]}>{(value) => <time>{value.now()}</time>}</Requires>
+  <Slot name="sidebar.item" />
 </KernelProvider> }
 ```
 
@@ -32,6 +35,7 @@ export function App() { return <KernelProvider kernel={kernel}>
 - Import token symbols from one contract module; never use string literals at call sites.
 - Prefer `<Requires>` over `useService(Token)!` so capability removal unmounts the dependent subtree.
 - Define plugin objects outside components so their identity survives re-renders.
+- Declare the host's `Slots` interface once in `@yatoi/slots`; import renderers from `@yatoi/react/slots`.
 
 [Specification](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/spec.md) · [Guide](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/guide.md) · [Pitfalls](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/pitfalls.md) · [React example](https://github.com/yatoi-dev/yatoi-js/tree/main/examples/todo)
 

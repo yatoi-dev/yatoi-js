@@ -34,6 +34,9 @@ skill's tools out before the model's next turn.
 
 ## Next — v0.2
 
+- **Remove the deprecated slot-package shims in 0.3.** Applications should
+  import `@yatoi/react/slots` or `@yatoi/vue/slots`; 0.2 publishes the old
+  package names once more only to provide a migration window.
 - **Release automation.** 0.1.0 was published by hand with a granular
   token (`docs/releasing.md`). Next: npm trusted publishing (OIDC) from
   CI with provenance, so no long-lived token exists; set the repo
@@ -181,9 +184,12 @@ Kept briefly so the history is visible without reading git log.
 - Name → `yatoi`, org `yatoi-dev`, repo `yatoi-js`.
 - Shared slot-names package for React + Vue hosts (raised while writing
   the Vue example) → `@yatoi/slots` split out as the framework-neutral
-  contract (`Slots`, `SlotName`, `SlotProps`, `slot()`), with
-  `@yatoi/react-slots` and `@yatoi/vue-slots` as thin bindings over it. A
+  contract (`Slots`, `SlotName`, `SlotProps`, `slot()`), with framework-
+  specific renderers that now live under each binding's `./slots` subpath. A
   host declares `Slots` once and both bindings type-check against it.
 - External review (2026-09-21): error-listener isolation, failed-plugin
   restart gating, Vue prop reactivity for `Requires`/`Slot` — fixed with
   regression tests.
+- Slot-binding install friction → React and Vue renderers now live at the
+  opt-in `@yatoi/react/slots` and `@yatoi/vue/slots` subpaths; the neutral
+  `@yatoi/slots` contract remains independent.

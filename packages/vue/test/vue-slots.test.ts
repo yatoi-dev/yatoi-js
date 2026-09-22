@@ -269,7 +269,7 @@ describe('<Slot mode="single">', () => {
 })
 
 describe('cross-bundle interop', () => {
-  it('a contribution made through a hand-built collection token (a second @yatoi/vue-slots copy) shows up in <Slot>', () => {
+  it('a contribution made through a hand-built collection token (a second @yatoi/vue/slots copy) shows up in <Slot>', () => {
     const kernel = createKernel()
     const foreignToken = defineCollection<SlotRenderer<'sidebar.item'>>('slot:sidebar.item')
     const p = plugin('foreign', (scope) => {

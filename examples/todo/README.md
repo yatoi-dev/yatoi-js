@@ -1,7 +1,7 @@
 # yatoi todo example
 
 A small todo app with an installable calendar plugin, exercising
-`@yatoi/kernel`, `@yatoi/react`, `@yatoi/slots`, and `@yatoi/react-slots`
+`@yatoi/kernel`, `@yatoi/react`, `@yatoi/slots`, and `@yatoi/react/slots`
 end to end.
 
 ## Run it
@@ -101,10 +101,10 @@ pnpm --filter yatoi-example-todo dev:remote
   `http://localhost:5174`, with a clean URL (no query string on a first,
   successful attempt).
 - That file carries its own tree-shaken copy of `@yatoi/kernel`,
-  `@yatoi/slots`, `@yatoi/react-slots`, and the contract, and still
+  `@yatoi/slots`, `@yatoi/react/slots`, and the contract, and still
   interoperates with the host's kernel by token key, not by shared module
   instance — see `packages/kernel/test/kernel.test.ts` block 11 and
-  `packages/react-slots/test/react-slots.test.tsx` "cross-bundle interop"
+  `packages/react/test/react-slots.test.tsx` "cross-bundle interop"
   for the same guarantee, tested directly.
 - **React is the one thing that *is* shared**, via a native import map —
   see `vite/react-import-map.ts` and

@@ -20,7 +20,7 @@ a thin React binding that only ever *observes* the kernel.
 ## Four layers
 
 ```
-@yatoi/react-slots   contribute(), <Slot> for React        React
+@yatoi/react/slots   contribute(), <Slot> for React        React
 @yatoi/react         KernelProvider, useService, <Requires> React
 @yatoi/slots         Slots interface, SlotName, slot()      no React, no Vue
 @yatoi/kernel        plugins, services, cascade unload       no React, no DOM
@@ -50,7 +50,7 @@ There are two kinds:
   Contributed to by any number of plugins. Slots are built on collections.
 
 The kernel stores values opaquely. It never knows a value is a React
-component; `@yatoi/react-slots` is what gives a stored value React
+component; `@yatoi/react/slots` is what gives a stored value React
 meaning — `@yatoi/slots` only declares the contract (names and prop
 shapes), framework-neutral.
 
@@ -222,14 +222,14 @@ in doubt, those are the compiled truth.
 ## Install
 
 ```bash
-pnpm add @yatoi/kernel @yatoi/react @yatoi/slots @yatoi/react-slots
+pnpm add @yatoi/kernel @yatoi/react react react-dom
 ```
 
 `@yatoi/kernel` has no dependencies. `@yatoi/slots` depends only on
-`@yatoi/kernel` — no React. `@yatoi/react` and `@yatoi/react-slots`
-peer-depend on `react ^18 || ^19`. For Vue, see
-["Using it from Vue"](#using-it-from-vue) below — `@yatoi/vue` and
-`@yatoi/vue-slots` peer-depend on `vue ^3.4.0` instead.
+`@yatoi/kernel` — no React. `@yatoi/react` (including its `./slots` subpath)
+peer-depends on `react ^18 || ^19`. For Vue, see
+["Using it from Vue"](#using-it-from-vue) below — `@yatoi/vue`
+peer-depends on Vue instead.
 
 ## Create a kernel
 
@@ -473,7 +473,7 @@ contribution:
 ## Contribute to a slot (plugin side)
 
 ```tsx
-import { contribute } from '@yatoi/react-slots'
+import { contribute } from '@yatoi/react/slots'
 
 setup(scope) {
   const todos = scope.get(Todos)
@@ -547,13 +547,13 @@ underneath. Each `Contribution` carries `value`, `priority`, `mode` and
 
 ## Using it from Vue
 
-`@yatoi/vue` and `@yatoi/vue-slots` are the same two layers, aimed at
+`@yatoi/vue` and its `./slots` subpath are the same two layers, aimed at
 Vue 3 instead of React. Everything above still applies conceptually — the
 kernel, tokens, plugins, `inject`/`provides`, cascade unload — only the
 binding changes. Install:
 
 ```bash
-pnpm add @yatoi/kernel @yatoi/vue @yatoi/slots @yatoi/vue-slots
+pnpm add @yatoi/kernel @yatoi/vue vue
 ```
 
 Install the kernel app-wide with `app.use(yatoi, { kernel })` — this is
@@ -642,7 +642,7 @@ Vue has no StrictMode double-invoke, but a component that unmounts and is
 immediately remounted at the same spot (a `:key` change, HMR) exercises
 the same load → unload → load contract.
 
-`<Slot>` from `@yatoi/vue-slots` works the same way as `@yatoi/react-slots`'s,
+`<Slot>` from `@yatoi/vue/slots` works the same way as `@yatoi/react/slots`'s,
 with one mechanical difference: a slot's own props (e.g. `task` for
 `task.card`) are passed as plain attrs, not typed component props — Vue
 has no way to spread an arbitrary typed prop bag onto a component's
@@ -656,12 +656,12 @@ false` and reads them off `attrs` instead:
 ```
 
 `declare module '@yatoi/slots' { interface Slots { ... } }` is the
-**same augmentation** `@yatoi/react-slots` type-checks against — both
+**same augmentation** `@yatoi/react/slots` type-checks against — both
 bindings re-export `Slots`/`SlotName`/`SlotProps`/`slot` from
 `@yatoi/slots`, so a host using both React and Vue surfaces for the same
 product declares its slots once. The tests in
-`packages/vue/test/vue.test.ts` and `packages/vue-slots/test/vue-slots.test.ts`
-port every claim from the React/`@yatoi/react-slots` suites; read those
+`packages/vue/test/vue.test.ts` and `packages/vue/test/vue-slots.test.ts`
+port every claim from the React/`@yatoi/react/slots` suites; read those
 before reading the source. See
 [examples/todo-vue](../examples/todo-vue/README.md) for a full app built on
 this binding, chapter 1 of `examples/todo` ported field for field.
@@ -717,7 +717,7 @@ on an env var (`VITE_PLUGIN_BASE`), and the plugin's own source doesn't
 change either way. That's the whole "loader" a v0.1 app needs.
 
 **Bundling.** A plugin built to ship as a separate file can bundle its own
-copy of `@yatoi/kernel`, `@yatoi/slots`, `@yatoi/react-slots`, and
+copy of `@yatoi/kernel`, `@yatoi/slots`, `@yatoi/react/slots`, and
 whatever contract it depends on — the kernel identifies services,
 collections and slots by a token's
 string `key`, not by object identity (`packages/kernel/src/token.ts`), so a
@@ -885,7 +885,7 @@ render-tree concern. They don't interfere by default, but four seams do.
   ```
 
   `<Slot>` memoises the composed renderer on the contributions array (see
-  `packages/react-slots/src/Slot.tsx`), so the lazy component's identity is
+  `packages/react/src/slots/Slot.tsx`), so the lazy component's identity is
   stable across host re-renders — it doesn't re-suspend or remount when an
   unrelated slot prop changes.
 
@@ -983,7 +983,7 @@ its own build — the shim has to name its exports explicitly, not
 `export * from 'react'`).
 
 The plugin does **not** need to externalize `@yatoi/kernel`, `@yatoi/slots`,
-`@yatoi/react-slots`, or its contract package — it may bundle its own
+`@yatoi/react/slots`, or its contract package — it may bundle its own
 copies of all four. A service, collection, or slot's identity is its
 string `key` (`packages/kernel/src/token.ts`), and slot names are just
 collection keys of the form `slot:${name}`, defined once in
@@ -1079,6 +1079,10 @@ state(token): present with a value, loading during real progress, otherwise abse
 - **Don't** create plugin objects inside components. **Do** define them at module scope or create a distinct object for each intended instance.
 - **Don't** create the application kernel during render. **Do** create it outside the tree and pass it to `<KernelProvider>`.
 - **Don't** cache `useContributions()` outside React. **Do** let the hook subscribe to the kernel snapshot.
+- **Don't** declare slot names in more than one place. **Do** augment `@yatoi/slots` once in a shared contract module.
+- **Don't** contribute UI outside plugin setup. **Do** import `contribute` from `@yatoi/react/slots` and let the scope own its removal.
+- **Don't** recreate contributed component types in setup. **Do** keep renderer component identities stable and close over injected services.
+- **Don't** assume `<Slot>` adds a Suspense boundary. **Do** place the fallback at the host boundary or inside the contribution.
 - **Don't** bundle a second React copy into remote plugins. **Do** externalize and share the host's React and JSX runtime.
 
 ## Lifecycle in six lines
@@ -1100,6 +1104,7 @@ state(token): present with a value, loading during real progress, otherwise abse
 - Are plugin objects stable across renders?
 - Will StrictMode load → unload → load leave one active instance?
 - Are remote plugins sharing the host's React runtime?
+- Are slot names declared once and slot contributions owned by a plugin scope?
 
 ## Where the rules come from
 
@@ -1150,50 +1155,6 @@ state(token): services are present/loading/absent; slots use live collections
 - [Protocol specification](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/spec.md) — normative behavior.
 - [Pitfalls](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/pitfalls.md) — mistakes and recovery patterns.
 
-# packages/react-slots/AGENTS.md
-
-# Working with `@yatoi/react-slots`
-
-## Use this package when
-
-- React plugins contribute typed renderers to host-declared slots.
-- Contributions should compose by append, replace, or wrap mode.
-- Unloading a plugin must remove its UI without manual unregister calls.
-
-## Do / Don't
-
-- **Don't** declare `Slots` in this package. **Do** augment `@yatoi/slots` once in a host contract module.
-- **Don't** call `contribute` during React render. **Do** call it from plugin `setup`.
-- **Don't** load plugins during render. **Do** load in bootstrap, handlers, effects, or `usePlugin`.
-- **Don't** write `useService(Token)!` inside a renderer. **Do** gate required UI with `<Requires>` or close over an injected setup-time service.
-- **Don't** create contributed component identities on every host render. **Do** define renderers in plugin setup or at module scope.
-- **Don't** add a hidden Suspense policy to `<Slot>`. **Do** place the desired `<Suspense>` boundary in the host or contribution.
-
-## Lifecycle in six lines
-
-```text
-inactive: registered but waiting for dependencies, or unloaded
-starting: setup may already contribute while awaiting
-active: contributed renderers are visible to <Slot>
-disposing: contributions disappear synchronously; cleanup may continue
-inactive → starting → active → disposing → inactive; failed is sticky
-state(token): services gate plugins; slot collections update subscribed renders
-```
-
-## Review checklist
-
-- Is the host's `Slots` augmentation imported by host and plugins?
-- Does each contribution use a declared slot name and correct props?
-- Is `contribute` called only from a live plugin scope?
-- Does `wrap` call or intentionally replace its `Default`?
-- Is required service access gated or closed over safely?
-- Is lazy UI covered by an intentional Suspense boundary?
-
-## Where the rules come from
-
-- [Protocol specification](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/spec.md) — normative behavior.
-- [Pitfalls](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/pitfalls.md) — mistakes and recovery patterns.
-
 # packages/vue/AGENTS.md
 
 # Working with `@yatoi/vue`
@@ -1212,6 +1173,9 @@ state(token): services gate plugins; slot collections update subscribed renders
 - **Don't** provide the app kernel from the root component and consume it there. **Do** install `yatoi` with `app.use(yatoi, { kernel })`.
 - **Don't** retain service refs after their component scope ends. **Do** use the read-only refs returned by the composables.
 - **Don't** cache collection arrays separately. **Do** use `useContributions` or `useContributionValues`.
+- **Don't** declare slot names in more than one place. **Do** augment `@yatoi/slots` once in a shared contract module.
+- **Don't** contribute UI outside plugin setup. **Do** import `contribute` from `@yatoi/vue/slots` and let the scope own its removal.
+- **Don't** recreate contributed component types in setup. **Do** keep renderer identities stable and close over injected services.
 
 ## Lifecycle in six lines
 
@@ -1232,52 +1196,21 @@ state(token): present with a value, loading during real progress, otherwise abse
 - Are plugin objects stable across component remounts?
 - Are subscriptions owned by the current Vue effect scope?
 - Does unmount/remount leave exactly one active plugin instance?
+- Are slot names declared once and slot contributions owned by a plugin scope?
 
 ## Where the rules come from
 
 - [Protocol specification](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/spec.md) — normative behavior.
 - [Pitfalls](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/pitfalls.md) — mistakes and recovery patterns.
+
+# packages/react-slots/AGENTS.md
+
+Deprecated: install `@yatoi/react` instead.
+Change imports from `@yatoi/react-slots` to `@yatoi/react/slots`.
+This compatibility shim will be removed in 0.3.
 
 # packages/vue-slots/AGENTS.md
 
-# Working with `@yatoi/vue-slots`
-
-## Use this package when
-
-- Vue plugins contribute typed components to host-declared slots.
-- Contributions should compose by append, replace, or wrap mode.
-- Unloading a plugin must remove its UI without manual unregister calls.
-
-## Do / Don't
-
-- **Don't** declare `Slots` in this package. **Do** augment `@yatoi/slots` once in a host contract module.
-- **Don't** call `contribute` during render or from a component `setup()` body. **Do** call it from plugin `setup`.
-- **Don't** load plugins during render. **Do** load in bootstrap, handlers, lifecycle hooks, or `usePlugin`.
-- **Don't** assert `useService(Token).value!` inside a renderer. **Do** gate required UI with `<Requires>` or close over an injected setup-time service.
-- **Don't** forget that the host default is a Vue slot. **Do** pass it through `Default` when a `wrap` contribution should preserve lower layers.
-- **Don't** duplicate the slot contract for Vue. **Do** share the neutral host contract with every binding.
-
-## Lifecycle in six lines
-
-```text
-inactive: registered but waiting for dependencies, or unloaded
-starting: setup may already contribute while awaiting
-active: contributed components are visible to <Slot>
-disposing: contributions disappear synchronously; cleanup may continue
-inactive → starting → active → disposing → inactive; failed is sticky
-state(token): services gate plugins; slot collections update subscribed renders
-```
-
-## Review checklist
-
-- Is the host's `Slots` augmentation imported by host and plugins?
-- Does each contribution use a declared slot name and correct props?
-- Is `contribute` called only from a live plugin scope?
-- Does `wrap` render or intentionally replace its `Default`?
-- Is required service access gated or closed over safely?
-- Will unmount/remount remove and restore exactly one contribution?
-
-## Where the rules come from
-
-- [Protocol specification](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/spec.md) — normative behavior.
-- [Pitfalls](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/pitfalls.md) — mistakes and recovery patterns.
+Deprecated: install `@yatoi/vue` instead.
+Change imports from `@yatoi/vue-slots` to `@yatoi/vue/slots`.
+This compatibility shim will be removed in 0.3.

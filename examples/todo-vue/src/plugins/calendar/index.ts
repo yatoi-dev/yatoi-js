@@ -47,7 +47,7 @@ export default definePlugin({
     contribute(scope, 'todo.item.extra', makeDueDateField(todos))
     // Not a slot — the shell needs the id/label as data (for nav and
     // routing), not just something to render, so this goes straight on
-    // the `Views` collection instead of through `/vue-slots`.
+    // the `Views` collection instead of through `@yatoi/vue/slots`.
     scope.contribute(Views, { id: 'calendar', label: 'Calendar', View: makeCalendarView(todos) })
   },
 })

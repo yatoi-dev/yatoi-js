@@ -13,7 +13,7 @@ export interface RequiresProps<Tokens extends readonly AnyServiceToken[]> {
 }
 
 // ── implementation, deliberately untyped ─────────────────────────────
-// Same trick as `@yatoi/vue-slots`'s `Slot.ts` (itself matching React's
+// Same trick as `@yatoi/vue/slots`'s `Slot.ts` (itself matching React's
 // `Slot.tsx`): a real generic component needs an SFC's `<script setup
 // generic>` macro, off the table without `vue-tsc`. `RequiresImpl` works
 // on a loose `readonly AnyServiceToken[]`; the export below restores a

@@ -9,6 +9,22 @@ packages to the same number. While the major is 0, a minor may break the
 public API or [the spec](docs/spec.md); a patch never does. See
 [docs/releasing.md](docs/releasing.md) for how a release is cut.
 
+## 0.2.0 — unreleased
+
+React and Vue slot bindings move into their framework packages as opt-in
+subpath exports: use `@yatoi/react/slots` and `@yatoi/vue/slots`. The
+framework-neutral `@yatoi/slots` contract remains a separate package.
+
+Existing imports can be migrated in one pass:
+
+```bash
+sed -i.bak -e 's#@yatoi/react-slots#@yatoi/react/slots#g' -e 's#@yatoi/vue-slots#@yatoi/vue/slots#g' path/to/files
+```
+
+`@yatoi/react-slots@0.2.0` and `@yatoi/vue-slots@0.2.0` are deprecated
+re-export shims. They preserve runtime and type identity for one minor and
+will be removed in 0.3.
+
 ## 0.1.0 — 2026-09-22
 
 First release. Six packages, layered:

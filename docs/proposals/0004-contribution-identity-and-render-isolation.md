@@ -5,7 +5,7 @@
 ## Problem
 
 Two gaps that every binding hits the same way, so they belong to the
-protocol rather than to `@yatoi/react-slots` or `@yatoi/vue-slots`:
+protocol rather than to `@yatoi/react/slots` or `@yatoi/vue/slots`:
 
 1. **Contributions have no identity.** A `Contribution` is
    `{ value, priority, mode, owner }` ([spec §11.1](../spec.md)). A
@@ -97,6 +97,6 @@ modes, the opaque-value rule.
 | Implementation | Status | Tracking |
 |---|---|---|
 | yatoi-js (kernel `id`) | — | |
-| yatoi-js (`@yatoi/react-slots`) | — | |
-| yatoi-js (`@yatoi/vue-slots`) | — | |
+| yatoi-js (`@yatoi/react/slots`) | — | |
+| yatoi-js (`@yatoi/vue/slots`) | — | |
 | yatoi-dart | — | |

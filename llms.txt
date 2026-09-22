@@ -10,12 +10,12 @@ A framework-neutral plugin kernel with reversible effects, typed capability disc
 - [packages/react/AGENTS.md](https://github.com/yatoi-dev/yatoi-js/blob/main/packages/react/AGENTS.md): Coding and review instructions for @yatoi/react.
 - [packages/slots/README.md](https://github.com/yatoi-dev/yatoi-js/blob/main/packages/slots/README.md): Installation and first-use guide for @yatoi/slots.
 - [packages/slots/AGENTS.md](https://github.com/yatoi-dev/yatoi-js/blob/main/packages/slots/AGENTS.md): Coding and review instructions for @yatoi/slots.
-- [packages/react-slots/README.md](https://github.com/yatoi-dev/yatoi-js/blob/main/packages/react-slots/README.md): Installation and first-use guide for @yatoi/react-slots.
-- [packages/react-slots/AGENTS.md](https://github.com/yatoi-dev/yatoi-js/blob/main/packages/react-slots/AGENTS.md): Coding and review instructions for @yatoi/react-slots.
 - [packages/vue/README.md](https://github.com/yatoi-dev/yatoi-js/blob/main/packages/vue/README.md): Installation and first-use guide for @yatoi/vue.
 - [packages/vue/AGENTS.md](https://github.com/yatoi-dev/yatoi-js/blob/main/packages/vue/AGENTS.md): Coding and review instructions for @yatoi/vue.
-- [packages/vue-slots/README.md](https://github.com/yatoi-dev/yatoi-js/blob/main/packages/vue-slots/README.md): Installation and first-use guide for @yatoi/vue-slots.
-- [packages/vue-slots/AGENTS.md](https://github.com/yatoi-dev/yatoi-js/blob/main/packages/vue-slots/AGENTS.md): Coding and review instructions for @yatoi/vue-slots.
+- [packages/react-slots/README.md](https://github.com/yatoi-dev/yatoi-js/blob/main/packages/react-slots/README.md): Deprecated compatibility shim for @yatoi/react-slots.
+- [packages/react-slots/AGENTS.md](https://github.com/yatoi-dev/yatoi-js/blob/main/packages/react-slots/AGENTS.md): Migration instruction for the deprecated @yatoi/react-slots shim.
+- [packages/vue-slots/README.md](https://github.com/yatoi-dev/yatoi-js/blob/main/packages/vue-slots/README.md): Deprecated compatibility shim for @yatoi/vue-slots.
+- [packages/vue-slots/AGENTS.md](https://github.com/yatoi-dev/yatoi-js/blob/main/packages/vue-slots/AGENTS.md): Migration instruction for the deprecated @yatoi/vue-slots shim.
 - [docs/concepts.md](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/concepts.md): Core vocabulary and the capability-graph mental model.
 - [docs/guide.md](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/guide.md): End-to-end usage patterns for plugins, services, collections, and bindings.
 - [docs/pitfalls.md](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/pitfalls.md): Known mistakes, failure modes, and safer alternatives.

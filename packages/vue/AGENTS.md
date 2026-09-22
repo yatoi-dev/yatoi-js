@@ -14,6 +14,9 @@
 - **Don't** provide the app kernel from the root component and consume it there. **Do** install `yatoi` with `app.use(yatoi, { kernel })`.
 - **Don't** retain service refs after their component scope ends. **Do** use the read-only refs returned by the composables.
 - **Don't** cache collection arrays separately. **Do** use `useContributions` or `useContributionValues`.
+- **Don't** declare slot names in more than one place. **Do** augment `@yatoi/slots` once in a shared contract module.
+- **Don't** contribute UI outside plugin setup. **Do** import `contribute` from `@yatoi/vue/slots` and let the scope own its removal.
+- **Don't** recreate contributed component types in setup. **Do** keep renderer identities stable and close over injected services.
 
 ## Lifecycle in six lines
 
@@ -34,6 +37,7 @@ state(token): present with a value, loading during real progress, otherwise abse
 - Are plugin objects stable across component remounts?
 - Are subscriptions owned by the current Vue effect scope?
 - Does unmount/remount leave exactly one active plugin instance?
+- Are slot names declared once and slot contributions owned by a plugin scope?
 
 ## Where the rules come from
 

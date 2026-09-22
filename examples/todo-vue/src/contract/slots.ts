@@ -17,7 +17,7 @@ import type {} from '@yatoi/slots'
  * targets the same slot key (`slot:todo.item.extra`, see
  * packages/slots/src/token.ts) as the host.
  *
- * `@yatoi/vue-slots` re-exports `Slots` from here, so this single
+ * `@yatoi/vue/slots` re-exports `Slots` from here, so this single
  * augmentation is what both the React todo example and this Vue example
  * would type-check against, if a host used both bindings at once.
  */

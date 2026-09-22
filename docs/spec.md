@@ -444,7 +444,7 @@ declaration itself (the `Slots` registry interface or equivalent, plus the
 key-mapping function) — and a **binding part**, layered on top per
 framework. A TypeScript implementation MAY split these into separate
 packages, as the reference implementation does (`@yatoi/slots` for the
-neutral part; `@yatoi/react-slots`/`@yatoi/vue-slots` for the binding
+neutral part; `@yatoi/react/slots`/`@yatoi/vue/slots` for the binding
 part) so that a host using more than one framework binding declares its
 `Slots` once. Either way, it MUST offer:
 - **contribute(scope, name, renderer, { priority, mode })** — a typed
@@ -554,7 +554,7 @@ injected token MUST still return the value.
 
 | Spec | Test |
 |---|---|
-| §2.2, §2.5 | `kernel.test.ts` 11; `slots.test.ts` "is the same collection a hand-built key would reach"; `react-slots.test.tsx` "cross-bundle interop"; `react.test.tsx` `<Requires>` "resolves a token created separately"; `vue-slots.test.ts` "cross-bundle interop"; `vue.test.ts` `Requires` "resolves a token created separately" |
+| §2.2, §2.5 | `kernel.test.ts` 11; `slots.test.ts` "is the same collection a hand-built key would reach"; `react/test/react-slots.test.tsx` "cross-bundle interop"; `react.test.tsx` `<Requires>` "resolves a token created separately"; `vue/test/vue-slots.test.ts` "cross-bundle interop"; `vue.test.ts` `Requires` "resolves a token created separately" |
 | §2.4 | `tokens.test.ts` "service() / collection()" |
 | §3.1 `name` | `tokens.test.ts` "requires a name" |
 | §5.1–5.3 | `kernel.test.ts` 1 |
@@ -580,7 +580,7 @@ injected token MUST still return the value.
 | §13.3 | `react.test.tsx` `useService`, `useServiceState`; `vue.test.ts` `useService`, `useServiceState` |
 | §13.4 | `react.test.tsx` `<Requires>`; `vue.test.ts` `Requires`, including "follows a change to `of` after mount", "follows an in-place mutation of a reactive `of` array" |
 | §13.5 | `react.test.tsx` `usePlugin`; `torture.test.ts` T3; `vue.test.ts` `usePlugin` (including the explicit mount → unmount → mount remount case, Vue's stand-in for StrictMode double-invoke) |
-| §13.6 | `slots.test.ts` (neutral contract); `react-slots.test.tsx` (all); `vue-slots.test.ts` (all), including `<Slot>` reactive name "follows a change to `name` after mount" |
+| §13.6 | `slots.test.ts` (neutral contract); `react/test/react-slots.test.tsx` (all); `vue/test/vue-slots.test.ts` (all), including `<Slot>` reactive name "follows a change to `name` after mount" |
 | §14 | `examples/todo` (not a test; the reference host) |
 | T1, T2 | `torture.test.ts` "provider unloads while dependents are mid-async setup" |
 | `dispose()` / `settle()` | `kernel.test.ts` "kernel.dispose" |

@@ -13,6 +13,10 @@
 - **Don't** create plugin objects inside components. **Do** define them at module scope or create a distinct object for each intended instance.
 - **Don't** create the application kernel during render. **Do** create it outside the tree and pass it to `<KernelProvider>`.
 - **Don't** cache `useContributions()` outside React. **Do** let the hook subscribe to the kernel snapshot.
+- **Don't** declare slot names in more than one place. **Do** augment `@yatoi/slots` once in a shared contract module.
+- **Don't** contribute UI outside plugin setup. **Do** import `contribute` from `@yatoi/react/slots` and let the scope own its removal.
+- **Don't** recreate contributed component types in setup. **Do** keep renderer component identities stable and close over injected services.
+- **Don't** assume `<Slot>` adds a Suspense boundary. **Do** place the fallback at the host boundary or inside the contribution.
 - **Don't** bundle a second React copy into remote plugins. **Do** externalize and share the host's React and JSX runtime.
 
 ## Lifecycle in six lines
@@ -34,6 +38,7 @@ state(token): present with a value, loading during real progress, otherwise abse
 - Are plugin objects stable across renders?
 - Will StrictMode load → unload → load leave one active instance?
 - Are remote plugins sharing the host's React runtime?
+- Are slot names declared once and slot contributions owned by a plugin scope?
 
 ## Where the rules come from
 

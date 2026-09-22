@@ -196,17 +196,18 @@ have to discover the lifecycle bugs yourself.
 | Package                                    | What                                                                                                                   | Runs in              |
 | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- | -------------------- |
 | [`@yatoi/kernel`](packages/kernel)         | Plugins, services, scope tree, cascade unload; no framework, DOM, or Node APIs                                         | Any modern JS runtime |
-| [`@yatoi/react`](packages/react)           | `<KernelProvider>`, `useService`, `<Requires>`, `usePlugin`, `useContributions`                                        | React 18/19          |
+| [`@yatoi/react`](packages/react)           | `<KernelProvider>`, hooks and `<Requires>`; `./slots` adds `contribute()` and `<Slot>`                                 | React 18/19          |
 | [`@yatoi/slots`](packages/slots)           | Framework-neutral slot contract: the `Slots` interface, `SlotName`, `SlotProps`, `slot()`                              | Any modern JS runtime |
-| [`@yatoi/react-slots`](packages/react-slots) | React binding for `@yatoi/slots`: `contribute()`, `<Slot>`                                                           | React 18/19          |
-| [`@yatoi/vue`](packages/vue)               | `provideKernel`/`<KernelProvider>`, `useService`, `<Requires>`, `usePlugin`, `useContributions`                        | Vue 3                |
-| [`@yatoi/vue-slots`](packages/vue-slots)   | Vue binding for `@yatoi/slots`: `contribute()`, `<Slot>`                                                               | Vue 3                |
+| [`@yatoi/vue`](packages/vue)               | Providers, composables and `<Requires>`; `./slots` adds `contribute()` and `<Slot>`                                    | Vue 3                |
 
 
 **Stop at the layer you need**. A shell developer drives the kernel from
 config and unit-tests it without rendering anything. An app developer
 writes `usePlugin` and `<Slot>` and never touches the kernel. If either of
 those stops being true, the API is wrong.
+
+`@yatoi/react-slots` and `@yatoi/vue-slots` are deprecated 0.2 compatibility
+shims for the new subpaths and will be removed in 0.3.
 
 ## The honest cost
 
@@ -226,16 +227,16 @@ Read [Pitfalls](docs/pitfalls.md) for more details.
 
 ## Status
 
-v0.1.0 is on npm (2026-09-22): `@yatoi/kernel`, `@yatoi/react`, `@yatoi/slots`,
-`@yatoi/react-slots`, `@yatoi/vue`, `@yatoi/vue-slots`.
+v0.1.0 is on npm (2026-09-22). The next minor has four active packages:
+`@yatoi/kernel`, `@yatoi/slots`, `@yatoi/react`, and `@yatoi/vue`.
 
 - **Kernel:** runs in plain Node with no DOM; a torture test covers a
 service unloading while dependents are mid-async.
 - **Bindings:** React runs under `<StrictMode>` on a concurrent root; Vue
 asserts unmount/remount explicitly. Adding Vue required no kernel changes.
-- **Verification:** 125 tests across the kernel, bindings, slots, and
+- **Verification:** 127 tests across the kernel, bindings, slots, and
 non-UI examples.
-- **Versioning:** 0.1.0 for all six packages. Patches move independently; minors move all six together as a new contract.
+- **Versioning:** Patches move independently; minors move the published set together as a new contract.
 While the major is 0, a minor may break and a patch will not — pin to
 `~0.1.0` if that matters to you.
 - **1.0:** when the spec's conformance table stops growing and a second
@@ -265,7 +266,7 @@ against.
 plugin, exercising the kernel, React binding, and slots end to end;
 chapter 2 loads the plugin from another origin.
 - [Vue example app](examples/todo-vue/README.md) — the same app, chapter 1
-only, ported to `@yatoi/vue` + `@yatoi/slots` + `@yatoi/vue-slots` — what a Vue plugin
+only, ported to `@yatoi/vue` + `@yatoi/slots` — what a Vue plugin
 author actually writes.
 - [Agent-host example](examples/agent-host/README.md) — a Node program,
 no React and no DOM, where skills are plugins and revoking a credential
@@ -285,7 +286,7 @@ Node ≥ 22.22.2, pnpm 9 (`packageManager` is pinned).
 
 ```bash
 pnpm install
-pnpm test          # all packages; kernel/slots in node, react/react-slots/vue/vue-slots in jsdom under StrictMode
+pnpm test          # all packages; kernel/slots in node, react/vue in jsdom
 pnpm typecheck
 pnpm build         # tsc -b → dist/ in each package
 pnpm pack:check    # build and audit the six npm tarballs without publishing

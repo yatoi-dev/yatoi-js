@@ -8,7 +8,9 @@ contains only compiled JavaScript, declarations, its README, agent instructions,
 
 ## Versioning
 
-Patches are per package; minors and majors move all six together.
+Patches are per package; minors and majors move the published set together.
+For 0.2 that set is the four active packages plus the two deprecated slot
+package shims. The shims leave the set when they are removed in 0.3.
 
 - A **patch** fixes behaviour inside the current contract. It bumps only
   the packages named in its changeset — a kernel fix ships as
@@ -40,7 +42,7 @@ Changesets' status check so a package change with no changeset fails CI.
 ## One-time npm setup
 
 1. Create or claim the `@yatoi` npm organization and give the release owner
-   permission to publish all six packages.
+   permission to publish the four active packages and both 0.2 shims.
 2. Require two-factor authentication for publishing.
 3. Confirm that these names are available on the public registry:
    `@yatoi/kernel`, `@yatoi/react`, `@yatoi/slots`, `@yatoi/react-slots`,
@@ -63,9 +65,9 @@ pnpm changeset
 ```
 
 Choose the semantic-version impact and explain the behavior developers will
-notice. For a patch, name only the packages that changed. For a minor or
-major, name all six at that level (see Versioning above); the guard will
-tell you if you forget one. Changes limited to examples, internal
+notice. For a patch, name only the packages that changed. For 0.2, name all
+six published packages at the minor level (see Versioning above); the guard
+will tell you if you forget one. Changes limited to examples, internal
 documentation, tests, or build tooling do not need a changeset.
 
 ## Prepare a release
@@ -124,3 +126,11 @@ After publishing, install the packages in a new empty project and run one
 kernel example plus one example for each framework binding included in the
 release. Finally, verify the npm package pages, README rendering, dependency
 ranges, and `latest` dist-tag.
+
+For the 0.2 release only, the release owner then marks the compatibility
+shims as deprecated. Do not run these before 0.2 is published:
+
+```bash
+npm deprecate @yatoi/react-slots@"0.2.x" "Use @yatoi/react/slots; this shim is removed in 0.3."
+npm deprecate @yatoi/vue-slots@"0.2.x" "Use @yatoi/vue/slots; this shim is removed in 0.3."
+```

@@ -8,8 +8,8 @@ implements both. File references are to `packages/*/src`.
 ## Layering and the no-DOM constraint
 
 ```
-react-slots/  Slot.tsx  contribute.ts  types.ts           → depends on react, slots, kernel
-react/        context  useService  useContributions  Requires  usePlugin   → depends on kernel
+react/slots/  Slot.tsx  contribute.ts  types.ts           → depends on react, slots, kernel
+react/        context  useService  useContributions  Requires  usePlugin   → depends on kernel, slots
 slots/        token.ts  types.ts                          → depends on kernel only, no React
 kernel/       token  types  registry  scope  kernel  plugin    → depends on nothing
 ```
@@ -21,8 +21,9 @@ the kernel testable in plain Node, and leaves the door open to a worker-
 or server-side kernel. `console` is the one exception, declared minimally
 in `globals.d.ts`.
 
-These packages (and their Vue counterparts) are separate publishable
-units with their own stability commitments. Do not merge them.
+The neutral contract remains a separate package. Framework renderers are
+opt-in subpath exports of their bindings, so consumers install one framework
+package without pulling slot code into the root entry point.
 
 ## Kernel data model
 
@@ -285,8 +286,8 @@ trace back to Vue's reactivity model not being React's.
   on every unrelated kernel change.
 - No generic component can be declared without an SFC's `<script setup
   generic="T">` macro (which needs `vue-tsc`, off the table under this
-  repo's plain-`tsc -b` toolchain). `Requires` and `@yatoi/vue-slots`'s
-  `Slot` both use the same fix as `@yatoi/react-slots`' `Slot.tsx`: an
+  repo's plain-`tsc -b` toolchain). `Requires` and `@yatoi/vue/slots`'s
+  `Slot` both use the same fix as `@yatoi/react/slots`' `Slot.tsx`: an
   untyped `defineComponent` implementation, exported under a cast to a
   generic function *signature* that only exists for the type checker.
   `h()` validates real call sites against it; nothing checks it against
@@ -302,7 +303,7 @@ trace back to Vue's reactivity model not being React's.
   assignment) is caught, not just a swapped-out array, and keeps an
   unrelated re-render that hands in a fresh-but-equal-keyed array from
   churning the cache.
-- `@yatoi/vue-slots`'s `Slot` follows `props.name` reactively (§13.6
+- `@yatoi/vue/slots`'s `Slot` follows `props.name` reactively (§13.6
   "reactive name"): the collection token is a `computed(() =>
   slot(props.name))` instead of one fixed at `setup()`, and a `watch` on
   that computed token (also `flush: 'sync'`) re-reads `kernel.list` so
@@ -312,7 +313,8 @@ trace back to Vue's reactivity model not being React's.
 
 ## Slots
 
-The contract and its bindings are three packages now, not one:
+The contract is one package; each framework binding exposes its renderer
+from `./slots`:
 
 - **`@yatoi/slots`** is the framework-neutral contract, and depends on
   `@yatoi/kernel` only — no React, no Vue, same `lib`/`types`
@@ -326,10 +328,10 @@ The contract and its bindings are three packages now, not one:
     "renderer" is. The `slot:${name}` key format is stable for
     cross-bundle interop — a plugin carrying its own copy of
     `@yatoi/slots` reaches the same collection by key alone.
-- **`@yatoi/react-slots`** is the React binding. It re-exports
+- **`@yatoi/react/slots`** is the React binding subpath. It re-exports
   `Slots`/`SlotName`/`SlotProps`/`slot` from `@yatoi/slots` so
-  `import { contribute, type Slots } from '@yatoi/react-slots'` still
-  works, and adds:
+  `import { contribute, type Slots } from '@yatoi/react/slots'` works, and
+  adds:
   - `types.ts`: `SlotRendererProps<N>` (slot props + `Default`) and
     `SlotRenderer<N>`, both React-specific (`ComponentType`/`ReactNode`).
   - `contribute.ts`: a typed wrapper over `scope.contribute(token, …)`.
@@ -353,8 +355,7 @@ The file is `token.ts` (in `@yatoi/slots`) rather than `slot.ts` because
 macOS's case-insensitive filesystem collides `slot.ts` with `Slot.tsx` in
 the binding packages.
 
-`@yatoi/vue-slots` is the same design over `@yatoi/vue` instead, and
-depends on `@yatoi/slots` the same way `@yatoi/react-slots` does — same
+`@yatoi/vue/slots` is the same design over `@yatoi/vue` instead — same
 re-exports, same one boundary cast (to its own `CollectionToken<
 SlotRenderer<N>>`, where `SlotRenderer` is a Vue `FunctionalComponent`),
 same `composeSingle` fold, same typed-signature-over-untyped-
@@ -375,14 +376,13 @@ declares its slots once.
 ## Build and test topology
 
 - TypeScript project references (`tsc -b`). `react` and `vue` each
-  reference `kernel/tsconfig.build.json`; `slots` references `kernel` only
-  (like the kernel, `lib: ["ES2022"]`/`types: []`); `react-slots`
-  references `kernel`, `slots` and `react`; `vue-slots` references
-  `kernel`, `slots` and `vue`. Typecheck uses the non-composite
+  reference `kernel` and `slots`; `slots` references `kernel` only (like
+  the kernel, `lib: ["ES2022"]`/`types: []`). The compatibility shims
+  reference their replacement binding. Typecheck uses the non-composite
   `tsconfig.json` with the same references.
-- Vitest projects, one per package: `kernel` and `slots` in `node` (no
-  DOM in either); `react`, `react-slots`, `vue` and `vue-slots` in
-  `jsdom`, each with its own `setup.ts`. React's
+- Vitest projects: `kernel` and `slots` in `node` (no DOM in either), with
+  React and Vue — including their slot suites and shim checks — in `jsdom`.
+  React's
   calls testing-library's `cleanup`; Vue's resets `document.body.innerHTML`
   (`@vue/test-utils` has no equivalent global auto-cleanup). All React
   tests render inside `<StrictMode>` on a `createRoot` (concurrent) root;
@@ -403,5 +403,5 @@ declares its slots once.
 | add a scope capability | `Scope` in `types.ts`, `ScopeImpl`, and `ScopeHost` if it needs the kernel |
 | add a React hook | one file in `react/src`, exported from `index.ts`, tested under StrictMode |
 | add a Vue composable | one file in `vue/src`, exported from `index.ts`, tested with explicit unmount/remount assertions |
-| add a slot resolution mode | `ContributionMode` in kernel `types.ts` (a string; kernel doesn't interpret it), then `@yatoi/react-slots`' `Slot.tsx` and `@yatoi/vue-slots`'s `Slot.ts` (both, same algorithm) |
+| add a slot resolution mode | `ContributionMode` in kernel `types.ts` (a string; kernel doesn't interpret it), then `react/src/slots/Slot.tsx` and `vue/src/slots/Slot.ts` (both, same algorithm) |
 | change the slot contract itself (`Slots`, `SlotName`, `SlotProps`, `slot()`) | `packages/slots/src` — both bindings re-export, so this is the one place |
