@@ -4,10 +4,10 @@
 [![npm](https://img.shields.io/npm/v/@yatoi/kernel.svg)](https://www.npmjs.com/package/@yatoi/kernel)
 [![license](https://img.shields.io/github/license/yatoi-dev/yatoi-js.svg)](https://github.com/yatoi-dev/yatoi-js/blob/main/LICENSE)
 
-**Plugins for React that come apart cleanly.** A small kernel that gives
-React the two properties a plugin system actually needs — remove a plugin
-and *everything it did is undone*; a plugin runs *only while what it needs
-exists* — and a React binding that only ever observes it.
+**Plugins that come apart cleanly.** A small kernel for any modern
+JavaScript runtime with the two properties a plugin system needs — remove
+a plugin and *everything it did is undone*; a plugin runs *only while what
+it needs exists* — and React and Vue bindings that only ever observe it.
 
 A **yatoi** is the loose tenon in Japanese joinery: a separate piece,
 belonging to neither board, cut to fit slots in both and inserted to hold
@@ -18,20 +18,23 @@ out leaves nothing behind.
 
 ## The problem
 
-React composes beautifully — as long as the app's authors decide, at build
-time, what the app is made of. Two things break the moment that stops
-being true:
+Composition breaks when what an app is made of stops being a build-time
+decision. Two things go wrong:
 
-- **A parent must import its children.** Nothing can add UI to a surface
-it doesn't own. A plugin can't put an item in *your* sidebar.
-- **Nothing is required, only read.** When a context provider unmounts,
-its consumers don't unmount — they re-render with `undefined`, and the
-`!` someone added three components deep crashes. There is no way to
-say "this subtree cannot exist without X."
+- **A parent must import its children.** In React or Vue, nothing can add
+UI to a surface it doesn't own. Outside a component tree, the same
+coupling is a host hard-coding its agent's tool list or server's route
+table.
+- **Nothing is required, only read.** React context, Vue
+`provide`/`inject`, and conventional DI resolution expose values to
+consumers; they do not treat a disappearing dependency as an event that
+deactivates each dependent and reverses its effects. Consumers keep a
+stale or absent reference instead.
 
 Add a third, quieter one: long-lived things that aren't UI — sockets,
-schedulers, agent runners — have no home in React except a module
-singleton or a god-provider, and no lifecycle that can be reversed.
+schedulers, agent runners — need a lifecycle that can be reversed. The
+[agent-host](examples/agent-host/README.md) and
+[server](examples/server/README.md) examples exercise exactly that.
 
 ## Two properties
 
@@ -40,16 +43,17 @@ system needs before components can be added and removed at runtime
 without disturbing each other. In plain words:
 
 
-|              | What it means                                   | yatoi                                                                                                                                                         | React today                                                              |
-| ------------ | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| **Temporal** | Remove a plugin and everything it did is undone | Every effect a plugin makes through its scope — `defer`, `provide`, `contribute` — carries its inverse, which the kernel holds and runs in reverse on dispose | `useEffect` cleanup, but only for render-tree nodes, and only on unmount |
-| **Spatial**  | A plugin runs only while what it needs exists   | `inject` declares requirements; activation is *derived* from what's present, and pulling a requirement unloads every dependent, in dependency order           | None. Context is a read, not a requirement                               |
+|              | What it means                                   | yatoi                                                                                                                                                         | Elsewhere                                                                                                                                                                                    |
+| ------------ | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Temporal** | Remove a plugin and everything it did is undone | Every effect a plugin makes through its scope — `defer`, `provide`, `contribute` — carries its inverse, which the kernel holds and runs in reverse on dispose | `useEffect`/`onUnmounted` cleanup follows component lifecycle, not dependency availability; DI containers dispose a whole scope, not an individual dependency edge                           |
+| **Spatial**  | A plugin runs only while what it needs exists   | `inject` declares requirements; activation is *derived* from what's present, and pulling a requirement unloads every dependent, in dependency order           | None. Context, `provide`/`inject`, and `resolve()` are reads, not requirements                                                                                                                |
 
 
-Together the paper calls this **spatiotemporal composability**. React has
-the temporal half for render-tree nodes and nothing else, and none of the
-spatial half. yatoi adds both — as a kernel that knows nothing about
-React, with React subscribed to it.
+Together the paper calls this **spatiotemporal composability**. UI
+frameworks have the temporal half for render-tree nodes; DI containers
+have it for whole scopes. Neither has the spatial half. yatoi adds both —
+as a kernel that knows nothing about any framework, with React and Vue
+subscribed to it.
 
 ## In thirty seconds
 
@@ -80,7 +84,8 @@ kernel.unload(clockPlugin)             // sync disposes first, cleanups in rever
 kernel.load(clockPlugin)               // both come back, sync with a fresh scope
 ```
 
-The same two properties, projected into the render tree:
+The same two properties, projected into a render tree (React shown; Vue
+provides the equivalent behavior — see [the guide](docs/guide.md)):
 
 ```tsx
 // React today: a read that can go stale
@@ -102,9 +107,11 @@ its plugin) that the host reads reactively.
 
 > **Never mutate the kernel during render.** `kernel.load`, `unload`,
 > `provide`, `contribute` belong in event handlers, effects, or outside
-> React entirely. Concurrent rendering can discard a render tree; plugin
-> loading is not rollback-able. There is no runtime guard — this is the one
-> rule you carry yourself.
+> the UI framework entirely. React's concurrent rendering and Vue's flush
+> queue can observe work between steps; plugin loading is not rollback-able.
+> There is no runtime guard — this is the one rule you carry yourself. In a
+> non-UI host, the same rule reads: mutate between turns or requests, never
+> inside one.
 
 
 
@@ -116,13 +123,16 @@ and its reference implementation, [Cordis](https://github.com/cordiverse/cordis)
 which powers DeepSeek Harness. yatoi keeps the vocabulary — effects,
 inject, scope — and takes no dependency on it.
 
-The difference is who owns the runtime. Cordis owns its own; React's
-scheduler can discard a render mid-flight and must never observe a
-half-done plugin. So the kernel does all its async behind a synchronous
-facade: disposers are *invoked* synchronously, only their promises are
-awaited, and React reads a snapshot (`present | absent | loading`) through
-`useSyncExternalStore` that can't tear. That constraint is the design work
-here, and the reason the kernel is small rather than a port.
+The difference is who owns the runtime. Cordis owns its own; UI schedulers
+— React's concurrent renderer, Vue's flush queue — can observe state
+between two steps of an update, and a Node host reading the kernel between
+turns must not see a half-done plugin either. So the kernel does all its
+async behind a synchronous facade: disposers are *invoked* synchronously,
+only their promises are awaited, and every observer reads a synchronous
+snapshot that can't tear — `useSyncExternalStore` in React, `shallowRef`
+in Vue, direct `kernel.state` / `get` / `list` reads in Node — with service
+state explicit as `present | absent | loading`. That constraint is the
+design work here, and the reason the kernel is small rather than a port.
 
 ## Why now
 
@@ -139,12 +149,25 @@ and uninstalled from a marketplace page. Its second chapter delivers that
 same plugin as a separately built ESM file, fetched by URL at runtime —
 the host never imports it.
 
+The other examples are a Vue port, a Node agent host whose tools cascade
+out when a credential is revoked, and a `node:http` server whose routes
+follow its database connection. The latter two use the same kernel with
+no UI.
+
 ## Why not…
 
-**…context and** `lazy()`**?** Context is a read: nothing deactivates when a
-provider goes away. `lazy()` loads code; nothing reverts it. That's the
-temporal half for render-tree nodes only, and no spatial half. It is the
-right tool right up until something has to be removable.
+**…framework context and lazy loading?** React context and Vue
+`provide`/`inject` are reads: nothing deactivates when a provider goes
+away. `lazy()` / `defineAsyncComponent` load code; nothing reverts it.
+That's the temporal half for render-tree nodes only, and no spatial half.
+They are the right tools right up until something has to be removable.
+
+**…a DI container?** A container answers *how to build* an object graph;
+yatoi answers *when things exist*. Conventional containers resolve values
+and dispose scopes — they do not notify and deactivate each dependent when
+one dependency goes away, or expose `loading` / `absent` as first-class
+states. They compose: one kernel scope, one container scope. See
+[Beyond UI](docs/beyond-ui.md).
 
 **…Module Federation or single-spa?** Those are delivery and isolation —
 and they deliberately avoid shared lifecycle, because team independence
@@ -153,23 +176,24 @@ on top when the pieces *do* need to compose.
 
 **…build it in-house, like VS Code?** VS Code's `DisposableStore` and
 service decorators are the temporal half done right and part of the
-spatial half. Every large extensible React app rebuilds that core, and
+spatial half. Every large extensible app rebuilds that core, and
 none extracts it, because the interesting part — the contribution surface
 — is always app-shaped. yatoi is the ~1,000 lines you'd write anyway,
 extracted, with the React bridge tested under StrictMode on a concurrent
-root so you don't have to discover the double-invoke bugs yourself.
+root and the Vue bridge asserting unmount/remount explicitly so you don't
+have to discover the lifecycle bugs yourself.
 
 ## Packages
 
 
-| Package                                    | What                                                                                                 | React? |
-| ------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------ |
-| [`@yatoi/kernel`](packages/kernel)         | Plugins, services, scope tree, cascade unload. Runs in plain Node — no DOM, enforced at compile time | No     |
-| [`@yatoi/react`](packages/react)           | `<KernelProvider>`, `useService`, `<Requires>`, `usePlugin`, `useContributions`                      | Yes    |
-| [`@yatoi/slots`](packages/slots)           | Framework-neutral slot contract: the `Slots` interface, `SlotName`, `SlotProps`, `slot()`. Depends on `@yatoi/kernel` only | No     |
-| [`@yatoi/react-slots`](packages/react-slots) | React binding for `@yatoi/slots`: `contribute()`, `<Slot>`                                         | Yes    |
-| [`@yatoi/vue`](packages/vue)               | `provideKernel`/`<KernelProvider>`, `useService`, `<Requires>`, `usePlugin`, `useContributions` — the Vue 3 equivalent of `@yatoi/react` | No (Vue) |
-| [`@yatoi/vue-slots`](packages/vue-slots)   | Vue binding for `@yatoi/slots`: `contribute()`, `<Slot>` — the Vue 3 equivalent of `@yatoi/react-slots` | No (Vue) |
+| Package                                    | What                                                                                                                   | Runs in              |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- | -------------------- |
+| [`@yatoi/kernel`](packages/kernel)         | Plugins, services, scope tree, cascade unload; no framework, DOM, or Node APIs                                         | Any modern JS runtime |
+| [`@yatoi/react`](packages/react)           | `<KernelProvider>`, `useService`, `<Requires>`, `usePlugin`, `useContributions`                                        | React 18/19          |
+| [`@yatoi/slots`](packages/slots)           | Framework-neutral slot contract: the `Slots` interface, `SlotName`, `SlotProps`, `slot()`                              | Any modern JS runtime |
+| [`@yatoi/react-slots`](packages/react-slots) | React binding for `@yatoi/slots`: `contribute()`, `<Slot>`                                                           | React 18/19          |
+| [`@yatoi/vue`](packages/vue)               | `provideKernel`/`<KernelProvider>`, `useService`, `<Requires>`, `usePlugin`, `useContributions`                        | Vue 3                |
+| [`@yatoi/vue-slots`](packages/vue-slots)   | Vue binding for `@yatoi/slots`: `contribute()`, `<Slot>`                                                               | Vue 3                |
 
 
 Stop at the layer you need. A shell developer drives the kernel from
@@ -228,8 +252,8 @@ and why each decision went the way it did.
 and binding must satisfy; what a port to another language is built
 against.
 - [Example app](examples/todo/README.md) — todo + an installable calendar
-plugin, exercising all three packages end to end; chapter 2 loads the
-plugin from another origin.
+plugin, exercising the kernel, React binding, and slots end to end;
+chapter 2 loads the plugin from another origin.
 - [Vue example app](examples/todo-vue/README.md) — the same app, chapter 1
 only, ported to `@yatoi/vue` + `@yatoi/slots` + `@yatoi/vue-slots` — what a Vue plugin
 author actually writes.
