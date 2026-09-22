@@ -1,6 +1,6 @@
 {
   "name": "@yatoi/vue",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Vue bridge for @yatoi/kernel: provideKernel, useService, Requires, usePlugin.",
   "license": "MIT",
   "repository": {

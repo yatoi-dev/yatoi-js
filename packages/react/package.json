@@ -1,6 +1,6 @@
 {
   "name": "@yatoi/react",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "React bridge for @yatoi/kernel: KernelProvider, useService, Requires, usePlugin.",
   "license": "MIT",
   "repository": {

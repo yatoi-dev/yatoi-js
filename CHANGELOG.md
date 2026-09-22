@@ -9,7 +9,7 @@ packages to the same number. While the major is 0, a minor may break the
 public API or [the spec](docs/spec.md); a patch never does. See
 [docs/releasing.md](docs/releasing.md) for how a release is cut.
 
-## 0.2.0 — unreleased
+## 0.2.0 — 2026-09-22
 
 React and Vue slot bindings move into their framework packages as opt-in
 subpath exports: use `@yatoi/react/slots` and `@yatoi/vue/slots`. The
