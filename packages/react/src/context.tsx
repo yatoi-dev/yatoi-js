@@ -3,8 +3,11 @@ import type { Kernel } from '@yatoi/kernel'
 
 const KernelContext = createContext<Kernel | null>(null)
 
+/** Props for {@link KernelProvider}. */
 export interface KernelProviderProps {
+  /** Kernel observed by the descendant React tree. */
   kernel: Kernel
+  /** Descendant elements that may consume the kernel. */
   children?: ReactNode
 }
 
@@ -17,6 +20,7 @@ export function KernelProvider({ kernel, children }: KernelProviderProps) {
   return <KernelContext.Provider value={kernel}>{children}</KernelContext.Provider>
 }
 
+/** Return the nearest kernel or throw when no {@link KernelProvider} exists. */
 export function useKernel(): Kernel {
   const kernel = useContext(KernelContext)
   if (!kernel) {

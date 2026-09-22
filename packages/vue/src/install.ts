@@ -2,7 +2,9 @@ import type { App, Plugin as VuePlugin } from 'vue'
 import type { Kernel } from '@yatoi/kernel'
 import { KERNEL_KEY } from './context.js'
 
+/** Options passed to `app.use(yatoi, options)`. */
 export interface YatoiOptions {
+  /** Application-owned kernel to provide above the Vue tree. */
   kernel: Kernel
 }
 

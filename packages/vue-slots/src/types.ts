@@ -10,6 +10,7 @@ export type { Slots, SlotName, SlotProps } from '@yatoi/slots'
  * `replace` contributions usually ignore it.
  */
 export type SlotRendererProps<N extends SlotName> = SlotProps<N> & {
+  /** Host default or next lower-priority renderer in a `wrap` chain. */
   Default: FunctionalComponent<SlotProps<N>>
 }
 

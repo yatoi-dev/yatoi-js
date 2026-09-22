@@ -25,6 +25,8 @@
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface Slots {}
 
+/** Names declared by the host through {@link Slots} augmentation. */
 export type SlotName = keyof Slots & string
 
+/** Props associated with one declared slot name. */
 export type SlotProps<N extends SlotName> = Slots[N]

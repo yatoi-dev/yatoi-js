@@ -6,6 +6,7 @@ type Values<Tokens extends readonly AnyServiceToken[]> = {
   [K in keyof Tokens]: ServiceType<Tokens[K]>
 }
 
+/** Props for a capability-gated React subtree. */
 export interface RequiresProps<Tokens extends readonly AnyServiceToken[]> {
   /** Services this subtree cannot exist without. */
   of: Tokens

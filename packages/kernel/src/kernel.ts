@@ -43,6 +43,7 @@ function isThenable(value: unknown): value is PromiseLike<unknown> {
   )
 }
 
+/** Create an empty kernel owned by the application host. */
 export function createKernel(): Kernel {
   return new KernelImpl()
 }

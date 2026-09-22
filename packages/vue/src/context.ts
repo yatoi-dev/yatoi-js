@@ -5,6 +5,7 @@ import type { Kernel } from '@yatoi/kernel'
 // wiring, unrelated to a yatoi plugin's `inject` field on the kernel side.
 // The names collide in vocabulary only; keep every comment here explicit
 // about which "inject" it means.
+/** Vue injection key used internally by the yatoi app and subtree providers. */
 export const KERNEL_KEY: InjectionKey<Kernel> = Symbol('yatoi:kernel')
 
 /**
@@ -24,7 +25,9 @@ export function provideKernel(kernel: Kernel): void {
   provide(KERNEL_KEY, kernel)
 }
 
+/** Props for {@link KernelProvider}. */
 export interface KernelProviderProps {
+  /** Kernel observed by the descendant Vue tree. */
   kernel: Kernel
 }
 

@@ -20,6 +20,13 @@ const tokens = new Map<string, CollectionToken<unknown>>()
  * `@yatoi/vue-slots` re-export this `slot()` rather than defining their
  * own, so a React contribution and a Vue contribution to the same slot
  * name always land in the same kernel collection.
+ *
+ * @example
+ * ```ts
+ * import { slot } from '@yatoi/slots'
+ * declare module '@yatoi/slots' { interface Slots { 'task.badge': {} } }
+ * const TaskBadge = slot('task.badge')
+ * ```
  */
 export function slot<N extends SlotName>(name: N): CollectionToken<unknown> {
   let token = tokens.get(name)

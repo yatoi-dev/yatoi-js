@@ -14,7 +14,9 @@ import { useKernel } from '@yatoi/vue'
 import { slot } from '@yatoi/slots'
 import type { SlotName, SlotProps, SlotRenderer } from './types.js'
 
+/** Framework-owned props accepted by the Vue {@link Slot} component. */
 export interface SlotOwnProps<N extends SlotName> {
+  /** Declared slot to render. */
   name: N
   /**
    * - `list` (default): render every `append` contribution, priority order.
@@ -24,6 +26,7 @@ export interface SlotOwnProps<N extends SlotName> {
   mode?: 'list' | 'single'
 }
 
+/** Props accepted by {@link Slot}, including the host-declared slot props. */
 export type SlotComponentProps<N extends SlotName> = SlotOwnProps<N> & SlotProps<N>
 
 // ── implementation, deliberately untyped ─────────────────────────────

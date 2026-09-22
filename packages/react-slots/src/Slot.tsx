@@ -5,6 +5,7 @@ import { slot } from '@yatoi/slots'
 import type { SlotName, SlotProps, SlotRenderer } from './types.js'
 
 type SlotOwnProps<N extends SlotName> = {
+  /** Declared slot to render. */
   name: N
   /**
    * - `list` (default): render every `append` contribution, priority order.
@@ -21,6 +22,7 @@ type SlotOwnProps<N extends SlotName> = {
   fallback?: ReactNode
 }
 
+/** Props accepted by {@link Slot}, including the host-declared slot props. */
 export type SlotComponentProps<N extends SlotName> = SlotOwnProps<N> & SlotProps<N>
 
 /**

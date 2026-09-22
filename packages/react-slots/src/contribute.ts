@@ -2,6 +2,7 @@ import type { CollectionToken, ContributionMode, Scope } from '@yatoi/kernel'
 import { slot } from '@yatoi/slots'
 import type { SlotName, SlotRenderer } from './types.js'
 
+/** Ordering and composition options for a React slot contribution. */
 export interface ContributeOptions {
   /** Higher renders first in `list` mode and wraps outermost in `single` mode. Default 0. */
   priority?: number

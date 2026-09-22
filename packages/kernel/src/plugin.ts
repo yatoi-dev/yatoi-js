@@ -5,6 +5,15 @@ import { ruleError } from './errors.js'
 /**
  * Identity at runtime; the generic pins `inject` as a tuple so `scope.get`
  * is typed non-null for exactly the tokens you declared.
+ *
+ * @example
+ * ```ts
+ * import { definePlugin } from '@yatoi/kernel'
+ * import { Clock } from './contract.js'
+ * export const clockPlugin = definePlugin({
+ *   name: 'clock', provides: [Clock], setup: (scope) => scope.provide(Clock, { now: Date.now }),
+ * })
+ * ```
  */
 export function definePlugin<const I extends readonly AnyServiceToken[] = readonly []>(
   def: PluginDef<I>,
