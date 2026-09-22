@@ -31,7 +31,7 @@
   "scripts": {
     "build": "tsc -b tsconfig.build.json",
     "prepack": "pnpm run build",
-    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json --noEmit",
+    "typecheck": "tsc -b tsconfig.json && tsc -b tsconfig.test.json",
     "test": "vitest run --project slots --root ../.."
   },
   "dependencies": {

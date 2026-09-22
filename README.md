@@ -6,8 +6,8 @@
 
 **Plugins that come apart cleanly.**
 A small kernel for any modern JavaScript runtime with the two properties
-a plugin system needs — remove a plugin and *everything it did is undone*;
-a plugin runs *only while what it needs exists* — and React and Vue bindings 
+a plugin system needs — <u>remove a plugin and *everything it did is undone*;</u>
+<u>a plugin runs *only while what it needs exists*</u> — and React and Vue bindings
 that only ever observe it.
 
 > **A yatoi is the loose tenon in Japanese joinery**: a separate piece,
@@ -222,7 +222,7 @@ The kernel makes it inspectable through `pluginState`, `state`, `list`, and
 `on('error')`. A future devtools package can make the graph visible, but it
 cannot remove the underlying complexity.
 
-- Read [Pitfalls](docs/pitfalls.md) for more details.
+Read [Pitfalls](docs/pitfalls.md) for more details.
 
 ## Status
 
