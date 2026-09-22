@@ -29,7 +29,8 @@ examples/agent-host/      yatoi-example-agent-host   Node program, no React, no 
                            plugins around a scripted (offline) model (see examples/agent-host/README.md)
 examples/server/          yatoi-example-server   node:http host: routes, jobs, middleware, async
                            database capability, config reload (see examples/server/README.md)
-docs/                     concepts, guide, pitfalls, architecture, design, spec, proposals/
+docs/                     concepts, guide, pitfalls, architecture, design, spec, proposals, releasing
+scripts/                  release checks; `check-packages.mjs` audits npm tarballs without publishing
 ROADMAP.md, CONTRIBUTING.md
 ```
 
@@ -46,6 +47,8 @@ pnpm test                                  # all packages
 pnpm test -- --project kernel              # one package: kernel | react | slots | react-slots | vue | vue-slots
 pnpm typecheck                             # every package, in parallel
 pnpm build                                 # tsc -b, topological
+pnpm pack:check                            # build + audit all publishable npm tarballs; does not publish
+pnpm check:changesets                      # require changesets; minor/major must name all six packages
 pnpm --filter yatoi-example-todo dev          # example on :5173 (also .claude/launch.json → todo-example)
 pnpm --filter yatoi-example-todo dev:remote   # same app, calendar plugin loaded from :5174 instead of bundled
 pnpm --filter yatoi-example-todo build        # tsc --noEmit && vite build
@@ -118,6 +121,10 @@ Same commit, every time:
 - Add or update a test. Kernel tests in Node; React tests under StrictMode.
 - If the change affects how plugins are written, check
   `examples/todo` still typechecks and builds.
+- Add a changeset (`pnpm changeset`) for every user-visible package change.
+  Patch: name only the changed packages. Minor/major: name all six at that
+  level — it's a new contract. Examples, tests, internal docs, and
+  build-only changes do not need one.
 
 The torture test (`packages/kernel/test/torture.test.ts`) must keep
 passing; it encodes the sync-facade guarantee.

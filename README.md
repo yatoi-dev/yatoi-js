@@ -193,6 +193,16 @@ without changing `@yatoi/kernel` — the proof that the layering is real,
 not just convenient for React. Not yet on npm; clone it and run the
 example.
 
+The first published version will be 0.1.0 for all six packages. After
+that, patches are per package and minors move all six together: any
+`0.1.x` binding works with any `0.1.x` kernel, and `0.2.0` on every
+package means one new contract. While the major is 0, a **minor** may
+break the public API or the spec and a **patch** never does — pin to
+`~0.1.0` if that matters to you. 1.0 comes when the spec's conformance
+table stops growing and a second implementation passes it. Release notes
+are in [CHANGELOG.md](CHANGELOG.md); each package also carries its own
+generated changelog.
+
 What's next — devtools, Suspense integration, token versioning, a Dart
 implementation for Flutter, a Solid binding — and what's deliberately not
 planned is in [ROADMAP.md](ROADMAP.md). [CONTRIBUTING.md](CONTRIBUTING.md)
@@ -226,6 +236,8 @@ cascades its tools out before the model's next turn.
 where routes and jobs follow an async database capability and config reload.
 - [Beyond UI](docs/beyond-ui.md) — how the same capability graph applies
 to agent runtimes, long-running servers, and other non-UI hosts.
+- [Release process](docs/releasing.md) — package contents, versioning,
+tarball verification, and the npm publishing checklist.
 
 
 
@@ -238,6 +250,7 @@ pnpm install
 pnpm test          # all packages; kernel/slots in node, react/react-slots/vue/vue-slots in jsdom under StrictMode
 pnpm typecheck
 pnpm build         # tsc -b → dist/ in each package
+pnpm pack:check    # build and audit the six npm tarballs without publishing
 pnpm --filter yatoi-example-todo dev   # the example app; see its README
 ```
 

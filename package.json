@@ -15,9 +15,15 @@
     "test:watch": "vitest",
     "typecheck": "pnpm -r --parallel typecheck",
     "build": "pnpm -r build",
-    "clean": "pnpm -r exec rm -rf dist"
+    "clean": "pnpm -r exec rm -rf dist",
+    "pack:check": "node scripts/check-packages.mjs",
+    "changeset": "changeset",
+    "check:changesets": "node scripts/check-changesets.mjs",
+    "version-packages": "node scripts/check-changesets.mjs && changeset version",
+    "release": "node scripts/release.mjs"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.29.0",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^22.0.0",
     "@types/react": "^19.3.0",

@@ -1,6 +1,6 @@
 {
   "name": "@yatoi/vue-slots",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Typed contribution points for @yatoi/kernel, for Vue: contribute() and <Slot>.",
   "license": "MIT",
   "repository": {
@@ -21,10 +21,16 @@
     }
   },
   "files": [
-    "dist"
+    "dist/**/*.js",
+    "dist/**/*.d.ts"
   ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "scripts": {
     "build": "tsc -b tsconfig.build.json",
+    "prepack": "pnpm run build",
     "typecheck": "tsc -b tsconfig.json && tsc -b tsconfig.test.json",
     "test": "vitest run --project vue-slots --root ../.."
   },
@@ -32,9 +38,9 @@
     "vue": "^3.4.0"
   },
   "dependencies": {
-    "@yatoi/kernel": "workspace:*",
-    "@yatoi/slots": "workspace:*",
-    "@yatoi/vue": "workspace:*"
+    "@yatoi/kernel": "workspace:^",
+    "@yatoi/slots": "workspace:^",
+    "@yatoi/vue": "workspace:^"
   },
   "keywords": [
     "vue",

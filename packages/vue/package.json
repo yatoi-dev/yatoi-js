@@ -1,6 +1,6 @@
 {
   "name": "@yatoi/vue",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Vue bridge for @yatoi/kernel: provideKernel, useService, Requires, usePlugin.",
   "license": "MIT",
   "repository": {
@@ -21,10 +21,16 @@
     }
   },
   "files": [
-    "dist"
+    "dist/**/*.js",
+    "dist/**/*.d.ts"
   ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "scripts": {
     "build": "tsc -b tsconfig.build.json",
+    "prepack": "pnpm run build",
     "typecheck": "tsc -b tsconfig.json && tsc -b tsconfig.test.json",
     "test": "vitest run --project vue --root ../.."
   },
@@ -32,7 +38,7 @@
     "vue": "^3.4.0"
   },
   "dependencies": {
-    "@yatoi/kernel": "workspace:*"
+    "@yatoi/kernel": "workspace:^"
   },
   "keywords": [
     "vue",

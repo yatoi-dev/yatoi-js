@@ -1,6 +1,6 @@
 {
   "name": "@yatoi/kernel",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Plugin kernel: scoped reversible effects, typed service discovery, and cascade unload. No React, no DOM.",
   "license": "MIT",
   "repository": {
@@ -21,10 +21,16 @@
     }
   },
   "files": [
-    "dist"
+    "dist/**/*.js",
+    "dist/**/*.d.ts"
   ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "scripts": {
     "build": "tsc -b tsconfig.build.json",
+    "prepack": "pnpm run build",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json --noEmit",
     "test": "vitest run --project kernel --root ../.."
   },

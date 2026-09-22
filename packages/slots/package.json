@@ -1,6 +1,6 @@
 {
   "name": "@yatoi/slots",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Framework-neutral slot contract for @yatoi/kernel: the Slots interface and slot().",
   "license": "MIT",
   "repository": {
@@ -21,15 +21,21 @@
     }
   },
   "files": [
-    "dist"
+    "dist/**/*.js",
+    "dist/**/*.d.ts"
   ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "scripts": {
     "build": "tsc -b tsconfig.build.json",
+    "prepack": "pnpm run build",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json --noEmit",
     "test": "vitest run --project slots --root ../.."
   },
   "dependencies": {
-    "@yatoi/kernel": "workspace:*"
+    "@yatoi/kernel": "workspace:^"
   },
   "keywords": [
     "plugin-architecture",
