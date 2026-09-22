@@ -16,6 +16,12 @@ glued in place, and the joint comes apart without damaging either side.
 yatoi provides the slots, the fit, and the guarantee that pulling a piece
 out leaves nothing behind.
 
+![Where yatoi sits in an application: a host — React app, Vue app, or Node process — observes one kernel; plugins apply reversible effects to it; removing a provider cascades to its dependents. Host and plugins never touch each other.](docs/assets/architecture.svg)
+
+The host observes the kernel and calls `load`/`unload` outside render;
+plugins act on it through their scope; neither imports the other. The
+kernel is the only joint.
+
 ## The problem
 
 Composition breaks when what an app is made of stops being a build-time
