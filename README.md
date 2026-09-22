@@ -4,17 +4,19 @@
 [![npm](https://img.shields.io/npm/v/@yatoi/kernel.svg)](https://www.npmjs.com/package/@yatoi/kernel)
 [![license](https://img.shields.io/github/license/yatoi-dev/yatoi-js.svg)](https://github.com/yatoi-dev/yatoi-js/blob/main/LICENSE)
 
-**Plugins that come apart cleanly.** A small kernel for any modern
-JavaScript runtime with the two properties a plugin system needs — remove
-a plugin and *everything it did is undone*; a plugin runs *only while what
-it needs exists* — and React and Vue bindings that only ever observe it.
+**Plugins that come apart cleanly.**
+A small kernel for any modern JavaScript runtime with the two properties
+a plugin system needs — remove a plugin and *everything it did is undone*;
+a plugin runs *only while what it needs exists* — and React and Vue bindings 
+that only ever observe it.
 
-**A yatoi is the loose tenon in Japanese joinery**: a separate piece,
-belonging to neither board, cut to fit slots in both and inserted to hold
-them together. Literally, a hired hand. It carries load without being
-glued in place, and the joint comes apart without damaging either side.
-yatoi provides the slots, the fit, and the guarantee that pulling a piece
-out leaves nothing behind.
+> **A yatoi is the loose tenon in Japanese joinery**: a separate piece,
+> belonging to neither board, cut to fit slots in both and inserted to hold
+> them together. A hired hand.
+>
+> It carries load without being glued in place, and the joint comes apart without
+> damaging either side. yatoi provides the slots, the fit, and the guarantee that pulling 
+> a piece out leaves nothing behind.
 
 ![Where yatoi sits in an application: a host — React app, Vue app, or Node process — observes one kernel; plugins apply reversible effects to it; removing a provider cascades to its dependents. Host and plugins never touch each other.](docs/assets/architecture.svg)
 
