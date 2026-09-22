@@ -9,12 +9,9 @@ const packageDirectories = [
   'kernel',
   'react',
   'slots',
-  'react-slots',
   'vue',
-  'vue-slots',
 ]
 const slotBindingDirectories = new Set(['react', 'vue'])
-const shimDirectories = new Set(['react-slots', 'vue-slots'])
 
 function fail(message) {
   throw new Error(`[pack:check] ${message}`)
@@ -60,14 +57,6 @@ try {
     )
     if (unexpected.length > 0) {
       fail(`${packed.name} contains unexpected files: ${unexpected.join(', ')}`)
-    }
-    if (shimDirectories.has(directory)) {
-      const extraShimOutput = paths.filter(
-        (path) => path.startsWith('dist/') && !['dist/index.js', 'dist/index.d.ts'].includes(path),
-      )
-      if (extraShimOutput.length > 0) {
-        fail(`${packed.name} shim contains unexpected output: ${extraShimOutput.join(', ')}`)
-      }
     }
 
     for (const path of paths.filter((path) => path.startsWith('dist/'))) {

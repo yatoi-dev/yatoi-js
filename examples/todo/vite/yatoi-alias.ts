@@ -16,6 +16,5 @@ export function yatoiAlias(): Record<string, string> {
     ),
     '@yatoi/react': src('react'),
     '@yatoi/slots': src('slots'),
-    '@yatoi/react-slots': src('react-slots'),
   }
 }

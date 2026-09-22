@@ -17,9 +17,7 @@ layered; React, Vue and Node examples. v0.1.0 published to npm on
 packages/kernel/          @yatoi/kernel   plugins, services, scope tree, cascade unload   no React, no DOM
 packages/react/           @yatoi/react    KernelProvider, hooks, <Requires>, and the ./slots binding
 packages/slots/           @yatoi/slots    Slots interface, SlotName, SlotProps, slot() — framework-neutral, no React, no Vue
-packages/react-slots/     @yatoi/react-slots   deprecated 0.2 compatibility shim; remove in 0.3
 packages/vue/             @yatoi/vue      providers, composables, Requires, and the ./slots binding (Vue 3)
-packages/vue-slots/       @yatoi/vue-slots   deprecated 0.2 compatibility shim; remove in 0.3
 examples/todo/            yatoi-example-todo   Vite app: todo + installable calendar plugin,
                            chapter 1 in one `pnpm dev`; chapter 2 delivers the same plugin as a
                            separately built file, opt-in (see examples/todo/README.md)
@@ -49,7 +47,7 @@ pnpm typecheck                             # every package, in parallel
 pnpm build                                 # tsc -b, topological
 pnpm build:llms                            # regenerate llms.txt and llms-full.txt
 pnpm pack:check                            # build + audit all publishable npm tarballs; does not publish
-pnpm check:changesets                      # require changesets; minor/major must name all six packages
+pnpm check:changesets                      # require changesets; minor/major must name all four packages
 pnpm --filter yatoi-example-todo dev          # example on :5173 (also .claude/launch.json → todo-example)
 pnpm --filter yatoi-example-todo dev:remote   # same app, calendar plugin loaded from :5174 instead of bundled
 pnpm --filter yatoi-example-todo build        # tsc --noEmit && vite build
@@ -64,7 +62,7 @@ pnpm test -- --project server                  # just the server example's tests
 Tests and the example alias `@yatoi/*` to `packages/*/src`, so no build
 is needed in the inner loop. Typechecking `react`/`vue` goes through
 `tsc -b` with project references, so each builds its `kernel` and `slots`
-dependencies first. The deprecated shims reference their replacement binding.
+dependencies first.
 
 Chapter 2 of the example needs both servers running, to demonstrate the
 loaded-by-URL plugin: `todo-plugin-cdn` (:5174, serves `calendar.js`) and
@@ -88,8 +86,7 @@ These are load-bearing. Don't relax them without changing
    `kernel` imports no binding; `slots` imports only `kernel`; `react` and
    `vue` import `kernel` and `slots` and never each other. Slot bindings live
    at `@yatoi/react/slots` and `@yatoi/vue/slots` as subpath exports, not
-   separate packages. The two old package directories are deprecated shims
-   for 0.2 only.
+   separate packages.
 4. **The kernel stores opaque values.** It never learns a value is a React
    component (or a Vue component). Framework meaning is added in the
    slots layer of each binding — see the one cast at the top of each
@@ -119,7 +116,7 @@ Same commit, every time:
 - If the change affects how plugins are written, check
   `examples/todo` still typechecks and builds.
 - Add a changeset (`pnpm changeset`) for every user-visible package change.
-  Patch: name only the changed packages. Minor/major: name all six at that
+  Patch: name only the changed packages. Minor/major: name all four at that
   level — it's a new contract. Examples, tests, internal docs, and
   build-only changes do not need one.
 - Update the package's `AGENTS.md` and rerun `pnpm build:llms` when a

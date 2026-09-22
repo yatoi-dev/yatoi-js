@@ -1,5 +1,5 @@
 // Enforces the versioning scheme in docs/releasing.md: patches are per
-// package, but a minor or major is a new contract and moves all six
+// package, but a minor or major is a new contract and moves all four
 // packages together. Changesets has no mode for that (`fixed` locks
 // patches too, `linked` makes late packages jump to catch up), so the rule
 // lives here: any pending minor/major changeset must name every package.
@@ -39,7 +39,7 @@ for (const file of files) {
     console.error(`[check:changesets] .changeset/${file} is a ${level} release but`)
     if (missing.length) console.error(`  omits: ${missing.join(', ')}`)
     if (lower.length) console.error(`  bumps below ${level}: ${lower.join(', ')}`)
-    console.error(`  A ${level} moves every package together; list all six at "${level}".`)
+    console.error(`  A ${level} moves every package together; list all four at "${level}".`)
   }
 }
 

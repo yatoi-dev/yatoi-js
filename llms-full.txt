@@ -1202,15 +1202,3 @@ state(token): present with a value, loading during real progress, otherwise abse
 
 - [Protocol specification](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/spec.md) — normative behavior.
 - [Pitfalls](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/pitfalls.md) — mistakes and recovery patterns.
-
-# packages/react-slots/AGENTS.md
-
-Deprecated: install `@yatoi/react` instead.
-Change imports from `@yatoi/react-slots` to `@yatoi/react/slots`.
-This compatibility shim will be removed in 0.3.
-
-# packages/vue-slots/AGENTS.md
-
-Deprecated: install `@yatoi/vue` instead.
-Change imports from `@yatoi/vue-slots` to `@yatoi/vue/slots`.
-This compatibility shim will be removed in 0.3.

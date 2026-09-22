@@ -12,10 +12,8 @@ const alias = {
   '@yatoi/react/slots': slots('react'),
   '@yatoi/react': src('react'),
   '@yatoi/slots': src('slots'),
-  '@yatoi/react-slots': src('react-slots'),
   '@yatoi/vue/slots': slots('vue'),
   '@yatoi/vue': src('vue'),
-  '@yatoi/vue-slots': src('vue-slots'),
 }
 
 export default defineConfig({
@@ -38,7 +36,7 @@ export default defineConfig({
           root: './packages/react',
           environment: 'jsdom',
           setupFiles: ['./test/setup.ts'],
-          include: ['test/**/*.test.{ts,tsx}', '../react-slots/test/**/*.test.{ts,tsx}'],
+          include: ['test/**/*.test.{ts,tsx}'],
         },
       },
       {
@@ -58,7 +56,7 @@ export default defineConfig({
           root: './packages/vue',
           environment: 'jsdom',
           setupFiles: ['./test/setup.ts'],
-          include: ['test/**/*.test.{ts,tsx}', '../vue-slots/test/**/*.test.{ts,tsx}'],
+          include: ['test/**/*.test.{ts,tsx}'],
         },
       },
       {

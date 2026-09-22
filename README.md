@@ -206,9 +206,6 @@ config and unit-tests it without rendering anything. An app developer
 writes `usePlugin` and `<Slot>` and never touches the kernel. If either of
 those stops being true, the API is wrong.
 
-`@yatoi/react-slots` and `@yatoi/vue-slots` are deprecated 0.2 compatibility
-shims for the new subpaths and will be removed in 0.3.
-
 ## The honest cost
 
 yatoi introduces a second kind of dependency. Imports say which code a
@@ -234,7 +231,7 @@ v0.1.0 is on npm (2026-09-22). The next minor has four active packages:
 service unloading while dependents are mid-async.
 - **Bindings:** React runs under `<StrictMode>` on a concurrent root; Vue
 asserts unmount/remount explicitly. Adding Vue required no kernel changes.
-- **Verification:** 127 tests across the kernel, bindings, slots, and
+- **Verification:** 125 tests across the kernel, bindings, slots, and
 non-UI examples.
 - **Versioning:** Patches move independently; minors move the published set together as a new contract.
 While the major is 0, a minor may break and a patch will not — pin to
@@ -289,7 +286,7 @@ pnpm install
 pnpm test          # all packages; kernel/slots in node, react/vue in jsdom
 pnpm typecheck
 pnpm build         # tsc -b → dist/ in each package
-pnpm pack:check    # build and audit the six npm tarballs without publishing
+pnpm pack:check    # build and audit the four npm tarballs without publishing
 pnpm --filter yatoi-example-todo dev   # the example app; see its README
 ```
 

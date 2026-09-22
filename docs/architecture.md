@@ -377,11 +377,10 @@ declares its slots once.
 
 - TypeScript project references (`tsc -b`). `react` and `vue` each
   reference `kernel` and `slots`; `slots` references `kernel` only (like
-  the kernel, `lib: ["ES2022"]`/`types: []`). The compatibility shims
-  reference their replacement binding. Typecheck uses the non-composite
+  the kernel, `lib: ["ES2022"]`/`types: []`). Typecheck uses the non-composite
   `tsconfig.json` with the same references.
 - Vitest projects: `kernel` and `slots` in `node` (no DOM in either), with
-  React and Vue — including their slot suites and shim checks — in `jsdom`.
+  React and Vue — including their slot suites — in `jsdom`.
   React's
   calls testing-library's `cleanup`; Vue's resets `document.body.innerHTML`
   (`@vue/test-utils` has no equivalent global auto-cleanup). All React

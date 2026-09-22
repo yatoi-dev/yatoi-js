@@ -16,7 +16,6 @@ function yatoiAlias(): Record<string, string> {
     ),
     '@yatoi/vue': src('vue'),
     '@yatoi/slots': src('slots'),
-    '@yatoi/vue-slots': src('vue-slots'),
   }
 }
 

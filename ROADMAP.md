@@ -14,12 +14,12 @@ contributor can start without a discussion first; read
 
 ## Now — v0.1, done
 
-Six packages (`@yatoi/kernel`, `@yatoi/react`, `@yatoi/slots`,
-`@yatoi/react-slots`, `@yatoi/vue`, `@yatoi/vue-slots`), the todo example
+Four packages (`@yatoi/kernel`, `@yatoi/slots`, `@yatoi/react`,
+`@yatoi/vue`), the todo example
 with its two chapters, developer docs, and the
 [protocol spec](docs/spec.md). `@yatoi/slots` is the framework-neutral
-slot contract (depends on `@yatoi/kernel` only); `@yatoi/react-slots` and
-`@yatoi/vue-slots` are thin bindings over it, so a host declares its
+slot contract (depends on `@yatoi/kernel` only); `@yatoi/react/slots` and
+`@yatoi/vue/slots` are thin bindings over it, so a host declares its
 `Slots` augmentation once. Tests: the kernel and the neutral `slots`
 package in plain Node, the React layer under `<StrictMode>` on a
 concurrent root, the Vue layer asserting unmount/remount explicitly (Vue
@@ -34,9 +34,6 @@ skill's tools out before the model's next turn.
 
 ## Next — v0.2
 
-- **Remove the deprecated slot-package shims in 0.3.** Applications should
-  import `@yatoi/react/slots` or `@yatoi/vue/slots`; 0.2 publishes the old
-  package names once more only to provide a migration window.
 - **Release automation.** 0.1.0 was published by hand with a granular
   token (`docs/releasing.md`). Next: npm trusted publishing (OIDC) from
   CI with provenance, so no long-lived token exists; set the repo
