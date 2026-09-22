@@ -80,6 +80,9 @@ design work here, and the reason the kernel is small rather than a port.
 ## In thirty seconds
 
 ```ts
+// Two plugins, to show both properties: clockPlugin alone is already
+// a complete, installable plugin — syncPlugin is a second one written
+// to consume it, showing activation follows presence and removal cascades.
 import { createKernel, defineService, definePlugin } from '@yatoi/kernel'
 
 const Clock = defineService<{ now(): number }>('clock')   // a real symbol, not a string
