@@ -1,5 +1,8 @@
 # `@yatoi/react`
 
+[![npm](https://img.shields.io/npm/v/@yatoi/react.svg)](https://www.npmjs.com/package/@yatoi/react)
+[![license](https://img.shields.io/npm/l/@yatoi/react.svg)](https://github.com/yatoi-dev/yatoi-js/blob/main/LICENSE)
+
 React bindings for `@yatoi/kernel`: `KernelProvider`, `useService`,
 `useServiceState`, `useContributions`, `Requires`, and `usePlugin`.
 

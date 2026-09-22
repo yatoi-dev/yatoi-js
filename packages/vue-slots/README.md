@@ -1,5 +1,8 @@
 # `@yatoi/vue-slots`
 
+[![npm](https://img.shields.io/npm/v/@yatoi/vue-slots.svg)](https://www.npmjs.com/package/@yatoi/vue-slots)
+[![license](https://img.shields.io/npm/l/@yatoi/vue-slots.svg)](https://github.com/yatoi-dev/yatoi-js/blob/main/LICENSE)
+
 Vue 3 rendering for the framework-neutral `@yatoi/slots` contract. It exports
 typed `contribute()` and `<Slot>` APIs.
 

@@ -1,5 +1,9 @@
 # yatoi
 
+[![CI](https://github.com/yatoi-dev/yatoi-js/actions/workflows/ci.yml/badge.svg)](https://github.com/yatoi-dev/yatoi-js/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/@yatoi/kernel.svg)](https://www.npmjs.com/package/@yatoi/kernel)
+[![license](https://img.shields.io/github/license/yatoi-dev/yatoi-js.svg)](https://github.com/yatoi-dev/yatoi-js/blob/main/LICENSE)
+
 **Plugins for React that come apart cleanly.** A small kernel that gives
 React the two properties a plugin system actually needs — remove a plugin
 and *everything it did is undone*; a plugin runs *only while what it needs

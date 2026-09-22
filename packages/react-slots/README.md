@@ -1,5 +1,8 @@
 # `@yatoi/react-slots`
 
+[![npm](https://img.shields.io/npm/v/@yatoi/react-slots.svg)](https://www.npmjs.com/package/@yatoi/react-slots)
+[![license](https://img.shields.io/npm/l/@yatoi/react-slots.svg)](https://github.com/yatoi-dev/yatoi-js/blob/main/LICENSE)
+
 React rendering for the framework-neutral `@yatoi/slots` contract. It exports
 typed `contribute()` and `<Slot>` APIs.
 

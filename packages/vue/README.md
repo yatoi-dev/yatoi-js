@@ -1,5 +1,8 @@
 # `@yatoi/vue`
 
+[![npm](https://img.shields.io/npm/v/@yatoi/vue.svg)](https://www.npmjs.com/package/@yatoi/vue)
+[![license](https://img.shields.io/npm/l/@yatoi/vue.svg)](https://github.com/yatoi-dev/yatoi-js/blob/main/LICENSE)
+
 Vue 3 bindings for `@yatoi/kernel`: the `yatoi` app plugin,
 `provideKernel`, `KernelProvider`, `useService`, `useServiceState`,
 `useContributions`, `Requires`, and `usePlugin`.

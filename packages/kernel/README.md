@@ -1,5 +1,8 @@
 # `@yatoi/kernel`
 
+[![npm](https://img.shields.io/npm/v/@yatoi/kernel.svg)](https://www.npmjs.com/package/@yatoi/kernel)
+[![license](https://img.shields.io/npm/l/@yatoi/kernel.svg)](https://github.com/yatoi-dev/yatoi-js/blob/main/LICENSE)
+
 A framework-neutral plugin kernel with reversible effects, typed service
 discovery, collections, child scopes, and cascade unload. It has no runtime
 dependencies and does not require React, Vue, a DOM, or Node APIs.
