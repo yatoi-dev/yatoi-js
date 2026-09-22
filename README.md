@@ -38,9 +38,8 @@ schedulers, agent runners — need a lifecycle that can be reversed. The
 
 ## Two properties
 
-The paper behind [Cordis](#inspired-by-cordis) names the two properties a
-system needs before components can be added and removed at runtime
-without disturbing each other. In plain words:
+yatoi is built around two forms of composability: temporal and spatial.
+In plain words:
 
 
 |              | What it means                                   | yatoi                                                                                                                                                         | Elsewhere                                                                                                                                                                                    |
@@ -49,11 +48,27 @@ without disturbing each other. In plain words:
 | **Spatial**  | A plugin runs only while what it needs exists   | `inject` declares requirements; activation is *derived* from what's present, and pulling a requirement unloads every dependent, in dependency order           | None. Context, `provide`/`inject`, and `resolve()` are reads, not requirements                                                                                                                |
 
 
-Together the paper calls this **spatiotemporal composability**. UI
-frameworks have the temporal half for render-tree nodes; DI containers
-have it for whole scopes. Neither has the spatial half. yatoi adds both —
-as a kernel that knows nothing about any framework, with React and Vue
-subscribed to it.
+Together these are **spatiotemporal composability**. UI frameworks have
+the temporal half for render-tree nodes; DI containers have it for whole
+scopes. Neither has the spatial half. yatoi adds both — as a kernel that
+knows nothing about any framework, with React and Vue subscribed to it.
+
+The terms come from *A Programming Paradigm for Spatiotemporal
+Composability* (Shi, Zhang, Cui — [arXiv:2608.25512](https://arxiv.org/abs/2608.25512))
+and its reference implementation, [Cordis](https://github.com/cordiverse/cordis),
+which powers DeepSeek Harness. yatoi keeps the vocabulary — effects,
+inject, scope — and takes no dependency on it.
+
+The difference is who owns the runtime. Cordis owns its own; UI schedulers
+— React's concurrent renderer, Vue's flush queue — can observe state
+between two steps of an update, and a Node host reading the kernel between
+turns must not see a half-done plugin either. So the kernel does all its
+async behind a synchronous facade: disposers are *invoked* synchronously,
+only their promises are awaited, and every observer reads a synchronous
+snapshot that can't tear — `useSyncExternalStore` in React, `shallowRef`
+in Vue, direct `kernel.state` / `get` / `list` reads in Node — with service
+state explicit as `present | absent | loading`. That constraint is the
+design work here, and the reason the kernel is small rather than a port.
 
 ## In thirty seconds
 
@@ -113,68 +128,53 @@ its plugin) that the host reads reactively.
 > non-UI host, the same rule reads: mutate between turns or requests, never
 > inside one.
 
-
-
-## Inspired by Cordis
-
-The two properties are from *A Programming Paradigm for Spatiotemporal
-Composability* (Shi, Zhang, Cui — [arXiv:2608.25512](https://arxiv.org/abs/2608.25512))
-and its reference implementation, [Cordis](https://github.com/cordiverse/cordis),
-which powers DeepSeek Harness. yatoi keeps the vocabulary — effects,
-inject, scope — and takes no dependency on it.
-
-The difference is who owns the runtime. Cordis owns its own; UI schedulers
-— React's concurrent renderer, Vue's flush queue — can observe state
-between two steps of an update, and a Node host reading the kernel between
-turns must not see a half-done plugin either. So the kernel does all its
-async behind a synchronous facade: disposers are *invoked* synchronously,
-only their promises are awaited, and every observer reads a synchronous
-snapshot that can't tear — `useSyncExternalStore` in React, `shallowRef`
-in Vue, direct `kernel.state` / `get` / `list` reads in Node — with service
-state explicit as `present | absent | loading`. That constraint is the
-design work here, and the reason the kernel is small rather than a port.
-
 ## Why now
 
-What an app is made of is stopping being a build-time decision. Marketplaces
-let users install capabilities. Products ship a core and let customers
-override pieces of it. And agents are the extreme case: they install
-tools, generate views, and remove them again, with no app author in the
-loop. Every one of those needs removal to be *total* and activation to be
-*reactive to what is actually present* — the two properties above. The
-alternative is a page reload, and agents don't reload pages.
+What an app is made of is increasingly a runtime decision:
 
-The example in this repo is a todo app with a calendar plugin installed
-and uninstalled from a marketplace page. Its second chapter delivers that
-same plugin as a separately built ESM file, fetched by URL at runtime —
-the host never imports it.
+- **Marketplaces** let users install and remove capabilities.
+- **Extensible products** ship a core while customers override or add pieces.
+- **Agents** install tools, generate views, and revoke them again without an
+app author in the loop.
 
-The other examples are a Vue port, a Node agent host whose tools cascade
-out when a credential is revoked, and a `node:http` server whose routes
-follow its database connection. The latter two use the same kernel with
-no UI.
+All three need removal to be *total* and activation to follow what is
+actually present. A page reload is not a lifecycle — and agents do not
+reload pages.
 
-## Why not…
+The examples exercise that model in four hosts:
 
-**…framework context and lazy loading?** React context and Vue
+- a React todo app whose calendar plugin can arrive as a separately built
+ESM file;
+- the same application shape in Vue;
+- a Node agent host whose tools disappear when a credential is revoked;
+- a `node:http` server whose routes follow its database connection.
+
+## Where yatoi fits
+
+yatoi does not replace framework context, lazy loading, DI, or code
+delivery. It supplies the lifecycle layer those tools do not: dependencies
+can disappear, dependents deactivate, and contributed effects are reversed
+automatically.
+
+**Framework context and lazy loading.** React context and Vue
 `provide`/`inject` are reads: nothing deactivates when a provider goes
 away. `lazy()` / `defineAsyncComponent` load code; nothing reverts it.
 That's the temporal half for render-tree nodes only, and no spatial half.
 They are the right tools right up until something has to be removable.
 
-**…a DI container?** A container answers *how to build* an object graph;
+**DI containers.** A container answers *how to build* an object graph;
 yatoi answers *when things exist*. Conventional containers resolve values
 and dispose scopes — they do not notify and deactivate each dependent when
 one dependency goes away, or expose `loading` / `absent` as first-class
 states. They compose: one kernel scope, one container scope. See
 [Beyond UI](docs/beyond-ui.md).
 
-**…Module Federation or single-spa?** Those are delivery and isolation —
+**Module Federation and single-spa.** Those are delivery and isolation —
 and they deliberately avoid shared lifecycle, because team independence
 was the goal. Neither property, on purpose. yatoi is the layer that goes
 on top when the pieces *do* need to compose.
 
-**…build it in-house, like VS Code?** VS Code's `DisposableStore` and
+**Building it in-house.** VS Code's `DisposableStore` and
 service decorators are the temporal half done right and part of the
 spatial half. Every large extensible app rebuilds that core, and
 none extracts it, because the interesting part — the contribution surface
@@ -203,39 +203,40 @@ those stops being true, the API is wrong.
 
 ## The honest cost
 
-`inject` + `provides` is a second dependency graph alongside the import
-graph, and it is only legible at runtime. That is the price of the spatial
-half — late binding is what makes activation derivable, and what makes it
-invisible to your bundler. The kernel keeps its state inspectable
-(`pluginState`, `state`, `on('error')`) to pay some of it back; a devtools
-package is the rest.
+yatoi introduces a second kind of dependency. Imports say which code a
+module uses; a plugin's `inject` and `provides` declarations say which
+runtime capabilities must exist before it can run.
+
+That runtime graph is what makes late installation, automatic activation,
+and cascade unload possible. It is also harder to follow than ordinary
+imports because your bundler and editor cannot show the whole graph.
+
+The kernel makes it inspectable through `pluginState`, `state`, `list`, and
+`on('error')`. A future devtools package can make the graph visible, but it
+cannot remove the underlying complexity.
 
 ## Status
 
-v0.1 is implemented and tested — 125 tests, the kernel's in plain Node, the
-React layer's under `<StrictMode>` on a concurrent root, the Vue layer
-asserting unmount/remount explicitly since Vue has no StrictMode, plus a
-torture test for a service that unloads while dependents are mid-async.
-`@yatoi/vue` and `@yatoi/vue-slots` are a second framework binding built
-without changing `@yatoi/kernel` — the proof that the layering is real,
-not just convenient for React. Not yet on npm; clone it and run the
-example.
+v0.1 is implemented and tested, but not yet published to npm.
 
-The first published version will be 0.1.0 for all six packages. After
-that, patches are per package and minors move all six together: any
-`0.1.x` binding works with any `0.1.x` kernel, and `0.2.0` on every
-package means one new contract. While the major is 0, a **minor** may
-break the public API or the spec and a **patch** never does — pin to
-`~0.1.0` if that matters to you. 1.0 comes when the spec's conformance
-table stops growing and a second implementation passes it. Release notes
-are in [CHANGELOG.md](CHANGELOG.md); each package also carries its own
-generated changelog.
+- **Kernel:** runs in plain Node with no DOM; a torture test covers a
+service unloading while dependents are mid-async.
+- **Bindings:** React runs under `<StrictMode>` on a concurrent root; Vue
+asserts unmount/remount explicitly. Adding Vue required no kernel changes.
+- **Verification:** 125 tests across the kernel, bindings, slots, and
+non-UI examples.
+- **Versioning:** the first release is 0.1.0 for all six packages. Patches
+then move independently; minors move all six together as a new contract.
+While the major is 0, a minor may break and a patch will not — pin to
+`~0.1.0` if that matters to you.
+- **1.0:** when the spec's conformance table stops growing and a second
+implementation passes it.
 
-What's next — devtools, Suspense integration, token versioning, a Dart
-implementation for Flutter, a Solid binding — and what's deliberately not
-planned is in [ROADMAP.md](ROADMAP.md). [CONTRIBUTING.md](CONTRIBUTING.md)
-is the short version of how to help; [AGENTS.md](AGENTS.md) is the long
-one.
+See [CHANGELOG.md](CHANGELOG.md) for releases and [ROADMAP.md](ROADMAP.md)
+for devtools, Suspense integration, token versioning, Dart, Solid, and what
+is deliberately out of scope. To help, start with
+[CONTRIBUTING.md](CONTRIBUTING.md); [AGENTS.md](AGENTS.md) has the full
+repository conventions.
 
 ## Documentation
 
