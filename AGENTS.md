@@ -8,8 +8,8 @@ read it before proposing architecture, not before fixing a typo.
 
 **yatoi** — a plugin kernel with reversible effects, typed service
 discovery, and cascade unload, bound to React and to Vue. Six packages,
-layered; a React example app. v0.1 is implemented and tested. Not yet
-published.
+layered; React, Vue and Node examples. v0.1.0 published to npm on
+2026-09-22.
 
 ## Layout
 

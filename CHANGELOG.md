@@ -9,7 +9,7 @@ packages to the same number. While the major is 0, a minor may break the
 public API or [the spec](docs/spec.md); a patch never does. See
 [docs/releasing.md](docs/releasing.md) for how a release is cut.
 
-## 0.1.0 — unreleased
+## 0.1.0 — 2026-09-22
 
 First release. Six packages, layered:
 

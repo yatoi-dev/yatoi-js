@@ -26,7 +26,7 @@ concurrent root, the Vue layer asserting unmount/remount explicitly (Vue
 has no StrictMode), plus the torture case. A second JS binding (Vue)
 landed here rather than in *Later* — it reuses `@yatoi/kernel` unchanged,
 which is the proof that the layering is real rather than convenient for
-React. Not yet published. Also done: an
+React. 0.1.0 published 2026-09-22. Also done: an
 [agent-host example](examples/agent-host/README.md), a Node program with
 no React and no DOM where skills are plugins, tools/prompt/middleware are
 collections read fresh each turn, and revoking a credential cascades a
@@ -34,10 +34,10 @@ skill's tools out before the model's next turn.
 
 ## Next — v0.2
 
-- **Publish `@yatoi/*` to npm.** The scope is free; the manifests carry
-  `repository`/`homepage`/`bugs`. Needs: a changeset or release
-  workflow, `files`/`exports` verified against a fresh install, and the
-  design brief's repo description and topics set once the repo is public.
+- **Release automation.** 0.1.0 was published by hand with a granular
+  token (`docs/releasing.md`). Next: npm trusted publishing (OIDC) from
+  CI with provenance, so no long-lived token exists; set the repo
+  description and topics once public.
 - **`/devtools`** — *pick-up-able.* A graph inspector (plugins, what they
   provide and inject, current states) and "why did this unload" traces
   built from the cascade order. The [honest cost](README.md#the-honest-cost)

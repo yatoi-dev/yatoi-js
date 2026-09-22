@@ -226,7 +226,8 @@ Read [Pitfalls](docs/pitfalls.md) for more details.
 
 ## Status
 
-v0.1 is implemented and tested, but not yet published to npm.
+v0.1.0 is on npm (2026-09-22): `@yatoi/kernel`, `@yatoi/react`, `@yatoi/slots`,
+`@yatoi/react-slots`, `@yatoi/vue`, `@yatoi/vue-slots`.
 
 - **Kernel:** runs in plain Node with no DOM; a torture test covers a
 service unloading while dependents are mid-async.
@@ -234,8 +235,7 @@ service unloading while dependents are mid-async.
 asserts unmount/remount explicitly. Adding Vue required no kernel changes.
 - **Verification:** 125 tests across the kernel, bindings, slots, and
 non-UI examples.
-- **Versioning:** the first release is 0.1.0 for all six packages. Patches
-then move independently; minors move all six together as a new contract.
+- **Versioning:** 0.1.0 for all six packages. Patches move independently; minors move all six together as a new contract.
 While the major is 0, a minor may break and a patch will not — pin to
 `~0.1.0` if that matters to you.
 - **1.0:** when the spec's conformance table stops growing and a second
