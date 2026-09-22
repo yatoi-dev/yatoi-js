@@ -57,7 +57,9 @@ describe('1. registration is not activation', () => {
     const kernel = createKernel()
     const clock = clockPlugin()
     kernel.load(clock)
-    expect(() => kernel.load(clock)).toThrow(/already loaded/)
+    expect(() => kernel.load(clock)).toThrow(
+      '[yatoi] Plugin was loaded twice in plugin "clock": the same plugin object is already registered at the kernel top level. Unload that plugin object before loading it again. (spec §5.4)',
+    )
     expect(() => kernel.unload(definePlugin({ name: 'never', setup() {} }))).not.toThrow()
   })
 })
@@ -378,6 +380,14 @@ describe('5. post-disposal scope calls', () => {
     expect(kernel.list(Items)).toHaveLength(0)
     expect(kernel.pluginState(dependent)).toBe('inactive')
     expect(warn).toHaveBeenCalledTimes(2)
+    expect(warn).toHaveBeenNthCalledWith(
+      1,
+      '[yatoi] Service "late" was provided after disposal in plugin "dependent": disposed scopes cannot publish effects. Check `scope.active` after each `await` before calling `provide`. (spec §6.8)',
+    )
+    expect(warn).toHaveBeenNthCalledWith(
+      2,
+      '[yatoi] Collection "items" received a contribution after disposal in plugin "dependent": disposed scopes cannot publish effects. Check `scope.active` after each `await` before calling `contribute`. (spec §6.8)',
+    )
     warn.mockRestore()
   })
 })
@@ -400,6 +410,9 @@ describe('6. error containment', () => {
 
     expect(badHandle!.state).toBe('failed')
     expect(badHandle!.error).toBeInstanceOf(Error)
+    expect(String(badHandle!.error)).toBe(
+      'Error: [yatoi] Setup failed in plugin "bad": boom. Change `setup` so it completes without throwing or rejecting. (spec §10.1)',
+    )
     expect(unwound).toHaveBeenCalledOnce()
     expect(kernel.get(Store)).toBeUndefined()
     expect(kernel.pluginState(good)).toBe('active')
@@ -420,6 +433,9 @@ describe('6. error containment', () => {
     await kernel.settle()
     expect(kernel.pluginState(bad)).toBe('failed')
     expect(errors).toHaveLength(1)
+    expect(String(errors[0])).toBe(
+      'Error: [yatoi] Setup failed in plugin "bad": async boom. Change `setup` so it completes without throwing or rejecting. (spec §10.1)',
+    )
   })
 
   it('failure does not retry in a loop; it resets when a dependency cycles', () => {
@@ -461,6 +477,9 @@ describe('6. error containment', () => {
     expect(() => kernel.unload(p)).not.toThrow()
     expect(after).toHaveBeenCalledOnce()
     expect(errors).toHaveLength(1)
+    expect(String(errors[0])).toBe(
+      'Error: [yatoi] Disposer failed in plugin "p": cleanup boom. Change the disposer so it completes without throwing or rejecting. (spec §10.5)',
+    )
   })
 
   it('without an error listener, errors go to console.error', () => {
@@ -475,6 +494,12 @@ describe('6. error containment', () => {
       }),
     )
     expect(err).toHaveBeenCalledOnce()
+    expect(err).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message:
+          '[yatoi] Setup failed in plugin "bad": x. Change `setup` so it completes without throwing or rejecting. (spec §10.1)',
+      }),
+    )
     err.mockRestore()
   })
 
@@ -505,7 +530,12 @@ describe('6. error containment', () => {
     expect(kernel.get(Store)).toBeUndefined()
     expect(disposer).toHaveBeenCalledOnce()
     expect(goodListener).toHaveBeenCalledOnce()
-    expect(err).toHaveBeenCalledWith(expect.stringMatching(/listener/i), expect.any(Error))
+    expect(err).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message:
+          '[yatoi] Error listener failed in plugin "bad": listener boom. Change the error listener so it does not throw. (spec §10.6)',
+      }),
+    )
     err.mockRestore()
   })
 
@@ -643,7 +673,9 @@ describe('7. provide guard', () => {
     })
     kernel.load(sneaky)
     expect(kernel.pluginState(sneaky)).toBe('failed')
-    expect(String(errors[0])).toMatch(/not in this plugin's `provides`/)
+    expect(String(errors[0])).toBe(
+      'Error: [yatoi] Service "clock" was provided without declaration in plugin "sneaky": token "clock" is not listed in `provides`. Add `clock` to `provides`. (spec §10.3)',
+    )
     expect(kernel.get(Clock)).toBeUndefined()
   })
 })
@@ -662,7 +694,9 @@ describe('8. same token, two providers', () => {
     kernel.load(a, b)
     expect(kernel.get(Clock)?.now()).toBe(42)
     expect(kernel.pluginState(b)).toBe('failed')
-    expect(String(errors[0])).toMatch(/already provided by "clock"/)
+    expect(String(errors[0])).toBe(
+      'Error: [yatoi] Service "clock" already has an active provider in plugin "clock-b": plugin "clock" currently provides token "clock". Unload plugin "clock" before providing `clock`, or use a collection. (spec §10.4)',
+    )
 
     // Once the winner leaves, the loser is still failed until its own deps cycle — it has none, so it stays failed.
     kernel.unload(a)
@@ -749,7 +783,9 @@ describe('9. scope tree', () => {
     h.dispose()
     expect(kernel.pluginState(child)).toBe('inactive')
     kernel.unload(parent)
-    expect(() => parentScope.load(child)).toThrow(/after scope disposed/)
+    expect(() => parentScope.load(child)).toThrow(
+      '[yatoi] Child plugin "child" was loaded after disposal in plugin "parent": disposed scopes cannot load children. Check `scope.active` after each `await` before calling `load`. (spec §6.6)',
+    )
   })
 
   it('kernel.unload does not reach child plugins — they belong to their parent', () => {

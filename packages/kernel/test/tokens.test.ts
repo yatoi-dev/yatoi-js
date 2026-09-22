@@ -78,7 +78,9 @@ describe('definePlugin typing', () => {
   })
 
   it('requires a name', () => {
-    expect(() => definePlugin({ name: '', setup() {} })).toThrow(/name/)
+    expect(() => definePlugin({ name: '', setup() {} })).toThrow(
+      '[yatoi] Plugin definition failed in plugin "<unnamed>": `name` is empty. Set `name` to a non-empty string. (spec §3.1)',
+    )
   })
 })
 

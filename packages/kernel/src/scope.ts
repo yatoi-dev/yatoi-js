@@ -1,5 +1,6 @@
 import type { AnyServiceToken, CollectionToken, ServiceToken, ServiceType } from './token.js'
 import type { Registry } from './registry.js'
+import { reportedError, ruleError, ruleMessage } from './errors.js'
 import type {
   AnyPlugin,
   ContributionMeta,
@@ -49,18 +50,36 @@ export class ScopeImpl implements Scope<readonly AnyServiceToken[]> {
 
   provide<T>(token: ServiceToken<T>, value: T): void {
     if (!this.active) {
-      console.warn(`[yatoi] ${this.name}: provide(${token.key}) after scope disposed — ignored`)
+      console.warn(
+        ruleMessage(
+          `Service "${token.key}" was provided after disposal`,
+          this.name,
+          'disposed scopes cannot publish effects',
+          'Check `scope.active` after each `await` before calling `provide`',
+          '6.8',
+        ),
+      )
       return
     }
     if (!this.provides.has(token.key)) {
-      throw new Error(
-        `[yatoi] ${this.name}: provide(${token.key}) but "${token.key}" is not in this plugin's \`provides\``,
+      throw ruleError(
+        `Service "${token.key}" was provided without declaration`,
+        this.name,
+        `token "${token.key}" is not listed in \`provides\``,
+        `Add \`${token.key}\` to \`provides\``,
+        '10.3',
       )
     }
     const registry = this.host.registry
     const holder = registry.serviceOwner(token)
     if (holder !== undefined) {
-      throw new Error(`[yatoi] ${this.name}: "${token.key}" is already provided by "${holder}"`)
+      throw ruleError(
+        `Service "${token.key}" already has an active provider`,
+        this.name,
+        `plugin "${holder}" currently provides token "${token.key}"`,
+        `Unload plugin "${holder}" before providing \`${token.key}\`, or use a collection`,
+        '10.4',
+      )
     }
     this.provided.add(token)
     registry.setService(token, value, this.name)
@@ -76,7 +95,15 @@ export class ScopeImpl implements Scope<readonly AnyServiceToken[]> {
 
   contribute<T>(collection: CollectionToken<T>, value: T, meta?: ContributionMeta): void {
     if (!this.active) {
-      console.warn(`[yatoi] ${this.name}: contribute(${collection.key}) after scope disposed — ignored`)
+      console.warn(
+        ruleMessage(
+          `Collection "${collection.key}" received a contribution after disposal`,
+          this.name,
+          'disposed scopes cannot publish effects',
+          'Check `scope.active` after each `await` before calling `contribute`',
+          '6.8',
+        ),
+      )
       return
     }
     this.disposers.push(this.host.registry.addContribution(collection, value, meta, this.name))
@@ -84,7 +111,13 @@ export class ScopeImpl implements Scope<readonly AnyServiceToken[]> {
 
   load(plugin: AnyPlugin): PluginHandle {
     if (!this.active) {
-      throw new Error(`[yatoi] ${this.name}: load(${plugin.name}) after scope disposed`)
+      throw ruleError(
+        `Child plugin "${plugin.name}" was loaded after disposal`,
+        this.name,
+        'disposed scopes cannot load children',
+        'Check `scope.active` after each `await` before calling `load`',
+        '6.6',
+      )
     }
     return this.host.loadChild(this, plugin)
   }
@@ -109,10 +142,30 @@ export class ScopeImpl implements Scope<readonly AnyServiceToken[]> {
     try {
       const result = fn()
       if (result && typeof (result as Promise<void>).then === 'function') {
-        return (result as Promise<void>).then(undefined, (e) => this.host.reportError(e, this.plugin))
+        return (result as Promise<void>).then(undefined, (e) =>
+          this.host.reportError(
+            reportedError(
+              'Disposer failed',
+              this.name,
+              e,
+              'Change the disposer so it completes without throwing or rejecting',
+              '10.5',
+            ),
+            this.plugin,
+          ),
+        )
       }
     } catch (e) {
-      this.host.reportError(e, this.plugin)
+      this.host.reportError(
+        reportedError(
+          'Disposer failed',
+          this.name,
+          e,
+          'Change the disposer so it completes without throwing or rejecting',
+          '10.5',
+        ),
+        this.plugin,
+      )
     }
     return null
   }

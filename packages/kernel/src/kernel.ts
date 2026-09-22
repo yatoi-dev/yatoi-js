@@ -1,5 +1,6 @@
 import { Registry } from './registry.js'
 import { ScopeImpl, type ScopeHost } from './scope.js'
+import { reportedError, ruleError } from './errors.js'
 import type { CollectionToken, ServiceToken } from './token.js'
 import type {
   AnyPlugin,
@@ -151,7 +152,7 @@ class KernelImpl implements Kernel, ScopeHost {
 
   reportError(error: unknown, plugin: AnyPlugin): void {
     if (this.errorListeners.size === 0) {
-      console.error(`[yatoi] error in plugin "${plugin.name}":`, error)
+      console.error(error)
       return
     }
     for (const listener of [...this.errorListeners]) {
@@ -160,7 +161,15 @@ class KernelImpl implements Kernel, ScopeHost {
       } catch (listenerError) {
         // A listener MUST NOT be able to take down the kernel or hide the
         // original error from the other listeners (spec §10.6).
-        console.error(`[yatoi] error listener for plugin "${plugin.name}" threw:`, listenerError)
+        console.error(
+          reportedError(
+            'Error listener failed',
+            plugin.name,
+            listenerError,
+            'Change the error listener so it does not throw',
+            '10.6',
+          ),
+        )
       }
     }
   }
@@ -186,7 +195,13 @@ class KernelImpl implements Kernel, ScopeHost {
         let passes = 0
         while (this.needsPass) {
           if (++passes > MAX_PASSES) {
-            throw new Error('[yatoi] plugin graph did not converge — a setup is likely mutating the kernel in a loop')
+            throw ruleError(
+              'Plugin graph did not converge',
+              '<kernel>',
+              'a setup kept mutating the graph without reaching a fixed point',
+              'Stop loading plugins or publishing capabilities in a repeating setup loop',
+              '12.2',
+            )
           }
           this.needsPass = false
           this.pass()
@@ -260,7 +275,15 @@ class KernelImpl implements Kernel, ScopeHost {
 
   private register(plugin: AnyPlugin, parent: ScopeImpl | null): PluginHandle {
     if (this.records.some((r) => r.registered && r.parent === parent && r.plugin === plugin)) {
-      throw new Error(`[yatoi] plugin "${plugin.name}" is already loaded${parent ? ` in "${parent.name}"` : ''}`)
+      throw ruleError(
+        'Plugin was loaded twice',
+        plugin.name,
+        parent
+          ? `the same plugin object is already registered under parent plugin "${parent.name}"`
+          : 'the same plugin object is already registered at the kernel top level',
+        'Unload that plugin object before loading it again',
+        '5.4',
+      )
     }
     const rec: PluginRecord = {
       plugin,
@@ -376,7 +399,14 @@ class KernelImpl implements Kernel, ScopeHost {
   }
 
   private fail(rec: PluginRecord, scope: ScopeImpl, error: unknown): void {
-    rec.error = error
+    const reported = reportedError(
+      'Setup failed',
+      rec.plugin.name,
+      error,
+      'Change `setup` so it completes without throwing or rejecting',
+      '10.1',
+    )
+    rec.error = reported
     rec.scope = null
     // Whatever the partial setup registered still unwinds — it must not
     // leak — and it happens *before* reporting (§10.1), so nothing a
@@ -403,7 +433,7 @@ class KernelImpl implements Kernel, ScopeHost {
         })
       })
     }
-    this.reportError(error, rec.plugin)
+    this.reportError(reported, rec.plugin)
     this.registry.touch()
     this.needsPass = true
   }
