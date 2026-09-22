@@ -24,9 +24,25 @@ sed -i.bak -e 's#@yatoi/react-slots#@yatoi/react/slots#g' -e 's#@yatoi/vue-slots
 `@yatoi/react-slots` and `@yatoi/vue-slots` are withdrawn from npm: 0.1.0
 was a day old with no dependents, so there is nothing to keep a shim for.
 
+Also in this release:
+
+- **Errors that teach.** Every kernel error and late-scope warning names
+  the plugin, states the rule, prescribes the fix, and cites the spec
+  section: `[yatoi] Service "late" was provided after disposal in plugin
+  "dependent": … Check \`scope.active\` after each \`await\` … (spec §6.8)`.
+- **Declarations that explain themselves.** `@example` blocks and rule
+  summaries on the public types reach `dist/*.d.ts`.
+- **Agent-facing packaging.** Each tarball ships an `AGENTS.md` (do/don't,
+  lifecycle, review checklist); package READMEs lead with install, a
+  runnable example, and the rules; `llms.txt` / `llms-full.txt` and
+  `context7.json` at the repo root.
+- **Versioning scheme.** Patches per package; minors and majors move all
+  packages together, enforced by `pnpm check:changesets`.
+
 ## 0.1.0 — 2026-09-22
 
-First release. Six packages, layered:
+First release. Six packages, layered (the two slot bindings were folded
+into `@yatoi/react` and `@yatoi/vue` in 0.2.0):
 
 - `@yatoi/kernel` — plugins with `inject`/`provides`/`setup(scope)`,
   reversible effects via `scope.defer`, typed service tokens, collections
