@@ -1,0 +1,7 @@
+export type { Slots, SlotName, SlotProps } from '@yatoi/slots'
+export { slot } from '@yatoi/slots'
+export type { SlotRenderer, SlotRendererProps } from './types.js'
+export { contribute } from './contribute.js'
+export type { ContributeOptions } from './contribute.js'
+export { Slot } from './Slot.js'
+export type { SlotComponentProps } from './Slot.js'

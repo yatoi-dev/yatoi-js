@@ -1,7 +1,7 @@
 {
   "name": "@yatoi/vue-slots",
   "version": "0.1.0",
-  "description": "Typed contribution points for @yatoi/kernel, for Vue: contribute() and <Slot>.",
+  "description": "Deprecated: import from `@yatoi/vue/slots`.",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -33,14 +33,9 @@
     "build": "tsc -b tsconfig.build.json",
     "prepack": "pnpm run build",
     "typecheck": "tsc -b tsconfig.json && tsc -b tsconfig.test.json",
-    "test": "vitest run --project vue-slots --root ../.."
-  },
-  "peerDependencies": {
-    "vue": "^3.4.0"
+    "test": "vitest run --project vue --root ../.."
   },
   "dependencies": {
-    "@yatoi/kernel": "workspace:^",
-    "@yatoi/slots": "workspace:^",
     "@yatoi/vue": "workspace:^"
   },
   "keywords": [

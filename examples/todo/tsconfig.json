@@ -9,9 +9,9 @@
     "types": ["vite/client"],
     "paths": {
       "@yatoi/kernel": ["../../packages/kernel/src/index.ts"],
+      "@yatoi/react/slots": ["../../packages/react/src/slots/index.ts"],
       "@yatoi/react": ["../../packages/react/src/index.ts"],
-      "@yatoi/slots": ["../../packages/slots/src/index.ts"],
-      "@yatoi/react-slots": ["../../packages/react-slots/src/index.ts"]
+      "@yatoi/slots": ["../../packages/slots/src/index.ts"]
     }
   },
   "include": ["src", "vite", "vite.config.ts", "vite.plugin.config.ts"]

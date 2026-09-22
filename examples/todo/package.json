@@ -16,7 +16,6 @@
     "@yatoi/kernel": "workspace:*",
     "@yatoi/react": "workspace:*",
     "@yatoi/slots": "workspace:*",
-    "@yatoi/react-slots": "workspace:*",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Slot } from '@yatoi/vue-slots'
+import { Slot } from '@yatoi/vue/slots'
 import type { TodoStore } from './core/todos.js'
 import { useTodos } from './contract/index.js'
 

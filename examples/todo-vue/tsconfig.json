@@ -9,9 +9,9 @@
     "types": ["vite/client"],
     "paths": {
       "@yatoi/kernel": ["../../packages/kernel/src/index.ts"],
+      "@yatoi/vue/slots": ["../../packages/vue/src/slots/index.ts"],
       "@yatoi/vue": ["../../packages/vue/src/index.ts"],
-      "@yatoi/slots": ["../../packages/slots/src/index.ts"],
-      "@yatoi/vue-slots": ["../../packages/vue-slots/src/index.ts"]
+      "@yatoi/slots": ["../../packages/slots/src/index.ts"]
     }
   },
   "include": ["src", "vite.config.ts"]

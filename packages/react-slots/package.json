@@ -1,7 +1,7 @@
 {
   "name": "@yatoi/react-slots",
   "version": "0.1.0",
-  "description": "React binding for @yatoi/slots: contribute() and <Slot>.",
+  "description": "Deprecated: import from `@yatoi/react/slots`.",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -33,15 +33,10 @@
     "build": "tsc -b tsconfig.build.json",
     "prepack": "pnpm run build",
     "typecheck": "tsc -b tsconfig.json && tsc -b tsconfig.test.json",
-    "test": "vitest run --project react-slots --root ../.."
-  },
-  "peerDependencies": {
-    "react": "^18.0.0 || ^19.0.0"
+    "test": "vitest run --project react --root ../.."
   },
   "dependencies": {
-    "@yatoi/kernel": "workspace:^",
-    "@yatoi/react": "workspace:^",
-    "@yatoi/slots": "workspace:^"
+    "@yatoi/react": "workspace:^"
   },
   "keywords": [
     "react",

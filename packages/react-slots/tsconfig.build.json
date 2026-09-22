@@ -13,12 +13,6 @@
   ],
   "references": [
     {
-      "path": "../kernel/tsconfig.build.json"
-    },
-    {
-      "path": "../slots/tsconfig.build.json"
-    },
-    {
       "path": "../react/tsconfig.build.json"
     }
   ]

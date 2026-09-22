@@ -3,7 +3,7 @@ import { act, render, screen } from '@testing-library/react'
 import { describe, expect, expectTypeOf, it, vi } from 'vitest'
 import { createKernel, defineCollection, definePlugin, defineService, type Kernel, type Scope } from '@yatoi/kernel'
 import { KernelProvider, Requires } from '@yatoi/react'
-import { Slot, contribute, type SlotRenderer, type SlotRendererProps } from '../src/index.js'
+import { Slot, contribute, type SlotRenderer, type SlotRendererProps } from '../src/slots/index.js'
 
 // ── host declares its contract ─────────────────────────────────────
 interface Task {

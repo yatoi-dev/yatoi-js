@@ -45,6 +45,7 @@ export function reactImportMap(): Plugin {
               index: root('index.html'),
               react: root('src/shared/react.ts'),
               'jsx-runtime': root('src/shared/jsx-runtime.ts'),
+              'yatoi-react-slots': root('src/shared/react-slots.ts'),
             },
             // Load-bearing: nothing *inside* this build statically imports
             // the shims' named exports (the app's own JSX/hooks resolve
@@ -59,7 +60,7 @@ export function reactImportMap(): Plugin {
             preserveEntrySignatures: 'strict',
             output: {
               entryFileNames: (chunk) =>
-                chunk.name === 'react' || chunk.name === 'jsx-runtime'
+                chunk.name === 'react' || chunk.name === 'jsx-runtime' || chunk.name === 'yatoi-react-slots'
                   ? 'shared/[name].js'
                   : 'assets/[name]-[hash].js',
             },
@@ -70,8 +71,16 @@ export function reactImportMap(): Plugin {
     transformIndexHtml() {
       const imports =
         command === 'serve'
-          ? { react: '/src/shared/react.ts', 'react/jsx-runtime': '/src/shared/jsx-runtime.ts' }
-          : { react: '/shared/react.js', 'react/jsx-runtime': '/shared/jsx-runtime.js' }
+          ? {
+              react: '/src/shared/react.ts',
+              'react/jsx-runtime': '/src/shared/jsx-runtime.ts',
+              '@yatoi/react/slots': '/src/shared/react-slots.ts',
+            }
+          : {
+              react: '/shared/react.js',
+              'react/jsx-runtime': '/shared/jsx-runtime.js',
+              '@yatoi/react/slots': '/shared/yatoi-react-slots.js',
+            }
       return [
         {
           tag: 'script',

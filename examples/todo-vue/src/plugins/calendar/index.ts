@@ -1,6 +1,6 @@
 import { h, type Component, type FunctionalComponent } from 'vue'
 import { definePlugin } from '@yatoi/kernel'
-import { contribute, type SlotRenderer } from '@yatoi/vue-slots'
+import { contribute, type SlotRenderer } from '@yatoi/vue/slots'
 import { Todos, Views, type TodoStore } from '../../contract/index.js'
 import DueDateField from './DueDateField.vue'
 import CalendarView from './CalendarView.vue'

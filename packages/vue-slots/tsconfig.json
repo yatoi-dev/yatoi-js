@@ -14,12 +14,6 @@
   ],
   "references": [
     {
-      "path": "../kernel/tsconfig.build.json"
-    },
-    {
-      "path": "../slots/tsconfig.build.json"
-    },
-    {
       "path": "../vue/tsconfig.build.json"
     }
   ]

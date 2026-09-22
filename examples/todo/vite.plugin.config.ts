@@ -26,11 +26,10 @@ export default defineConfig({
     outDir: 'dist-plugin',
     emptyOutDir: true,
     rollupOptions: {
-      // React is the ONLY thing this bundle externalizes. The host shares
-      // one React instance with every plugin it loads by URL via an import
-      // map (see vite/react-import-map.ts). @yatoi/kernel, @yatoi/slots,
-      // @yatoi/react-slots, and the contract (src/contract) are bundled in
-      // on purpose, not left external. A token's identity is its string `key`
+      // React and the React slots subpath are supplied by the host via an
+      // import map (see vite/react-import-map.ts). @yatoi/kernel,
+      // @yatoi/slots, and the contract (src/contract) are bundled in on
+      // purpose. A token's identity is its string `key`
       // (packages/kernel/src/token.ts), not the object `defineService` /
       // `defineCollection` returned, so this plugin's own copy of the
       // kernel protocol still resolves the host's `Todos` service and
@@ -39,7 +38,7 @@ export default defineConfig({
       // required. That's what lets this whole plugin ship as one
       // dependency-free ESM file, the way a real CDN-delivered plugin
       // would.
-      external: ['react', 'react/jsx-runtime', 'react-dom'],
+      external: ['react', 'react/jsx-runtime', 'react-dom', '@yatoi/react/slots'],
     },
   },
   preview: {

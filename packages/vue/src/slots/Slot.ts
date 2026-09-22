@@ -10,7 +10,7 @@ import {
   type VNode,
 } from 'vue'
 import type { CollectionToken, Contribution } from '@yatoi/kernel'
-import { useKernel } from '@yatoi/vue'
+import { useKernel } from '../context.js'
 import { slot } from '@yatoi/slots'
 import type { SlotName, SlotProps, SlotRenderer } from './types.js'
 

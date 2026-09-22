@@ -18,6 +18,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./slots": {
+      "types": "./dist/slots/index.d.ts",
+      "import": "./dist/slots/index.js"
     }
   },
   "files": [
@@ -39,7 +43,8 @@
     "vue": "^3.4.0"
   },
   "dependencies": {
-    "@yatoi/kernel": "workspace:^"
+    "@yatoi/kernel": "workspace:^",
+    "@yatoi/slots": "workspace:^"
   },
   "keywords": [
     "vue",

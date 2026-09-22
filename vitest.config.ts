@@ -3,13 +3,17 @@ import { fileURLToPath } from 'node:url'
 
 const src = (pkg: string) =>
   fileURLToPath(new URL(`./packages/${pkg}/src/index.ts`, import.meta.url))
+const slots = (pkg: 'react' | 'vue') =>
+  fileURLToPath(new URL(`./packages/${pkg}/src/slots/index.ts`, import.meta.url))
 
 // Source aliases so cross-package tests never depend on a prior build.
 const alias = {
   '@yatoi/kernel': src('kernel'),
+  '@yatoi/react/slots': slots('react'),
   '@yatoi/react': src('react'),
   '@yatoi/slots': src('slots'),
   '@yatoi/react-slots': src('react-slots'),
+  '@yatoi/vue/slots': slots('vue'),
   '@yatoi/vue': src('vue'),
   '@yatoi/vue-slots': src('vue-slots'),
 }
@@ -34,7 +38,7 @@ export default defineConfig({
           root: './packages/react',
           environment: 'jsdom',
           setupFiles: ['./test/setup.ts'],
-          include: ['test/**/*.test.{ts,tsx}'],
+          include: ['test/**/*.test.{ts,tsx}', '../react-slots/test/**/*.test.{ts,tsx}'],
         },
       },
       {
@@ -50,31 +54,11 @@ export default defineConfig({
       {
         resolve: { alias },
         test: {
-          name: 'react-slots',
-          root: './packages/react-slots',
-          environment: 'jsdom',
-          setupFiles: ['./test/setup.ts'],
-          include: ['test/**/*.test.{ts,tsx}'],
-        },
-      },
-      {
-        resolve: { alias },
-        test: {
           name: 'vue',
           root: './packages/vue',
           environment: 'jsdom',
           setupFiles: ['./test/setup.ts'],
-          include: ['test/**/*.test.{ts,tsx}'],
-        },
-      },
-      {
-        resolve: { alias },
-        test: {
-          name: 'vue-slots',
-          root: './packages/vue-slots',
-          environment: 'jsdom',
-          setupFiles: ['./test/setup.ts'],
-          include: ['test/**/*.test.{ts,tsx}'],
+          include: ['test/**/*.test.{ts,tsx}', '../vue-slots/test/**/*.test.{ts,tsx}'],
         },
       },
       {
