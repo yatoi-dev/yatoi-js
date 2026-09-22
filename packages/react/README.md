@@ -3,39 +3,40 @@
 [![npm](https://img.shields.io/npm/v/@yatoi/react.svg)](https://www.npmjs.com/package/@yatoi/react)
 [![license](https://img.shields.io/npm/l/@yatoi/react.svg)](https://github.com/yatoi-dev/yatoi-js/blob/main/LICENSE)
 
-React bindings for `@yatoi/kernel`: `KernelProvider`, `useService`,
-`useServiceState`, `useContributions`, `Requires`, and `usePlugin`.
+React bindings that observe an `@yatoi/kernel` through providers, hooks, capability gates, and component-scoped plugins.
 
 ## Install
 
 ```bash
-npm install @yatoi/kernel @yatoi/react react
+npm i @yatoi/kernel @yatoi/react react react-dom
 ```
-
-React 18 and 19 are supported. Create the kernel outside the component tree;
-React observes it but does not own it.
 
 ```tsx
-import { createKernel } from '@yatoi/kernel'
+import { createKernel, definePlugin, defineService } from '@yatoi/kernel'
 import { KernelProvider, Requires } from '@yatoi/react'
-import { Clock } from './contract.js'
-
+const Clock = defineService<{ now(): number }>('clock')
+const clock = definePlugin({ name: 'clock', provides: [Clock], setup(scope) {
+  scope.provide(Clock, { now: () => Date.now() })
+  scope.defer(() => console.log('clock stopped'))
+} })
 const kernel = createKernel()
-
-root.render(
-  <KernelProvider kernel={kernel}>
-    <Requires of={[Clock]} fallback={<p>Clock unavailable</p>}>
-      {(clock) => <time>{clock.now()}</time>}
-    </Requires>
-  </KernelProvider>,
-)
+kernel.load(clock)
+export function App() { return <KernelProvider kernel={kernel}>
+  <Requires of={[Clock]}>{(value) => <time>{value.now()}</time>}</Requires>
+</KernelProvider> }
 ```
 
-Load and unload plugins during bootstrap, event handlers, or effects—never
-during render. `Requires` unmounts its subtree when a required service goes
-away, so normal React cleanup follows the kernel's cascade.
+## Rules
 
-See the [React guide](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/guide.md#consume-a-service-in-react)
-and [example application](https://github.com/yatoi-dev/yatoi-js/tree/main/examples/todo).
+- Never mutate the kernel during render; load and unload in bootstrap, event handlers, or effects.
+- Import token symbols from one contract module; never use string literals at call sites.
+- Prefer `<Requires>` over `useService(Token)!` so capability removal unmounts the dependent subtree.
+- Define plugin objects outside components so their identity survives re-renders.
+
+[Specification](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/spec.md) · [Guide](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/guide.md) · [Pitfalls](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/pitfalls.md) · [React example](https://github.com/yatoi-dev/yatoi-js/tree/main/examples/todo)
+
+## More
+
+React 18 and 19 are supported. Create the kernel outside the component tree; React observes it but does not own it. `Requires` unmounts its subtree when a required service disappears, so normal React cleanup follows the kernel cascade.
 
 MIT
