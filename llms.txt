@@ -4,24 +4,24 @@ A framework-neutral plugin kernel with reversible effects, typed capability disc
 
 ## Documentation
 
-- [packages/kernel/README.md](packages/kernel/README.md): Installation and first-use guide for @yatoi/kernel.
-- [packages/kernel/AGENTS.md](packages/kernel/AGENTS.md): Coding and review instructions for @yatoi/kernel.
-- [packages/react/README.md](packages/react/README.md): Installation and first-use guide for @yatoi/react.
-- [packages/react/AGENTS.md](packages/react/AGENTS.md): Coding and review instructions for @yatoi/react.
-- [packages/slots/README.md](packages/slots/README.md): Installation and first-use guide for @yatoi/slots.
-- [packages/slots/AGENTS.md](packages/slots/AGENTS.md): Coding and review instructions for @yatoi/slots.
-- [packages/react-slots/README.md](packages/react-slots/README.md): Installation and first-use guide for @yatoi/react-slots.
-- [packages/react-slots/AGENTS.md](packages/react-slots/AGENTS.md): Coding and review instructions for @yatoi/react-slots.
-- [packages/vue/README.md](packages/vue/README.md): Installation and first-use guide for @yatoi/vue.
-- [packages/vue/AGENTS.md](packages/vue/AGENTS.md): Coding and review instructions for @yatoi/vue.
-- [packages/vue-slots/README.md](packages/vue-slots/README.md): Installation and first-use guide for @yatoi/vue-slots.
-- [packages/vue-slots/AGENTS.md](packages/vue-slots/AGENTS.md): Coding and review instructions for @yatoi/vue-slots.
-- [docs/concepts.md](docs/concepts.md): Core vocabulary and the capability-graph mental model.
-- [docs/guide.md](docs/guide.md): End-to-end usage patterns for plugins, services, collections, and bindings.
-- [docs/pitfalls.md](docs/pitfalls.md): Known mistakes, failure modes, and safer alternatives.
-- [docs/spec.md](docs/spec.md): Normative protocol semantics and conformance requirements.
-- [docs/beyond-ui.md](docs/beyond-ui.md): How the kernel fits agent runtimes and long-running servers.
-- [examples/todo/README.md](examples/todo/README.md): React todo application with installable UI plugins.
-- [examples/todo-vue/README.md](examples/todo-vue/README.md): Vue port of the todo plugin application.
-- [examples/agent-host/README.md](examples/agent-host/README.md): Node agent host with revocable tools and child-scoped delegation.
-- [examples/server/README.md](examples/server/README.md): node:http host with capability-driven routes and jobs.
+- [packages/kernel/README.md](https://github.com/yatoi-dev/yatoi-js/blob/main/packages/kernel/README.md): Installation and first-use guide for @yatoi/kernel.
+- [packages/kernel/AGENTS.md](https://github.com/yatoi-dev/yatoi-js/blob/main/packages/kernel/AGENTS.md): Coding and review instructions for @yatoi/kernel.
+- [packages/react/README.md](https://github.com/yatoi-dev/yatoi-js/blob/main/packages/react/README.md): Installation and first-use guide for @yatoi/react.
+- [packages/react/AGENTS.md](https://github.com/yatoi-dev/yatoi-js/blob/main/packages/react/AGENTS.md): Coding and review instructions for @yatoi/react.
+- [packages/slots/README.md](https://github.com/yatoi-dev/yatoi-js/blob/main/packages/slots/README.md): Installation and first-use guide for @yatoi/slots.
+- [packages/slots/AGENTS.md](https://github.com/yatoi-dev/yatoi-js/blob/main/packages/slots/AGENTS.md): Coding and review instructions for @yatoi/slots.
+- [packages/react-slots/README.md](https://github.com/yatoi-dev/yatoi-js/blob/main/packages/react-slots/README.md): Installation and first-use guide for @yatoi/react-slots.
+- [packages/react-slots/AGENTS.md](https://github.com/yatoi-dev/yatoi-js/blob/main/packages/react-slots/AGENTS.md): Coding and review instructions for @yatoi/react-slots.
+- [packages/vue/README.md](https://github.com/yatoi-dev/yatoi-js/blob/main/packages/vue/README.md): Installation and first-use guide for @yatoi/vue.
+- [packages/vue/AGENTS.md](https://github.com/yatoi-dev/yatoi-js/blob/main/packages/vue/AGENTS.md): Coding and review instructions for @yatoi/vue.
+- [packages/vue-slots/README.md](https://github.com/yatoi-dev/yatoi-js/blob/main/packages/vue-slots/README.md): Installation and first-use guide for @yatoi/vue-slots.
+- [packages/vue-slots/AGENTS.md](https://github.com/yatoi-dev/yatoi-js/blob/main/packages/vue-slots/AGENTS.md): Coding and review instructions for @yatoi/vue-slots.
+- [docs/concepts.md](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/concepts.md): Core vocabulary and the capability-graph mental model.
+- [docs/guide.md](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/guide.md): End-to-end usage patterns for plugins, services, collections, and bindings.
+- [docs/pitfalls.md](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/pitfalls.md): Known mistakes, failure modes, and safer alternatives.
+- [docs/spec.md](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/spec.md): Normative protocol semantics and conformance requirements.
+- [docs/beyond-ui.md](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/beyond-ui.md): How the kernel fits agent runtimes and long-running servers.
+- [examples/todo/README.md](https://github.com/yatoi-dev/yatoi-js/blob/main/examples/todo/README.md): React todo application with installable UI plugins.
+- [examples/todo-vue/README.md](https://github.com/yatoi-dev/yatoi-js/blob/main/examples/todo-vue/README.md): Vue port of the todo plugin application.
+- [examples/agent-host/README.md](https://github.com/yatoi-dev/yatoi-js/blob/main/examples/agent-host/README.md): Node agent host with revocable tools and child-scoped delegation.
+- [examples/server/README.md](https://github.com/yatoi-dev/yatoi-js/blob/main/examples/server/README.md): node:http host with capability-driven routes and jobs.

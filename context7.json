@@ -1,0 +1,14 @@
+{
+  "$schema": "https://context7.com/schema/context7.json",
+  "projectTitle": "yatoi",
+  "description": "Plugin kernel with reversible effects, typed service discovery and cascade unload, with React and Vue bindings.",
+  "folders": ["docs", "packages"],
+  "excludeFolders": ["examples", "node_modules", "dist", "docs/assets"],
+  "excludeFiles": ["llms-full.txt"],
+  "rules": [
+    "Never mutate the kernel during render: kernel.load/unload and scope.provide/contribute belong in event handlers, effects, or bootstrap.",
+    "Tokens are imported symbols from one contract module, never string literals at call sites.",
+    "Prefer <Requires of={[Token]}> over useService(Token)! so removal unmounts the dependent subtree.",
+    "After an await inside setup, check scope.active before provide or contribute."
+  ]
+}

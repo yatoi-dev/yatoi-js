@@ -106,9 +106,13 @@ release commit while authenticated as an npm publisher:
 pnpm release
 ```
 
-For the first release, the manifests already carry `0.1.0`; Changesets will
-publish packages that do not yet exist on npm. Later releases are driven by
-the accumulated changeset files.
+For the first release, the manifests already carry `0.1.0` and
+`CHANGELOG.md` holds the release notes. Do not run `pnpm version-packages`
+first: it would consume the pending changesets and bump every package to
+`0.1.1` before anything exists on npm. Instead, delete the pending
+changeset files (their content is already in the `0.1.0` changelog
+entry), then publish. Changesets accumulate from the first published
+version onward.
 
 The repository intentionally does not contain an automatic publish workflow
 yet. Configure npm trusted publishing for this GitHub repository first, then

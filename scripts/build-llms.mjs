@@ -3,6 +3,8 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+// Absolute URLs: agents fetch llms.txt by URL, so relative paths resolve nowhere.
+const base = 'https://github.com/yatoi-dev/yatoi-js/blob/main/'
 const packages = ['kernel', 'react', 'slots', 'react-slots', 'vue', 'vue-slots']
 
 const links = [
@@ -28,7 +30,7 @@ const index = [
   '',
   '## Documentation',
   '',
-  ...links.map(([path, description]) => `- [${path}](${path}): ${description}`),
+  ...links.map(([path, description]) => `- [${path}](${base}${path}): ${description}`),
   '',
 ].join('\n')
 
