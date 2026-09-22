@@ -47,6 +47,7 @@ pnpm test                                  # all packages
 pnpm test -- --project kernel              # one package: kernel | react | slots | react-slots | vue | vue-slots
 pnpm typecheck                             # every package, in parallel
 pnpm build                                 # tsc -b, topological
+pnpm build:llms                            # regenerate llms.txt and llms-full.txt
 pnpm pack:check                            # build + audit all publishable npm tarballs; does not publish
 pnpm check:changesets                      # require changesets; minor/major must name all six packages
 pnpm --filter yatoi-example-todo dev          # example on :5173 (also .claude/launch.json → todo-example)
@@ -125,6 +126,8 @@ Same commit, every time:
   Patch: name only the changed packages. Minor/major: name all six at that
   level — it's a new contract. Examples, tests, internal docs, and
   build-only changes do not need one.
+- Update the package's `AGENTS.md` and rerun `pnpm build:llms` when a
+  public rule or idiom changes.
 
 The torture test (`packages/kernel/test/torture.test.ts`) must keep
 passing; it encodes the sync-facade guarantee.

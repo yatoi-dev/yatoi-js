@@ -24,6 +24,8 @@ jobs:
           cache: pnpm
           registry-url: https://registry.npmjs.org
       - run: pnpm install --frozen-lockfile
+      - run: pnpm build:llms
+      - run: git diff --exit-code -- llms.txt llms-full.txt
       - run: pnpm check:changesets -- --since origin/main
       - run: pnpm test
       - run: pnpm typecheck

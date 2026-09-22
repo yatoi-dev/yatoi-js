@@ -1,0 +1,1283 @@
+# docs/concepts.md
+
+# Concepts
+
+The mental model behind yatoi, in one sitting. Read this before the
+[guide](guide.md); read [architecture](architecture.md) if you want to
+change the library rather than use it.
+
+## The one-paragraph version
+
+React gives you reversible effects (`useEffect` cleanup), hierarchical DI
+(context), and dynamic code delivery (`lazy`). yatoi adds the three things
+it lacks for a plugin-based app: **a composition unit that isn't a
+render-tree node** (a plugin), **capability-level lifecycle** (a subtree
+that cannot exist without a service unmounts when the service goes away),
+and **inverted contribution** (a plugin pushes UI into a surface it doesn't
+own). It does this with a small kernel that knows nothing about React, and
+a thin React binding that only ever *observes* the kernel.
+
+## Four layers
+
+```
+@yatoi/react-slots   contribute(), <Slot> for React        React
+@yatoi/react         KernelProvider, useService, <Requires> React
+@yatoi/slots         Slots interface, SlotName, slot()      no React, no Vue
+@yatoi/kernel        plugins, services, cascade unload       no React, no DOM
+```
+
+You stop at the layer you need. A shell developer drives the kernel from
+config and unit-tests it in Node without rendering anything. An app
+developer writes `usePlugin` and `<Slot>` and never touches the kernel
+directly. If either of those stops being true, the API is wrong.
+
+## Tokens
+
+A **token** is the key a consumer uses to ask for a capability without
+importing the implementation. It is a real TypeScript value — so
+go-to-definition, rename and find-all-references work — carrying a phantom
+type and a string that is only used for debugging:
+
+```ts
+const Clock = defineService<{ now(): number }>('clock')
+```
+
+There are two kinds:
+
+- **Service** (`defineService<T>`) — exactly one value at a time.
+  Provided by one plugin, consumed by many.
+- **Collection** (`defineCollection<T>`) — many values, priority-ordered.
+  Contributed to by any number of plugins. Slots are built on collections.
+
+The kernel stores values opaquely. It never knows a value is a React
+component; `@yatoi/react-slots` is what gives a stored value React
+meaning — `@yatoi/slots` only declares the contract (names and prop
+shapes), framework-neutral.
+
+Tokens like `Clock` above are the documented default. There is a second
+form, `service(key)`/`collection(key)`, for a plugin that can't depend on
+the host's contract package — see [guide.md](guide.md) "Define a service".
+
+## Plugins
+
+A **plugin** is a named unit of behaviour with a declared dependency
+graph and a `setup` function:
+
+```ts
+const syncPlugin = definePlugin({
+  name: 'sync',
+  inject: [Clock, Storage],   // activates only when both are present
+  provides: [SyncStatus],     // may provide only what it declares
+  setup(scope) {
+    const clock = scope.get(Clock)        // typed non-null: it's injected
+    scope.defer(subscribe(clock))         // reversible effect
+    scope.provide(SyncStatus, status)     // published; removed on dispose
+  },
+})
+```
+
+`inject` is the load-bearing declaration. It drives when the plugin runs
+and when it is torn down. `provides` is the other half: providing a token
+you didn't declare is an error, so the graph is always legible from the
+declarations alone.
+
+`definePlugin` is an identity function with types. A plugin is plain data
+until a kernel loads it.
+
+## Scope: reversible effects
+
+`setup` receives a **scope** — the plugin's handle on its own lifetime.
+Anything a plugin does through the scope is undone automatically when the
+scope disposes:
+
+| Call | Effect | Undone by |
+|---|---|---|
+| `scope.defer(fn)` | registers a cleanup | running `fn` (LIFO order) |
+| `scope.provide(token, value)` | publishes a service | removing it from the registry |
+| `scope.contribute(collection, value, meta)` | adds to a collection | removing the entry |
+| `scope.load(plugin)` | loads a child plugin | unloading the child first |
+
+A scope disposes when its plugin is unloaded, when one of its injected
+services disappears, or when its parent scope disposes. There is no
+manual "unsubscribe from everything" step.
+
+## Registration vs. activation
+
+`kernel.load(plugin)` **registers** a plugin. Whether it is **active** is
+derived: a plugin runs `setup` when every token in its `inject` list is
+present, and disposes when any of them goes away. Load order does not
+matter.
+
+```
+kernel.load(syncPlugin)    // registered, inactive — Clock isn't there yet
+kernel.load(clockPlugin)   // clock activates; sync activates right after
+kernel.unload(clockPlugin) // sync disposes first, then clock
+kernel.load(clockPlugin)   // both come back, sync with a fresh scope
+```
+
+This is **cascade unload**: pull one thread and everything that depended
+on it unwinds, in dependency order, cleanups running in reverse. Reload
+the thread and the dependents re-run `setup`. The plugin author writes no
+code for any of this.
+
+## Two mounting modes
+
+A plugin's lifetime is owned either by the kernel or by React:
+
+- **Kernel-scoped** — `kernel.load(p)` from config, a marketplace, or
+  bootstrap code. Outlives every render tree. For stores, sockets,
+  schedulers, agents: anything long-lived or async. React only observes.
+- **Component-scoped** — `usePlugin(p)` inside a component. Loaded on
+  mount, unloaded on unmount. Cheap, synchronous, StrictMode-safe. For
+  view-local behaviour and UI contributions.
+
+Both are the same plugin type; only who calls `load` differs.
+
+[examples/agent-host](../examples/agent-host/README.md) is the kernel-scoped
+case in full, with no React and no DOM in sight: a Node agent host where
+skills are plugins, revoking a credential cascades a skill's tools out
+before the next turn, and the whole thing runs under a plain test runner.
+The [server example](../examples/server/README.md) applies the same model
+to routes, jobs, middleware, database revocation, and config reload. See
+[Beyond UI](beyond-ui.md) for the shared capability-graph framing and its
+boundaries.
+
+## Observing from React
+
+React never mutates the kernel during render and never sees a pending
+async operation. It subscribes via `useSyncExternalStore` and reads a
+synchronous snapshot:
+
+- `useService(Clock)` → `Clock | undefined`. Cheap, and the `| undefined`
+  is the trap — reaching for `!` is how a service disappearing crashes
+  three components deep.
+- `<Requires of={[Clock]} fallback={…}>{(clock) => …}</Requires>` → the
+  render prop's argument is genuinely non-null. When `Clock` goes away
+  the subtree **unmounts**, running its own effect cleanups. This is the
+  React expression of cascade unload, and the recommended default.
+- `useServiceState(Clock)` → `present | absent | loading`, for UIs that
+  want to distinguish "not installed" from "starting up".
+
+## Contribution: slots and collections
+
+A plugin cannot render into a surface it doesn't own — a parent must
+import a child. Contribution inverts that. The host declares a **slot**
+with a props contract; plugins **contribute** renderers; the host renders
+`<Slot>` without knowing who contributed:
+
+```tsx
+// host
+declare module '@yatoi/slots' {
+  interface Slots { 'todo.item.extra': { todo: Todo } }
+}
+<Slot name="todo.item.extra" todo={todo} />
+
+// plugin
+contribute(scope, 'todo.item.extra', ({ todo }) => <DueDate todo={todo} />)
+```
+
+Props are type-checked on both sides. Because `contribute` is a scope
+effect, uninstalling the plugin removes its UI with no further code.
+
+Two resolution modes cover the prior art: `<Slot mode="list">` renders
+every `append` contribution in priority order; `<Slot mode="single">`
+folds `replace` and `wrap` contributions over the host's default, so an
+override can wrap the built-in and call through to it — a pattern that
+survives the default changing underneath it.
+
+When the host needs *data about* what was contributed — ids to route on,
+labels for a nav — use a plain **collection** instead of a slot. The
+kernel stores whatever you put in it; `useContributions(Views)` hands the
+list back to React as data. The [example app](../examples/todo/README.md)
+uses both and explains when each is the right shape.
+
+## Manifest / activation split
+
+Contributions are JSON-serialisable data, separate from executable code.
+A shell can render a marketplace card for a plugin whose code has not
+loaded — or does not exist. In the example, `plugins.json` describes
+plugins by id; a separate registry (id → `import()`) supplies the code,
+`import()`-ed on install. That registry can resolve an id to a bundled
+module or, for a plugin shipped as a separately built ESM file, to a URL —
+loaded the way a plugin from a CDN would be. Either way that's all the
+"loader" a v0.1 app needs; a `/loader` package is deliberately absent
+until someone asks for it.
+
+## The honest cost
+
+`inject` + `provides` is a second dependency graph alongside the import
+graph, and it is only legible at runtime. That is the tax for late
+binding. It's why the kernel keeps its state machine inspectable
+(`kernel.pluginState`, `kernel.state`, `kernel.on('error')`) and why a
+devtools package is optional in the plan but not optional in practice.
+
+# docs/guide.md
+
+# Guide
+
+Task-oriented. Assumes you've read [concepts](concepts.md). Snippets are
+adapted from the test suites and the [example app](../examples/todo); when
+in doubt, those are the compiled truth.
+
+## Install
+
+```bash
+pnpm add @yatoi/kernel @yatoi/react @yatoi/slots @yatoi/react-slots
+```
+
+`@yatoi/kernel` has no dependencies. `@yatoi/slots` depends only on
+`@yatoi/kernel` — no React. `@yatoi/react` and `@yatoi/react-slots`
+peer-depend on `react ^18 || ^19`. For Vue, see
+["Using it from Vue"](#using-it-from-vue) below — `@yatoi/vue` and
+`@yatoi/vue-slots` peer-depend on `vue ^3.4.0` instead.
+
+## Create a kernel
+
+One per app, at module scope, outside any component:
+
+```ts
+// kernel.ts
+import { createKernel } from '@yatoi/kernel'
+
+export const kernel = createKernel()
+
+kernel.on('error', (error, plugin) => {
+  console.error(`plugin "${plugin.name}" failed:`, error)
+})
+```
+
+Wrap the tree once:
+
+```tsx
+<KernelProvider kernel={kernel}>
+  <App />
+</KernelProvider>
+```
+
+## Define a service
+
+A service token names a capability. Default: an imported token object. Put
+it where both provider and consumers can import it — a `services.ts`, or
+the package that owns the concept:
+
+```ts
+import { defineService } from '@yatoi/kernel'
+
+export interface TodoStore {
+  getAll(): readonly Todo[]
+  add(title: string): void
+  subscribe(listener: () => void): () => void
+}
+
+export const Todos = defineService<TodoStore>('todos')
+```
+
+The string is runtime identity for debugging. You never type it at a call
+site.
+
+When a plugin can't depend on your contract package — the third-party
+case — the host publishes a types-only package (a `.d.ts` package, no
+runtime code) and the plugin augments `Services` and calls `service(key)`
+instead of importing a token; identity is by key, so it resolves the same
+capability:
+
+```ts
+import { service } from '@yatoi/kernel'
+import type { TodoStore } from '@todo-app/types'
+
+declare module '@yatoi/kernel' {
+  interface Services {
+    todos: TodoStore
+  }
+}
+const todos = service('todos') // ServiceToken<TodoStore>
+```
+
+## Write a plugin that provides a service
+
+```ts
+import { definePlugin } from '@yatoi/kernel'
+
+export const todosPlugin = definePlugin({
+  name: 'todos',
+  provides: [Todos],
+  setup(scope) {
+    const store = createStore(loadFromLocalStorage())
+    const stop = store.subscribe(() => saveToLocalStorage(store.getAll()))
+    scope.defer(stop)                 // undone on dispose, LIFO
+    scope.provide(Todos, store)       // must be listed in `provides`
+  },
+})
+```
+
+Rules the kernel enforces:
+
+- `provide` of a token not in `provides` throws — the plugin fails, others
+  are untouched.
+- Two active providers of one token: first wins, second fails.
+- After the scope disposes, `provide`/`contribute` are no-ops (with a
+  console warning) and `defer(fn)` runs `fn` immediately. Nothing leaks
+  from a `setup` that finishes late.
+
+## Write a plugin that depends on a service
+
+```ts
+export const syncPlugin = definePlugin({
+  name: 'sync',
+  inject: [Todos, Clock],
+  setup(scope) {
+    const todos = scope.get(Todos)     // TodoStore, not TodoStore | undefined
+    const clock = scope.get(Clock)
+    const id = setInterval(() => push(todos.getAll(), clock.now()), 5000)
+    scope.defer(() => clearInterval(id))
+  },
+})
+```
+
+`scope.get` is typed non-null for injected tokens and `T | undefined` for
+anything else. The injected values are snapshotted at activation and stay
+stable for the scope's lifetime — if the underlying service changes, the
+scope is disposed and re-run rather than handed a new value mid-flight.
+
+### Async setup
+
+`setup` may return a promise. Check `scope.active` after any `await` if
+you're about to do something with side effects the scope can't reverse:
+
+```ts
+async setup(scope) {
+  const socket = await connect()
+  if (!scope.active) { socket.close(); return }   // deps vanished mid-await
+  scope.defer(() => socket.close())
+  scope.provide(Socket, socket)
+}
+```
+
+If you forget the check, `provide` is still a no-op after disposal — but
+the socket would leak. `defer` before the `await` when you can.
+
+## Load plugins (kernel-scoped)
+
+From bootstrap code, an event handler, or an effect — never during render:
+
+```ts
+// bootstrap.ts — runs once before the first render
+kernel.load(todosPlugin, clockPlugin, syncPlugin)   // order doesn't matter
+```
+
+```ts
+// an install button
+async function install(id: string) {
+  const mod = await pluginModules[id]()
+  kernel.load(mod.default)
+}
+function uninstall(plugin: AnyPlugin) {
+  kernel.unload(plugin)   // dependents cascade; no-op if not loaded
+}
+```
+
+`load` returns handles (`{ state, error, dispose() }`) if you want them.
+The plugin **object** is the identity: loading the same object twice at
+top level throws, so keep a `Map<id, plugin>` if you load from a manifest.
+
+## Load plugins (component-scoped)
+
+```tsx
+const spellcheckPlugin = definePlugin({ name: 'spellcheck', setup(scope) { … } })
+
+function Editor() {
+  usePlugin(spellcheckPlugin)   // loaded on mount, unloaded on unmount
+  return <Surface />
+}
+```
+
+Define the plugin at module scope so its identity is stable. Under
+StrictMode this becomes load → unload → load; the kernel handles it and
+you end up with exactly one active instance. Two mounted components using
+the same plugin object is an error — give each its own, or hoist to a
+kernel-scoped load. Inside a hidden `<Activity>` a component-scoped plugin
+unloads and reloads on show — see "Lazy loading and Suspense" in
+[docs/pitfalls.md](pitfalls.md).
+
+## Consume a service in React
+
+The recommended shape is `<Requires>`. The render prop's arguments are
+non-null, and the subtree unmounts when a service disappears:
+
+```tsx
+<Requires of={[Todos]} fallback={<p>Loading…</p>}>
+  {(todos) => <Shell todos={todos} />}
+</Requires>
+```
+
+`of` accepts any number of tokens; the arguments arrive in the same order.
+
+For the cheap case where absence is genuinely fine to render:
+
+```tsx
+const clock = useService(Clock)          // Clock | undefined
+return <span>{clock ? clock.now() : '—'}</span>
+```
+
+To distinguish "absent" from "starting up":
+
+```tsx
+const s = useServiceState(Clock)         // { status: 'present', value } | { status: 'absent' } | { status: 'loading' }
+```
+
+All three subscribe via `useSyncExternalStore` and re-render only when
+their own answer changes, not on every kernel mutation.
+
+### Subscribing to a service's own state
+
+A service is just a value; if it has state, subscribe to it the way you
+would any external store:
+
+```ts
+export function useTodos(store: TodoStore) {
+  return useSyncExternalStore(store.subscribe, store.getAll)
+}
+```
+
+Keep `getAll()` returning the same array reference until a mutation so
+this stays cheap.
+
+## Declare a slot (host side)
+
+```ts
+// slots.ts — import this from your entry point so the augmentation is in the program
+import type { Todo } from './core/todos'
+
+declare module '@yatoi/slots' {
+  interface Slots {
+    'todo.item.extra': { todo: Todo }
+    'task.card': { task: Task }
+  }
+}
+```
+
+Render it. Extra props are the slot's props and are forwarded to every
+contribution:
+
+```tsx
+<Slot name="todo.item.extra" todo={todo} />                 // list mode (default)
+<Slot name="task.card" mode="single" task={task}>{DefaultCard}</Slot>
+```
+
+- `mode="list"` renders every `append` contribution in priority order
+  (higher first). `fallback` renders when there are none.
+- `mode="single"` renders one thing: the `children` component (the host
+  default) with `replace` and `wrap` contributions folded over it,
+  highest priority outermost.
+
+## Contribute to a slot (plugin side)
+
+```tsx
+import { contribute } from '@yatoi/react-slots'
+
+setup(scope) {
+  const todos = scope.get(Todos)
+
+  contribute(scope, 'todo.item.extra', ({ todo }) => (
+    <input type="date" value={typeof todo.dueDate === 'string' ? todo.dueDate : ''}
+           onChange={(e) => todos.patch(todo.id, { dueDate: e.target.value })} />
+  ))
+
+  contribute(scope, 'task.card', ({ task, Default }) => (
+    <Highlighted><Default task={task} /></Highlighted>
+  ), { mode: 'wrap', priority: 10 })
+}
+```
+
+The renderer is a React component — hooks are fine inside it. It receives
+the slot's props plus `Default` (the renderer beneath it; a no-op in list
+mode). Props are checked against `Slots[name]`, so the wrong shape is a
+compile error. Removal on unload is automatic. If the renderer is
+`React.lazy`, wrap it in your own `<Suspense>` rather than relying on the
+host's — see [docs/pitfalls.md](pitfalls.md) "Lazy loading and Suspense".
+
+### Closing over services
+
+Renderers have a fixed signature, so a service from `setup` reaches the
+component through a closure. Inline arrow functions do this naturally (as
+above). For larger components, a factory keeps things readable:
+
+```tsx
+function makeCalendarView(todos: TodoStore) {
+  return function CalendarView() {
+    const list = useTodos(todos)
+    …
+  }
+}
+scope.contribute(Views, { id: 'calendar', label: 'Calendar', View: makeCalendarView(todos) })
+```
+
+This looks like one level of indirection too many the first time. It's
+the idiomatic way to hand a setup-time dependency to a component React
+will call later, after `setup` has returned.
+
+## Contribute data, not UI: collections
+
+When the host needs to *know* what was contributed — ids for routing,
+labels for a nav — a slot is the wrong shape. Use a collection:
+
+```ts
+// host
+export interface ViewDescriptor { id: string; label: string; View: ComponentType }
+export const Views = defineCollection<ViewDescriptor>('views')
+
+function Shell() {
+  const views = useContributions(Views)       // readonly Contribution<ViewDescriptor>[]
+  const active = views.find((c) => c.value.id === activeId)
+  return (
+    <>
+      <nav>{views.map((c) => <button key={c.value.id}>{c.value.label}</button>)}</nav>
+      {active ? <active.value.View /> : <Home />}
+    </>
+  )
+}
+
+// plugin
+scope.contribute(Views, { id: 'calendar', label: 'Calendar', View })
+```
+
+`useContributions` works on any `CollectionToken`; slots are collections
+underneath. Each `Contribution` carries `value`, `priority`, `mode` and
+`owner` (the contributing plugin's name).
+
+## Using it from Vue
+
+`@yatoi/vue` and `@yatoi/vue-slots` are the same two layers, aimed at
+Vue 3 instead of React. Everything above still applies conceptually — the
+kernel, tokens, plugins, `inject`/`provides`, cascade unload — only the
+binding changes. Install:
+
+```bash
+pnpm add @yatoi/kernel @yatoi/vue @yatoi/slots @yatoi/vue-slots
+```
+
+Install the kernel app-wide with `app.use(yatoi, { kernel })` — this is
+the default:
+
+```ts
+import { createApp } from 'vue'
+import { yatoi } from '@yatoi/vue'
+import { kernel } from './kernel'
+import App from './App.vue'
+
+createApp(App).use(yatoi, { kernel }).mount('#app')
+```
+
+Prefer this over calling `provideKernel(kernel)` in a component's
+`setup()`: Vue's `provide()` only reaches *descendant* components, never
+the instance that called `provide()` itself, so a root component that
+provides the kernel can't also consume it (`useKernel`/`useService`/
+`useContributions`/`<Requires>`) — a real footgun the first version of
+`examples/todo-vue` hit. `provideKernel`/`<KernelProvider>` remain the
+right tool for a nested or scoped kernel — a subtree that needs a
+*different* kernel than the app-level one:
+
+```ts
+import { provideKernel } from '@yatoi/vue'
+
+export default defineComponent({
+  setup() {
+    provideKernel(nestedKernel)
+    // ...
+  },
+})
+```
+
+or, template-first, with `<KernelProvider :kernel="kernel">` wrapping the
+subtree. Note the name collision this whole binding lives next to: Vue's
+own `inject()` (what `useKernel()` is built on) has nothing to do with a
+plugin's `inject:` field on the kernel side — every doc comment in
+`@yatoi/vue` says "Vue's `inject()`" when it means Vue's, to keep the two
+apart.
+
+`useService`/`useServiceState`/`useContributions` return read-only refs
+instead of hook return values — there's no `useSyncExternalStore` in Vue,
+so `kernel.subscribe` plus a `shallowRef` (written only when the kernel's
+answer actually changed) is the tearing-safe equivalent:
+
+```ts
+const clock = useService(Clock)   // Readonly<ShallowRef<Clock | undefined>>
+// in a render function: clock.value
+// in a template:         {{ clock }}
+```
+
+`useContributionValues(collection)` is `useContributions` minus the
+`Contribution<T>` wrapper, for the common case that just wants the
+values: `useContributions(Views).value.find(c => c.value.id === x)` has
+two `.value`s meaning different things; `useContributionValues(Views)
+.value.find(v => v.id === x)` doesn't. Reach for `useContributions` when
+you need `priority`, `mode`, or `owner`.
+
+```ts
+const views = useContributionValues(Views)   // Readonly<ShallowRef<readonly ViewDescriptor[]>>
+```
+
+`<Requires>` is the same cascade-unload boundary, with the values handed
+to the default slot as a single tuple argument — which is also why
+`v-slot="[clock, store]"` (array destructuring) works in a template, the
+same way `v-slot="{ x }"` does for objects:
+
+```html
+<Requires :of="[Clock, Store]">
+  <template #fallback><Spinner /></template>
+  <template #default="[clock, store]">
+    <Dashboard :clock="clock" :store="store" />
+  </template>
+</Requires>
+```
+
+Write it with an explicit `<template #default="[...]">` like this, not the
+`<Requires :of="[...]" v-slot="[...]">` shorthand — combined with a
+sibling `<template #fallback>`, the shorthand crashes `vite build`'s
+production codegen (a Vue compiler issue, not a `@yatoi/vue` one; see
+`examples/todo-vue/README.md`'s "Friction" section for the repro).
+
+`usePlugin(plugin)` loads on `onMounted`, disposes on `onBeforeUnmount` —
+Vue has no StrictMode double-invoke, but a component that unmounts and is
+immediately remounted at the same spot (a `:key` change, HMR) exercises
+the same load → unload → load contract.
+
+`<Slot>` from `@yatoi/vue-slots` works the same way as `@yatoi/react-slots`'s,
+with one mechanical difference: a slot's own props (e.g. `task` for
+`task.card`) are passed as plain attrs, not typed component props — Vue
+has no way to spread an arbitrary typed prop bag onto a component's
+declared props the way JSX does, so `<Slot>` declares `inheritAttrs:
+false` and reads them off `attrs` instead:
+
+```html
+<Slot name="task.card" mode="single" :task="task">
+  <template #default="{ task }"><DefaultCard :task="task" /></template>
+</Slot>
+```
+
+`declare module '@yatoi/slots' { interface Slots { ... } }` is the
+**same augmentation** `@yatoi/react-slots` type-checks against — both
+bindings re-export `Slots`/`SlotName`/`SlotProps`/`slot` from
+`@yatoi/slots`, so a host using both React and Vue surfaces for the same
+product declares its slots once. The tests in
+`packages/vue/test/vue.test.ts` and `packages/vue-slots/test/vue-slots.test.ts`
+port every claim from the React/`@yatoi/react-slots` suites; read those
+before reading the source. See
+[examples/todo-vue](../examples/todo-vue/README.md) for a full app built on
+this binding, chapter 1 of `examples/todo` ported field for field.
+
+## Load plugins from a manifest
+
+Keep the *description* of a plugin (data) separate from its *code*:
+
+```json
+// public/plugins.json
+[{
+  "id": "calendar",
+  "name": "Calendar",
+  "version": "0.1.0",
+  "description": "…"
+}]
+```
+
+```ts
+// the "loader": id → code. The default shape — bundled with the app, so
+// Vite code-splits this like any other dynamic import.
+const registry: Record<string, () => Promise<unknown>> = {
+  calendar: () => import('./plugins/calendar/index.js'),
+}
+
+const mod = await registry[entry.id]?.()
+if (typeof mod?.default?.name !== 'string' || typeof mod?.default?.setup !== 'function') {
+  throw new Error(`plugin "${entry.id}" has no valid default export`)
+}
+kernel.load(mod.default)
+```
+
+The marketplace UI renders cards from the JSON alone. An id the manifest
+describes but the registry doesn't list shows as unavailable — the shell
+can describe a plugin it can't run.
+
+**The same thing, with the code on another origin.** The registry doesn't
+have to hold code — it can resolve an id to a URL instead, and
+dynamic-`import()` that, the way a plugin from a CDN would be loaded:
+
+```ts
+const url = `${pluginBase}/${entry.id}.js`
+const mod = await import(/* @vite-ignore */ url)
+// same validation, same kernel.load(mod.default)
+```
+
+Now every id is attemptable, and a missing file is a load failure the UI
+can show without the app crashing, rather than "unavailable" — see
+`examples/todo`'s "Failed to load" card. Switching between the two is a
+deployment decision, not an app-logic one; `examples/todo`'s
+`src/marketplace/useMarketplace.ts` picks between them with one `if` keyed
+on an env var (`VITE_PLUGIN_BASE`), and the plugin's own source doesn't
+change either way. That's the whole "loader" a v0.1 app needs.
+
+**Bundling.** A plugin built to ship as a separate file can bundle its own
+copy of `@yatoi/kernel`, `@yatoi/slots`, `@yatoi/react-slots`, and
+whatever contract it depends on — the kernel identifies services,
+collections and slots by a token's
+string `key`, not by object identity (`packages/kernel/src/token.ts`), so a
+second copy of the protocol still resolves the host's services and still
+contributes to the host's slots. The one thing that must **not** be
+bundled is React: externalize `react` and `react/jsx-runtime`, and share a
+single instance with the host via an import map. `examples/todo`'s chapter
+2 is built exactly this way — see `examples/todo/vite.plugin.config.ts`
+(`rollupOptions.external`) and `examples/todo/vite/react-import-map.ts`
+for the full mechanics, and
+[Pitfalls](pitfalls.md#share-react-not-yatoi) for why. See the example's
+README for the runnable version of both forms.
+
+## Observe the kernel directly
+
+For marketplace badges, devtools, or tests:
+
+```ts
+kernel.pluginState(plugin)   // 'inactive' | 'starting' | 'active' | 'disposing' | 'failed'
+kernel.state(Clock)          // { status: 'present', value } | { status: 'absent' } | { status: 'loading' }
+kernel.get(Clock)            // Clock | undefined
+kernel.list(Views)           // readonly Contribution<ViewDescriptor>[]
+kernel.subscribe(listener)   // fires once per batch of changes
+kernel.version               // bumps on every change — a cheap useSyncExternalStore snapshot
+```
+
+## Test without React
+
+The kernel runs in plain Node:
+
+```ts
+const kernel = createKernel()
+kernel.load(clockPlugin, syncPlugin)
+expect(kernel.pluginState(syncPlugin)).toBe('active')
+
+kernel.unload(clockPlugin)
+expect(kernel.pluginState(syncPlugin)).toBe('inactive')
+
+await kernel.settle()    // wait for any async setup/disposal
+await kernel.dispose()   // unload everything and settle
+```
+
+Capture errors instead of letting them hit the console:
+
+```ts
+const errors: unknown[] = []
+kernel.on('error', (e) => errors.push(e))
+```
+
+The kernel's own tests in `packages/kernel/test` are the fullest
+reference, including the torture case (a provider unloads while three
+dependents are mid-`await`).
+
+# docs/pitfalls.md
+
+# Pitfalls
+
+Short and blunt. Each of these has bitten someone or is designed to.
+
+## Never mutate the kernel during render
+
+`kernel.load`, `kernel.unload`, `scope.provide`, `scope.contribute` — all
+of it belongs in event handlers, effects, or code that runs outside React
+entirely. Concurrent rendering can start a render and throw it away;
+plugin loading is not rollback-able.
+
+There is no runtime guard for this. The symptom is React's "Cannot update
+a component while rendering a different component" warning, or a plugin
+loaded twice with the second load throwing. If you see either, look for a
+kernel call in a component body.
+
+## `useService` + `!` is the trap
+
+```tsx
+const clock = useService(Clock)!   // don't
+```
+
+The `| undefined` is real: the service can disappear while the component
+is mounted, and the next render will crash somewhere below. Use
+`<Requires>` — the subtree unmounts cleanly when the service goes, and
+the render prop's argument is genuinely non-null.
+
+## The plugin object is the identity
+
+The kernel identifies a plugin by object reference, not by `name`.
+
+- Define plugins at module scope. A plugin defined inside a component is a
+  new object every render; `usePlugin` will load and unload it every time.
+- Loading the same object twice at top level throws. If you load from a
+  manifest, keep a `Map<id, plugin>` so uninstall can find the exact
+  object install loaded.
+- Two mounted components calling `usePlugin` with the same object is an
+  error. Give each instance its own plugin object, or hoist to a single
+  kernel-scoped load.
+
+## `provide` only what you declare
+
+`scope.provide(T)` where `T` isn't in the plugin's `provides` throws and
+fails the plugin. This is deliberate — `inject` + `provides` is the whole
+dependency graph, and it has to be readable from the declarations alone.
+Two active providers of one token: first wins, second fails.
+
+## Renderers close over setup-time services
+
+A slot renderer's signature is fixed by the `Slots` contract; a view
+descriptor's `View` takes no props. Neither has a parameter for "the
+store I got from `scope.get`". Hand it over with a closure:
+
+```tsx
+function makeDueDateField(todos: TodoStore) {
+  return function DueDateField({ todo }: SlotRendererProps<'todo.item.extra'>) { … }
+}
+contribute(scope, 'todo.item.extra', makeDueDateField(scope.get(Todos)))
+```
+
+The first instinct — add a `todos` parameter to the renderer — is a type
+error, and the tempting fix (`as any`) hides a real problem: the `Scope`
+only exists during `setup`, so a closure is the only thing that can carry
+the dependency into a component React calls later.
+
+## Lazy loading and Suspense
+
+Plugin activation (`kernel.load`, `registry[id]()`) and `React.lazy` /
+`<Suspense>` are orthogonal — one is a kernel mutation, the other a
+render-tree concern. They don't interfere by default, but four seams do.
+
+- **Module-evaluation side effects in a lazily-loaded module.** Fine from
+  `bootstrap.ts`; wrong when the module is reached via `React.lazy`,
+  because then module evaluation happens *during render* and the kernel's
+  synchronous notification changes other components' snapshots mid-render.
+
+  ```ts
+  // wrong — runs during React.lazy's render-time import
+  kernel.load(spellcheckPlugin)
+  export default SpellcheckPanel
+
+  // right — the module exports the plugin, a handler or effect loads it
+  export default definePlugin({ name: 'spellcheck', setup(scope) { … } })
+  ```
+
+  `usePlugin(spellcheckPlugin)` inside the lazy component is the natural
+  form — it's a `useEffect`, so it runs after the Suspense boundary commits.
+
+- **Re-suspension vs. `<Activity>`.** A mounted subtree that suspends again
+  is hidden but stays mounted — layout effects tear down and rerun, passive
+  effects (so `usePlugin`) are untouched. `<Activity mode="hidden">`
+  (React 19.2) is different: it unmounts effects of hidden content and
+  recreates them on show, so a component-scoped plugin inside a hidden
+  `<Activity>` unloads and reloads with fresh state. Coherent, but anything
+  that must survive being hidden belongs kernel-scoped, not component-scoped.
+
+- **Lazy contributions need a `<Suspense>` boundary; `<Slot>` doesn't add
+  one.** A plugin may contribute `React.lazy(() => import('./Heavy'))`.
+  `<Slot>` renders it and suspends to the nearest `<Suspense>` above the
+  *host* — deliberate, a slot shouldn't pick the host's fallback UI. Either
+  the host wraps `<Slot>` in `<Suspense>`, or, more politely, the plugin
+  wraps its own lazy component so it controls its own placeholder:
+
+  ```tsx
+  contribute(scope, 'sidebar.item', () => (
+    <Suspense fallback={<Spinner size="sm" />}>
+      <LazyWidget />
+    </Suspense>
+  ))
+  ```
+
+  `<Slot>` memoises the composed renderer on the contributions array (see
+  `packages/react-slots/src/Slot.tsx`), so the lazy component's identity is
+  stable across host re-renders — it doesn't re-suspend or remount when an
+  unrelated slot prop changes.
+
+- **`<Requires>` fallback ≠ `<Suspense>` fallback.** `<Requires>` answers
+  "is the capability present"; `<Suspense>` answers "has the code arrived".
+  They compose but aren't interchangeable — the kernel's `loading` status
+  isn't a Suspense signal today, `<Requires>` treats it like absent.
+  Bridging it (`useServiceSuspense`) is on the roadmap.
+
+## HMR replaces plugin objects
+
+The kernel identifies a plugin by object reference (see "The plugin object
+is the identity" above). Vite HMR hot-replacing a plugin module produces a
+*new* object with the same `name` but a different identity.
+
+Component-scoped, this is harmless: `usePlugin`'s dependency changes, the
+old instance unloads, the new one loads. Kernel-scoped and loaded at
+bootstrap, it isn't — the old object stays loaded, the new one isn't
+recognised as a duplicate, so it loads beside the old one, tries to
+provide the same token a second time, and fails (spec §10.4: first
+provider wins). Nothing throws at the call site; the new plugin just sits
+`failed` with an error report. Guard it in the module:
+
+```ts
+export const todosPlugin = definePlugin({ … })
+
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => kernel.unload(todosPlugin))
+}
+```
+
+Dev-only, and it only bites the first time someone edits a kernel-scoped
+plugin's module with HMR on — without the guard, accept a full reload
+instead.
+
+## Async `setup`: check `scope.active` after `await`
+
+If a dependency disappears while your `setup` is awaiting, the scope is
+disposed underneath you. `provide`/`contribute` afterwards are harmless
+no-ops (with a console warning), but anything you acquired during the
+await that the scope can't reverse — a socket, a subscription — leaks
+unless you check:
+
+```ts
+const socket = await connect()
+if (!scope.active) { socket.close(); return }
+scope.defer(() => socket.close())
+```
+
+Better: `defer` the cleanup *before* the await when you can.
+
+## `loading` vs `absent`
+
+`kernel.state(token)` reports `loading` only when a registered provider is
+mid-setup or mid-teardown. A provider that is itself blocked on *its* own
+dependencies reads `absent`, not `loading` — "loading" means progress is
+being made. Don't show a spinner for a service whose provider isn't going
+to activate.
+
+## `failed` sticks
+
+A plugin whose `setup` threw stays `failed` until you unload it or one of
+its dependencies cycles. It will not retry on its own. Check
+`kernel.pluginState(p)` / `handle.error`, fix the cause, then unload and
+load again.
+
+## Don't `import()` the app's modules from the browser console
+
+Testing "what happens if I uninstall from the console" by running
+`import('/src/marketplace/useMarketplace.js')` in devtools creates a
+**second module graph** with its own `createKernel()` and its own state.
+Calls into it look like they work (they write `localStorage`) but touch
+nothing the running app uses. Vite serves the app's `.js`-suffixed imports
+as `.ts` internally; a raw console import with the wrong extension lands
+on a different cache key.
+
+If you need a console handle for debugging, expose the kernel yourself
+(`window.__kernel = kernel` in dev) — or better, use the UI you built.
+
+## Share React, not @yatoi
+
+A plugin loaded from a URL (`docs/guide.md` "Load plugins from a
+manifest") runs in a bundle built independently of the host. It **must**
+externalize `react` and `react/jsx-runtime` — a second copy of React in the
+page means the plugin's hooks run against a dispatcher the host's render
+loop never sees, and you get "Invalid hook call" (or a silent duplicate-
+React warning) instead of a working plugin. The host has to share its own
+instance back, typically via a native import map pointing the plugin's bare
+`import 'react'` at a re-export of the host's own React — see
+`examples/todo/vite/react-import-map.ts` (the `reactImportMap` plugin) and
+`examples/todo/vite.plugin.config.ts` (`rollupOptions.external`)
+for a worked version, including the build-time gotchas (Rollup can't
+statically expand a re-export of a CommonJS module for a consumer outside
+its own build — the shim has to name its exports explicitly, not
+`export * from 'react'`).
+
+The plugin does **not** need to externalize `@yatoi/kernel`, `@yatoi/slots`,
+`@yatoi/react-slots`, or its contract package — it may bundle its own
+copies of all four. A service, collection, or slot's identity is its
+string `key` (`packages/kernel/src/token.ts`), and slot names are just
+collection keys of the form `slot:${name}`, defined once in
+`packages/slots/src/token.ts` and shared by every binding.
+Two independently bundled tokens with the same key name the same
+capability to the host's kernel, no shared object or shared module
+instance required. That's what makes "externalize React, bundle
+everything else" the right split, not an arbitrary one.
+
+## Slot props are the *host's* contract
+
+`declare module '@yatoi/slots' { interface Slots { … } }` must be in the
+program for both the host and every plugin that contributes — import the
+file from your entry point. If a plugin sees an empty `Slots`, every slot
+name is a type error, which is the correct failure but a confusing one.
+
+## Case-insensitive filesystems
+
+`slot.ts` and `Slot.tsx` are the same file on macOS. That's why the
+slot-token helper is `token.ts`. If you add a component and a helper with
+names that differ only in case, TypeScript will tell you — eventually,
+with an unhelpful error.
+
+## What is *not* a pitfall
+
+- Unloading a plugin that isn't loaded is a no-op, by design, so effect
+  cleanups are safe.
+- StrictMode's double effect invocation is handled: `usePlugin` becomes
+  load → unload → load and ends with exactly one active instance.
+- A token's string key colliding between two `defineService` calls is
+  fine at runtime (same identity) — but don't do it; make one token and
+  share it.
+
+# packages/kernel/AGENTS.md
+
+# Working with `@yatoi/kernel`
+
+## Use this package when
+
+- Capabilities must appear and disappear while an application is running.
+- Plugin effects must unwind automatically and dependency removal must cascade.
+- A Node, browser, React, or Vue host needs the same framework-neutral lifecycle.
+
+## Do / Don't
+
+- **Don't** call `kernel.load` or `kernel.unload` during React render or a Vue `setup()` body. **Do** mutate in bootstrap, an event handler, or a framework effect.
+- **Don't** call `useService(Token)!`. **Do** gate dependent UI with the binding's `<Requires of={[Token]}>`.
+- **Don't** hold a service reference across an `await` in `setup` without checking the scope. **Do** check `scope.active` before publishing or retaining late effects.
+- **Don't** define the same token in multiple modules. **Do** export it from one contract module and import the symbol.
+- **Don't** cache `kernel.list()` results as a permanent registry. **Do** read the collection at each request, turn, render, or scheduler tick.
+- **Don't** manually unregister provided values or contributions. **Do** attach cleanup with `scope.defer`; scope disposal removes registry effects.
+
+## Lifecycle in six lines
+
+```text
+inactive: registered but waiting for dependencies, or unloaded
+starting: setup is running or awaiting
+active: setup completed and the scope is live
+disposing: disposers ran; at least one awaitable is pending
+inactive → starting → active → disposing → inactive; failed is sticky
+state(token): present with a value, loading during real progress, otherwise absent
+```
+
+## Review checklist
+
+- Are all tokens imported from one contract module?
+- Are `inject` and `provides` complete and readable from the plugin definition?
+- Does every external effect have a `scope.defer` cleanup?
+- Does async setup check `scope.active` after each `await`?
+- Do request, turn, and scheduler boundaries read `state()` or `list()` fresh?
+- Are kernel mutations outside render and request/turn handling?
+- Does removal of a provider safely dispose every dependent?
+
+## Where the rules come from
+
+- [Protocol specification](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/spec.md) — normative behavior.
+- [Pitfalls](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/pitfalls.md) — mistakes and recovery patterns.
+
+# packages/react/AGENTS.md
+
+# Working with `@yatoi/react`
+
+## Use this package when
+
+- A React 18 or 19 tree must observe yatoi services and collections.
+- A subtree should mount only while required capabilities exist.
+- A plugin's lifetime should follow a component's committed lifetime.
+
+## Do / Don't
+
+- **Don't** load or unload plugins during render. **Do** mutate in bootstrap, event handlers, effects, or `usePlugin`.
+- **Don't** write `useService(Token)!`. **Do** wrap dependent UI in `<Requires of={[Token]}>`.
+- **Don't** create plugin objects inside components. **Do** define them at module scope or create a distinct object for each intended instance.
+- **Don't** create the application kernel during render. **Do** create it outside the tree and pass it to `<KernelProvider>`.
+- **Don't** cache `useContributions()` outside React. **Do** let the hook subscribe to the kernel snapshot.
+- **Don't** bundle a second React copy into remote plugins. **Do** externalize and share the host's React and JSX runtime.
+
+## Lifecycle in six lines
+
+```text
+inactive: registered but waiting for dependencies, or unloaded
+starting: setup is running or awaiting
+active: setup completed and the scope is live
+disposing: disposers ran; at least one awaitable is pending
+inactive → starting → active → disposing → inactive; failed is sticky
+state(token): present with a value, loading during real progress, otherwise absent
+```
+
+## Review checklist
+
+- Is one stable kernel provided above every yatoi hook and component?
+- Are all kernel mutations outside render?
+- Does required UI use `<Requires>` instead of a non-null assertion?
+- Are plugin objects stable across renders?
+- Will StrictMode load → unload → load leave one active instance?
+- Are remote plugins sharing the host's React runtime?
+
+## Where the rules come from
+
+- [Protocol specification](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/spec.md) — normative behavior.
+- [Pitfalls](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/pitfalls.md) — mistakes and recovery patterns.
+
+# packages/slots/AGENTS.md
+
+# Working with `@yatoi/slots`
+
+## Use this package when
+
+- A host needs named, typed contribution points independent of a UI framework.
+- React and Vue bindings must share one slot contract.
+- Slot contributions must disappear with their owning plugin scopes.
+
+## Do / Don't
+
+- **Don't** augment separate framework packages. **Do** declare `Slots` once in `@yatoi/slots`.
+- **Don't** leave the augmentation file outside the TypeScript program. **Do** import the host contract from host and plugin entry points.
+- **Don't** construct `slot:<name>` keys yourself. **Do** call `slot(name)` with a declared name.
+- **Don't** define a slot contract in multiple places. **Do** export one host-owned contract module.
+- **Don't** cache the result of `kernel.list(slot(name))`. **Do** read it at each unit-of-work boundary or use a framework binding.
+- **Don't** put React or Vue types in this package's contract. **Do** keep slot props framework-neutral.
+
+## Lifecycle in six lines
+
+```text
+inactive: registered but waiting for dependencies, or unloaded
+starting: setup is running or awaiting
+active: setup completed and the scope is live
+disposing: slot contributions are removed with their scope
+inactive → starting → active → disposing → inactive; failed is sticky
+state(token): services are present/loading/absent; slots use live collections
+```
+
+## Review checklist
+
+- Is `Slots` augmented exactly once in a host contract module?
+- Is that contract included in every relevant TypeScript program?
+- Are all slot names accepted by `SlotName` without casts?
+- Are slot props portable across the intended bindings?
+- Are contributions owned by plugin scopes rather than a manual registry?
+- Are slot collections read fresh or through a subscribed binding?
+
+## Where the rules come from
+
+- [Protocol specification](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/spec.md) — normative behavior.
+- [Pitfalls](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/pitfalls.md) — mistakes and recovery patterns.
+
+# packages/react-slots/AGENTS.md
+
+# Working with `@yatoi/react-slots`
+
+## Use this package when
+
+- React plugins contribute typed renderers to host-declared slots.
+- Contributions should compose by append, replace, or wrap mode.
+- Unloading a plugin must remove its UI without manual unregister calls.
+
+## Do / Don't
+
+- **Don't** declare `Slots` in this package. **Do** augment `@yatoi/slots` once in a host contract module.
+- **Don't** call `contribute` during React render. **Do** call it from plugin `setup`.
+- **Don't** load plugins during render. **Do** load in bootstrap, handlers, effects, or `usePlugin`.
+- **Don't** write `useService(Token)!` inside a renderer. **Do** gate required UI with `<Requires>` or close over an injected setup-time service.
+- **Don't** create contributed component identities on every host render. **Do** define renderers in plugin setup or at module scope.
+- **Don't** add a hidden Suspense policy to `<Slot>`. **Do** place the desired `<Suspense>` boundary in the host or contribution.
+
+## Lifecycle in six lines
+
+```text
+inactive: registered but waiting for dependencies, or unloaded
+starting: setup may already contribute while awaiting
+active: contributed renderers are visible to <Slot>
+disposing: contributions disappear synchronously; cleanup may continue
+inactive → starting → active → disposing → inactive; failed is sticky
+state(token): services gate plugins; slot collections update subscribed renders
+```
+
+## Review checklist
+
+- Is the host's `Slots` augmentation imported by host and plugins?
+- Does each contribution use a declared slot name and correct props?
+- Is `contribute` called only from a live plugin scope?
+- Does `wrap` call or intentionally replace its `Default`?
+- Is required service access gated or closed over safely?
+- Is lazy UI covered by an intentional Suspense boundary?
+
+## Where the rules come from
+
+- [Protocol specification](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/spec.md) — normative behavior.
+- [Pitfalls](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/pitfalls.md) — mistakes and recovery patterns.
+
+# packages/vue/AGENTS.md
+
+# Working with `@yatoi/vue`
+
+## Use this package when
+
+- A Vue 3 tree must observe yatoi services and collections.
+- A subtree should exist only while required capabilities are present.
+- A plugin's lifetime should follow a component mount and unmount.
+
+## Do / Don't
+
+- **Don't** load or unload plugins during render or directly in a `setup()` body. **Do** mutate in bootstrap, event handlers, lifecycle hooks, or `usePlugin`.
+- **Don't** assert `useService(Token).value!`. **Do** gate dependent UI with `<Requires :of="[Token]">`.
+- **Don't** create plugin objects inside component setup. **Do** define stable plugin objects at module scope.
+- **Don't** provide the app kernel from the root component and consume it there. **Do** install `yatoi` with `app.use(yatoi, { kernel })`.
+- **Don't** retain service refs after their component scope ends. **Do** use the read-only refs returned by the composables.
+- **Don't** cache collection arrays separately. **Do** use `useContributions` or `useContributionValues`.
+
+## Lifecycle in six lines
+
+```text
+inactive: registered but waiting for dependencies, or unloaded
+starting: setup is running or awaiting
+active: setup completed and the scope is live
+disposing: disposers ran; at least one awaitable is pending
+inactive → starting → active → disposing → inactive; failed is sticky
+state(token): present with a value, loading during real progress, otherwise absent
+```
+
+## Review checklist
+
+- Is the app kernel installed above every consumer?
+- Are kernel mutations outside render and direct setup execution?
+- Does required UI use `<Requires>` rather than a non-null assertion?
+- Are plugin objects stable across component remounts?
+- Are subscriptions owned by the current Vue effect scope?
+- Does unmount/remount leave exactly one active plugin instance?
+
+## Where the rules come from
+
+- [Protocol specification](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/spec.md) — normative behavior.
+- [Pitfalls](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/pitfalls.md) — mistakes and recovery patterns.
+
+# packages/vue-slots/AGENTS.md
+
+# Working with `@yatoi/vue-slots`
+
+## Use this package when
+
+- Vue plugins contribute typed components to host-declared slots.
+- Contributions should compose by append, replace, or wrap mode.
+- Unloading a plugin must remove its UI without manual unregister calls.
+
+## Do / Don't
+
+- **Don't** declare `Slots` in this package. **Do** augment `@yatoi/slots` once in a host contract module.
+- **Don't** call `contribute` during render or from a component `setup()` body. **Do** call it from plugin `setup`.
+- **Don't** load plugins during render. **Do** load in bootstrap, handlers, lifecycle hooks, or `usePlugin`.
+- **Don't** assert `useService(Token).value!` inside a renderer. **Do** gate required UI with `<Requires>` or close over an injected setup-time service.
+- **Don't** forget that the host default is a Vue slot. **Do** pass it through `Default` when a `wrap` contribution should preserve lower layers.
+- **Don't** duplicate the slot contract for Vue. **Do** share the neutral host contract with every binding.
+
+## Lifecycle in six lines
+
+```text
+inactive: registered but waiting for dependencies, or unloaded
+starting: setup may already contribute while awaiting
+active: contributed components are visible to <Slot>
+disposing: contributions disappear synchronously; cleanup may continue
+inactive → starting → active → disposing → inactive; failed is sticky
+state(token): services gate plugins; slot collections update subscribed renders
+```
+
+## Review checklist
+
+- Is the host's `Slots` augmentation imported by host and plugins?
+- Does each contribution use a declared slot name and correct props?
+- Is `contribute` called only from a live plugin scope?
+- Does `wrap` render or intentionally replace its `Default`?
+- Is required service access gated or closed over safely?
+- Will unmount/remount remove and restore exactly one contribution?
+
+## Where the rules come from
+
+- [Protocol specification](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/spec.md) — normative behavior.
+- [Pitfalls](https://github.com/yatoi-dev/yatoi-js/blob/main/docs/pitfalls.md) — mistakes and recovery patterns.

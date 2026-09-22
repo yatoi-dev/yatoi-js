@@ -3,8 +3,8 @@
 The repository contains examples, tests, design documents, and local tooling,
 but npm does not publish the repository root. Each public package is packed
 from its own directory and has an explicit `files` allowlist. Its tarball
-contains only compiled JavaScript, declarations, its README, `LICENSE`, and
-`package.json`.
+contains only compiled JavaScript, declarations, its README, agent instructions,
+`LICENSE`, and `package.json`.
 
 ## Versioning
 

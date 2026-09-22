@@ -15,6 +15,7 @@
     "test:watch": "vitest",
     "typecheck": "pnpm -r --parallel typecheck",
     "build": "pnpm -r build",
+    "build:llms": "node scripts/build-llms.mjs",
     "clean": "pnpm -r exec rm -rf dist",
     "pack:check": "node scripts/check-packages.mjs",
     "changeset": "changeset",

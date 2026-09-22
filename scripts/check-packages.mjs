@@ -42,13 +42,13 @@ try {
     const packed = JSON.parse(output.slice(jsonStart))
     const paths = packed.files.map((file) => file.path)
 
-    for (const required of ['LICENSE', 'README.md', 'package.json', 'dist/index.js', 'dist/index.d.ts']) {
+    for (const required of ['AGENTS.md', 'LICENSE', 'README.md', 'package.json', 'dist/index.js', 'dist/index.d.ts']) {
       if (!paths.includes(required)) fail(`${packed.name} is missing ${required}`)
     }
 
     const unexpected = paths.filter(
       (path) =>
-        !['LICENSE', 'README.md', 'package.json'].includes(path) &&
+        !['AGENTS.md', 'LICENSE', 'README.md', 'package.json'].includes(path) &&
         !/^dist\/.+\.(?:js|d\.ts)$/.test(path),
     )
     if (unexpected.length > 0) {

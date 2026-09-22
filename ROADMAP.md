@@ -169,6 +169,8 @@ Each of these has a good existing answer, and the README's
 
 Kept briefly so the history is visible without reading git log.
 
+- Agent-consumable packages → instructional errors, self-explaining
+  declarations, first-screen READMEs, packaged `AGENTS.md`, and llms indexes.
 - Service-absence policy → `<Requires>` (design.md decision 1).
 - Slot resolution modes → `append` / `replace` / `wrap` (decision 2).
 - Token location → both forms; imported tokens are the default,

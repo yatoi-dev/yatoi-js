@@ -21,6 +21,7 @@
     }
   },
   "files": [
+    "AGENTS.md",
     "dist/**/*.js",
     "dist/**/*.d.ts"
   ],
